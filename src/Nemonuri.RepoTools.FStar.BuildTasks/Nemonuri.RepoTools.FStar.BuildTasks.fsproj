@@ -14,10 +14,11 @@
     <PackageReference Include="Microsoft.Build.Utilities.Core" ExcludeAssets="runtime"/>
   </ItemGroup>
 
-<!-- 
-  <ItemGroup Condition="$([MSBuild]::GetTargetFrameworkIdentifier('$(TargetFramework)')) == '.NETFramework'">
-    <PackageReference Include="NETStandard.Library" />
+  <ItemGroup Condition="$(_Test) == 'true'">
+    <PackageReference Update="Microsoft.Build.Utilities.Core" ExcludeAssets=""/>
   </ItemGroup>
- -->
+  <PropertyGroup Condition="$(_Test) == 'true'">
+    <ArtifactsPivots>$(ArtifactsPivots)_MyCustomPivot_$(TargetFramework)</ArtifactsPivots>
+  </PropertyGroup>
 
 </Project>
