@@ -1,0 +1,8 @@
+<Project>
+  <Import Project="$(MSBuildThisFileDirectory)RepoRoot.props" Condition="$(RepoRootPath) == ''" />
+
+  <PropertyGroup>
+
+
+  </PropertyGroup>
+</Project>
