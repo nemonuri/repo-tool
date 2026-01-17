@@ -1,7 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>netstandard2.0;net46;net8.0</TargetFrameworks>
+    <TargetFrameworks>netstandard2.0;net8.0</TargetFrameworks> <!-- .NETFramework -->
+    <TargetFrameworks Condition="$([MSBuild]::IsOsPlatform('WINDOWS'))" >$(TargetFrameworks);net461</TargetFrameworks>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
 
@@ -10,7 +11,13 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.Build.Utilities.Core" />
+    <PackageReference Include="Microsoft.Build.Utilities.Core" ExcludeAssets="runtime"/>
   </ItemGroup>
+
+<!-- 
+  <ItemGroup Condition="$([MSBuild]::GetTargetFrameworkIdentifier('$(TargetFramework)')) == '.NETFramework'">
+    <PackageReference Include="NETStandard.Library" />
+  </ItemGroup>
+ -->
 
 </Project>
