@@ -1,24 +1,18 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>netstandard2.0;net8.0</TargetFrameworks> <!-- .NETFramework -->
-    <TargetFrameworks Condition="$([MSBuild]::IsOsPlatform('WINDOWS'))" >$(TargetFrameworks);net461</TargetFrameworks>
+    <TargetFrameworks>netstandard2.0;net8.0</TargetFrameworks>
+    <TargetFrameworks Condition="$([MSBuild]::IsOsPlatform('WINDOWS'))">$(TargetFrameworks);net461</TargetFrameworks>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Include="Theories.fs" />
     <Compile Include="GeneratePrivateFStarConfigJson.fs" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.Build.Utilities.Core" ExcludeAssets="runtime"/>
+    <PackageReference Include="Microsoft.Build.Utilities.Core" ExcludeAssets="runtime" />
   </ItemGroup>
-
-  <ItemGroup Condition="$(_Test) == 'true'">
-    <PackageReference Update="Microsoft.Build.Utilities.Core" ExcludeAssets=""/>
-  </ItemGroup>
-  <PropertyGroup Condition="$(_Test) == 'true'">
-    <ArtifactsPivots>$(ArtifactsPivots)_MyCustomPivot_$(TargetFramework)</ArtifactsPivots>
-  </PropertyGroup>
 
 </Project>
