@@ -3,4 +3,5 @@
     <Project Path="test/Nemonuri.RepoTools.FStar.BuildTasks.Tests/Nemonuri.RepoTools.FStar.BuildTasks.Tests.fsproj" />
   </Folder>
   <Project Path="Nemonuri.RepoTools.FStar.BuildTasks/Nemonuri.RepoTools.FStar.BuildTasks.fsproj" />
+  <Project Path="Nemonuri.RepoTools.TestRuntime/Nemonuri.RepoTools.TestRuntime.csproj" />
 </Solution>

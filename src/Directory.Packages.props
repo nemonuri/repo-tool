@@ -10,5 +10,7 @@
     <PackageVersion Include="Microsoft.Build.Utilities.Core" Version="15.9.20" Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0')) != 'true'" />
     <PackageVersion Include="FSharp.Core" Version="10.0.102" />
     <PackageVersion Include="xunit.v3.mtp-v2" Version="3.2.2" />
+    <PackageVersion Include="Polyfill" Version="9.7.3" />
+    <PackageVersion Include="CommunityToolkit.Diagnostics" Version="8.4.0" />
   </ItemGroup>
 </Project>

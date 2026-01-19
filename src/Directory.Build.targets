@@ -1,0 +1,26 @@
+<Project TreatAsLocalProperty="__PolyfillRoot">
+  <!-- Polyfill -->
+  <Choose> 
+    <When Condition="Exists('$(PkgPolyfill)')">
+      <ItemGroup>
+        <Compile Remove="$(PkgPolyfill)/**/*.cs" />
+      </ItemGroup>
+      <Choose>
+        <When Condition="$(TargetFramework) == 'netstandard2.0'">
+          <PropertyGroup>
+            <DefineConstants>$(DefineConstants);PolyUseEmbeddedAttribute</DefineConstants>
+            <__PolyfillRoot>$(PkgPolyfill)/**/netstandard2.0/</__PolyfillRoot>
+          </PropertyGroup>
+          <ItemGroup>
+            <Compile Include="$(__PolyfillRoot)EmbeddedAttribute.cs" />
+            <Compile Include="$(__PolyfillRoot)Nullable/**/*.cs" />
+            <Compile Include="$(__PolyfillRoot)IndexRange/**/*.cs" />
+          </ItemGroup>
+        </When>
+        <Otherwise>
+        </Otherwise>
+      </Choose>
+    </When>
+  </Choose> 
+  <!-- /Polyfill -->
+</Project>
