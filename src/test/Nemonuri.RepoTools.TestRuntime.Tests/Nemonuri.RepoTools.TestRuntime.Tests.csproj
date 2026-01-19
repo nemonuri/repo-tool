@@ -44,15 +44,20 @@
     </MSBuild>
     
     <ItemGroup>
-      <_ContentFiles Include="@(TestPackagePath->'%(FullPath)/contentFiles/any')" /> <!-- 이 패키지 레이아웃이 어떻게 되더라... -->
-      <_ContentFiles Remove="@(_ContentFiles)" Condition="!Exists(%(Identity))" />
-      <_Dirs
-        Include="@(_ContentFiles->'$([System.IO.Directory]::GetDirectories(&quot;%(FullPath)&quot;, &quot;net*&quot;)'" />
-      <_Dirs Update="@(_Dirs)" >
-        <Tfm>$('%(Identity)''.Substring('%(Identity)'.LastIndexOfAny('\/'.ToCharArray())))</Tfm>
-      </_Dirs>
-      <_Dirs Remove="@(_Dirs)" Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', '%(Tfm)')) != 'true'" />
-      <MSBuildDllPath Include="@(_Dirs->'%(FullPath)/MSBuild.dll')" />
+      <_ContentFile Include="@(TestPackagePath->'%(FullPath)/contentFiles/any')" /> <!-- 이 패키지 레이아웃이 어떻게 되더라... -->
+      <_ContentFile Remove="@(_ContentFile)" Condition="!Exists(%(Identity))" />
+      <_MSBuildDllFile Include="@(_ContentFile->'%(FullPath)/**/MSBuild.dll')" />
+      <_MSBuildDllFile Include="@(_MSBuildDllFile)" Condition="Exists(%(Identity))" />
+      <_MSBuildDllFileDirectory Include="@(_MSBuildDllFile->DirectoryName())" />
+      <_MSBuildDllFileDirectory Update="@(_MSBuildDllFileDirectory)">
+        <!-- 
+          - Calling a String method
+            - https://learn.microsoft.com/en-us/visualstudio/msbuild/item-functions?view=visualstudio#calling-a-string-method 
+        -->
+        <Tfm>$([System.String]::new('%(FullPath)').Substring($([System.String]::new('%(FullPath)').LastIndexOfAny('\/'.ToCharArray()))))</Tfm>
+      </_MSBuildDllFileDirectory>
+      <_MSBuildDllFileDirectory Remove="@(_MSBuildDllFileDirectory)" Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', '%(Tfm)')) != 'true'" />
+      <MSBuildDllPath Include="@(_MSBuildDllFileDirectory->'%(FullPath)/MSBuild.dll')" />
     </ItemGroup>
     
     <ItemGroup>
