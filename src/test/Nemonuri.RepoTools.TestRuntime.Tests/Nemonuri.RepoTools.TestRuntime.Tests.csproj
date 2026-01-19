@@ -19,13 +19,9 @@
 
   <ItemGroup>
     <PackageReference Include="xunit.v3.mtp-v2" />
-    <PackageReference Include="ThisAssembly.Constants">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
-    </PackageReference>
   </ItemGroup>
 
-  <Target Name="GetMSBuildDllPathAndAddToAssemblyMetadata" Outputs="@(MSBuildDllPath)"
+  <Target Name="GetMSBuildDllPathAndReference" Outputs="@(MSBuildDllPath)"
     Condition="@(MSBuildDllPath) == ''"
     BeforeTargets="BeforeCompile">
     
@@ -42,29 +38,31 @@
       
       <Output TaskParameter="TargetOutputs" ItemName="TestPackagePath" />
     </MSBuild>
-    
-    <ItemGroup>
+
+    <!-- 
+          - Calling a String method
+            -
+    https://learn.microsoft.com/en-us/visualstudio/msbuild/item-functions?view=visualstudio#calling-a-string-method 
+        -->
+    <ItemGroup Condition="false"> <!-- ...결국 포기 - 'for each' 같은 게 필요해... -->
       <_ContentFile Include="@(TestPackagePath->'%(FullPath)/contentFiles/any')" /> <!-- 이 패키지 레이아웃이 어떻게 되더라... -->
       <_ContentFile Remove="@(_ContentFile)" Condition="!Exists(%(Identity))" />
       <_MSBuildDllFile Include="@(_ContentFile->'%(FullPath)/**/MSBuild.dll')" />
       <_MSBuildDllFile Include="@(_MSBuildDllFile)" Condition="Exists(%(Identity))" />
       <_MSBuildDllFileDirectory Include="@(_MSBuildDllFile->DirectoryName())" />
       <_MSBuildDllFileDirectory Update="@(_MSBuildDllFileDirectory)">
-        <!-- 
-          - Calling a String method
-            - https://learn.microsoft.com/en-us/visualstudio/msbuild/item-functions?view=visualstudio#calling-a-string-method 
-        -->
         <Tfm>$([System.String]::new('%(FullPath)').Substring($([System.String]::new('%(FullPath)').LastIndexOfAny('\/'.ToCharArray()))))</Tfm>
       </_MSBuildDllFileDirectory>
       <_MSBuildDllFileDirectory Remove="@(_MSBuildDllFileDirectory)" Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', '%(Tfm)')) != 'true'" />
       <MSBuildDllPath Include="@(_MSBuildDllFileDirectory->'%(FullPath)/MSBuild.dll')" />
     </ItemGroup>
     
+    <Error Condition="@(TestPackagePath->Count()) != 1" Text="TestPackagePath is not singleton. Count = @(TestPackagePath->Count())" />
+    
     <ItemGroup>
-      <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
-        <_Parameter1>MSBuildDllPath</_Parameter1>
-        <_Parameter2>@(MSBuildDllPath)</_Parameter2>
-      </AssemblyAttribute>
+      <Content Include="@(TestPackagePath->'%(FullPath)contentFiles/any/net8.0/MSBuild.dll')"
+        CopyToOutputDirectory="PreserveNewest"
+        Visible="false" />
     </ItemGroup>
 
   </Target>
