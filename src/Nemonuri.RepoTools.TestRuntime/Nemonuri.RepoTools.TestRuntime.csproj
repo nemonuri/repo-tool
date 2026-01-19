@@ -5,6 +5,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <LangVersion>14</LangVersion>
+    <IsAotCompatible>true</IsAotCompatible>
   </PropertyGroup>
   
   <ItemGroup>
@@ -14,6 +15,10 @@
       <IncludeAssets>contentfiles</IncludeAssets>
     </PackageReference>
     <PackageReference Include="CommunityToolkit.Diagnostics" />
+    <PackageReference Include="Moq" />
+    <PackageReference Include="Microsoft.Build.Framework">
+      <ExcludeAssets>runtime</ExcludeAssets>
+    </PackageReference>
   </ItemGroup>
 
 </Project>

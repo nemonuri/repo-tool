@@ -17,10 +17,32 @@
             <Compile Include="$(__PolyfillRoot)IndexRange/**/*.cs" />
           </ItemGroup>
         </When>
-        <Otherwise>
-        </Otherwise>
       </Choose>
     </When>
   </Choose> 
   <!-- /Polyfill -->
+
+  <!-- Trimming -->
+  <!-- 
+    - Prepare .NET libraries for trimming
+      - https://learn.microsoft.com/en-us/dotnet/core/deploying/trimming/prepare-libraries-for-trimming
+    - AOT-compatibility analyzers
+      - https://learn.microsoft.com/en-us/dotnet/core/deploying/native-aot/#aot-compatibility-analyzers
+  -->
+  <Choose>
+    <When Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net6.0'))">
+      <PropertyGroup>
+        <VerifyReferenceTrimCompatibility>$(IsTrimmable)</VerifyReferenceTrimCompatibility>
+      </PropertyGroup>
+    </When>
+    <Otherwise>
+      <PropertyGroup>
+        <IsAotCompatible></IsAotCompatible>
+        <IsTrimmable></IsTrimmable>
+        <VerifyReferenceTrimCompatibility></VerifyReferenceTrimCompatibility>
+      </PropertyGroup>
+    </Otherwise>
+  </Choose>
+  <!-- /Trimming -->
+
 </Project>
