@@ -3,6 +3,8 @@
   <PropertyGroup>
     <RepoRootPath>$(MSBuildThisFileDirectory)</RepoRootPath>
     <UseArtifactsOutput>true</UseArtifactsOutput>
-    <ArtifactsPath>$(RepoRootPath)artifacts</ArtifactsPath>
+    <ArtifactsPath>$(RepoRootPath)artifacts/</ArtifactsPath>
+    <SrcRootPath>$(RepoRootPath)src/</SrcRootPath>
+    <TestRootPath>$(SrcRootPath)test/</TestRootPath>
   </PropertyGroup>
 </Project>
