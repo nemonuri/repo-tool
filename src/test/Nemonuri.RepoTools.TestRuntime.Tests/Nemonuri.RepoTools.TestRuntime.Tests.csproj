@@ -19,6 +19,7 @@
 
   <ItemGroup>
     <PackageReference Include="xunit.v3.mtp-v2" />
+    <PackageReference Include="MSBuild.ProjectCreation" />
   </ItemGroup>
 
   <Target Name="GetMSBuildDllPathAndReference" Outputs="@(MSBuildDllPath)"
@@ -60,9 +61,10 @@
     <Error Condition="@(TestPackagePath->Count()) != 1" Text="TestPackagePath is not singleton. Count = @(TestPackagePath->Count())" />
     
     <ItemGroup>
-      <Content Include="@(TestPackagePath->'%(FullPath)contentFiles/any/net8.0/MSBuild.dll')"
-        CopyToOutputDirectory="PreserveNewest"
-        Visible="false" />
+      <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
+        <_Parameter1>MSBuildDllPath</_Parameter1>
+        <_Parameter2>@(TestPackagePath->'%(FullPath)contentFiles/any/net8.0/MSBuild.dll')</_Parameter2>
+      </AssemblyAttribute>
     </ItemGroup>
 
   </Target>

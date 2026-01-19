@@ -26,6 +26,6 @@
     <PackageVersion Include="Polyfill" Version="9.7.3" />
     <PackageVersion Include="CommunityToolkit.Diagnostics" Version="8.4.0" />
     <PackageVersion Include="Moq" Version="4.20.72" />
-    <PackageVersion Include="ThisAssembly.Constants" Version="2.1.2" />
+    <PackageVersion Include="MSBuild.ProjectCreation" Version="17.0.1" />
   </ItemGroup>
 </Project>
