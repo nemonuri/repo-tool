@@ -1,0 +1,66 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>Nemonuri.RepoTools.TestRuntime.Tests</RootNamespace>
+    <TargetFramework>net8.0</TargetFramework>
+    <TestingPlatformDotnetTestSupport>true</TestingPlatformDotnetTestSupport>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Content Include="xunit.runner.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Xunit" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="xunit.v3.mtp-v2" />
+    <PackageReference Include="ThisAssembly.Constants">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <Target Name="GetMSBuildDllPathAndAddToAssemblyMetadata" Outputs="@(MSBuildDllPath)"
+    Condition="@(MSBuildDllPath) == ''"
+    BeforeTargets="BeforeCompile">
+    
+    <PropertyGroup>
+      <_Properties>TestPackageRootPath=$(TestPackageRootPath)</_Properties>
+      <_Properties>$(_Properties);TestPackageId=Microsoft.Build.Runtime</_Properties>
+      <_Properties>$(_Properties);TestPackageVersion=17.8.29</_Properties>
+      <_Properties>$(_Properties);TestPackageTargetFramework=$(TargetFramework)</_Properties>
+    </PropertyGroup>
+    
+    <MSBuild Projects="$(RepoRootPath)Tool.proj"
+      Targets="RestoreTestPackage"
+      Properties="$(_Properties)">
+      
+      <Output TaskParameter="TargetOutputs" ItemName="TestPackagePath" />
+    </MSBuild>
+    
+    <ItemGroup>
+      <_ContentFiles Include="@(TestPackagePath->'%(FullPath)/contentFiles/any')" /> <!-- 이 패키지 레이아웃이 어떻게 되더라... -->
+      <_ContentFiles Remove="@(_ContentFiles)" Condition="!Exist(%(Identity))" />
+      <_Dirs Include="@(_ContentFiles->'$([System.IO.Directory]::GetDirectories(%(FullPath), &quot;net*&quot;)'" />
+      <_Dirs Update="@(_Dirs)" >
+        <Tfm>$(%(Identity).Substring(%(Identity).LastIndexOfAny('\/'.ToCharArray())))</Tfm>
+      </_Dirs>
+      <_Dirs Remove="@(_Dirs)" Condition="!$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', '%(Tfm)')" />
+      <MSBuildDllPath Include="@(_Dirs->'%(FullPath)/MSBuild.dll')" />
+    </ItemGroup>
+    
+    <ItemGroup>
+      <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
+        <_Parameter1>MSBuildDllPath</_Parameter1>
+        <_Parameter2>@(MSBuildDllPath)</_Parameter2>
+      </AssemblyAttribute>
+    </ItemGroup>
+
+  </Target>
+
+</Project>
