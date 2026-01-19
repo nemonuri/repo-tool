@@ -45,12 +45,13 @@
     
     <ItemGroup>
       <_ContentFiles Include="@(TestPackagePath->'%(FullPath)/contentFiles/any')" /> <!-- 이 패키지 레이아웃이 어떻게 되더라... -->
-      <_ContentFiles Remove="@(_ContentFiles)" Condition="!Exist(%(Identity))" />
-      <_Dirs Include="@(_ContentFiles->'$([System.IO.Directory]::GetDirectories(%(FullPath), &quot;net*&quot;)'" />
+      <_ContentFiles Remove="@(_ContentFiles)" Condition="!Exists(%(Identity))" />
+      <_Dirs
+        Include="@(_ContentFiles->'$([System.IO.Directory]::GetDirectories(&quot;%(FullPath)&quot;, &quot;net*&quot;)'" />
       <_Dirs Update="@(_Dirs)" >
-        <Tfm>$(%(Identity).Substring(%(Identity).LastIndexOfAny('\/'.ToCharArray())))</Tfm>
+        <Tfm>$('%(Identity)''.Substring('%(Identity)'.LastIndexOfAny('\/'.ToCharArray())))</Tfm>
       </_Dirs>
-      <_Dirs Remove="@(_Dirs)" Condition="!$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', '%(Tfm)')" />
+      <_Dirs Remove="@(_Dirs)" Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', '%(Tfm)')) != 'true'" />
       <MSBuildDllPath Include="@(_Dirs->'%(FullPath)/MSBuild.dll')" />
     </ItemGroup>
     

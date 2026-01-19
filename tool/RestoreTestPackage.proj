@@ -27,7 +27,7 @@
             <ExpectedTestPackagePath>$([MSBuild]::EnsureTrailingSlash('$(RestorePackagesPath)'))$(TestPackageId.ToLowerInvariant())/$(TestPackageVersion)/</ExpectedTestPackagePath>
         </PropertyGroup>
         
-        <Error Condition="!Exist('$(ExpectedTestPackagePath)')" Text="Package directory not exist. ExpectedTestPackagePath = $(ExpectedTestPackagePath)" />
+        <Error Condition="!Exists('$(ExpectedTestPackagePath)')" Text="Package directory not exist. ExpectedTestPackagePath = $(ExpectedTestPackagePath)" />
         
         <ItemGroup>
             <TestPackagePath Include="$(ExpectedTestPackagePath)" />
