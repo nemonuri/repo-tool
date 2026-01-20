@@ -109,10 +109,13 @@ type public GeneratePrivateFStarConfigJson() =
                 match __.GeneratorName with
                 | StringTheory.NotNullOrWhiteSpace v -> v
                 | _ -> FStarConfigJson.defaultGeneratorName
+            
+            let toFullPathAndJsonEscape (v: string) : string =
+                (Path.GetFullPath v).Replace(@"\", @"\\")
 
             append "{"
             append $$"""  "_comment": "This file is auto generated from {{generatorName}}. Do not edit manually.", """
-            append $$"""  "fstar_exe": "{{fe}}", """
+            append $$"""  "fstar_exe": "{{toFullPathAndJsonEscape fe}}", """
             append $$"""  "options": [{{__.Options |> Array.map getItemSpec |> String.concat ``, ``}}], """
             append $$"""  "include_dirs": [{{__.IncludeDirs |> Array.map getItemSpec |> String.concat ``, ``}}] """
             append "}"
