@@ -39,7 +39,7 @@ type public GeneratePrivateFStarConfigJson() =
     member val GeneratorName: string = "" with get,set
 
     override __.Execute(): bool =
-        let logError message valueExpr value = __.Log.LogError ("{0}. {1} = {2}", message, valueExpr, value); false
+        let logError message valueExpr value = __.Log.LogError("{0}. {1} = {2}", message, valueExpr, value); false
         let fe = __.FStarExe
         let fee = nameof __.FStarExe
         let timeOut = 5000
@@ -72,11 +72,12 @@ type public GeneratePrivateFStarConfigJson() =
                     logError "File is not exist" fee fe
                 else
 
-                if F.GetAttributes fe |> FileTheory.isNoneOrNormal |> not then
-                    logError "File is not executable" fee fe
-                else
+                // if F.GetAttributes fe |> FileTheory.isMaybeExecutable |> not then
+                //    __.Log.LogMessage("{0}", F.GetAttributes fe)
+                //    logError "File is not executable" fee fe
+                // else
 
-                __.Log.LogMessage ("Invoke version command. Command = {0} {1}", fe, "--version")
+                __.Log.LogMessage("Invoke version command. Command = {0} {1}", fe, "--version")
                 match ProcessTheory.invokeVersionCommand fe timeOut with
                 | Ir.TimeOut -> logError $"Timeout {timeOut}" fee fe
                 | Ir.StdErr msg -> logError "Failed" "Message" msg
@@ -94,7 +95,7 @@ type public GeneratePrivateFStarConfigJson() =
                 else
                 let odInfo =
                     if D.Exists od |> not then 
-                        __.Log.LogMessage ("New directory created. {0} = {1}", ode, od)
+                        __.Log.LogMessage("New directory created. {0} = {1}", ode, od)
                         D.CreateDirectory od
                     else DirectoryInfo od
                 Some odInfo
@@ -123,7 +124,7 @@ type public GeneratePrivateFStarConfigJson() =
             let fcjFilePath = FStarConfigJson.getFullPath odInfo.FullName __.Prefix
             F.WriteAllText (fcjFilePath, fcjContent)
 
-            __.Log.LogMessage ("File written. Path = {0}", fcjFilePath)
+            __.Log.LogMessage("File written. Path = {0}", fcjFilePath)
 
             true
             

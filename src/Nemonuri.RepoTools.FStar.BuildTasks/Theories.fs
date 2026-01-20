@@ -14,7 +14,7 @@ module PathTheory =
 
 module FileTheory =
 
-    let isNoneOrNormal (fileAttr: FileAttributes) =
+    let isMaybeExecutable (fileAttr: FileAttributes) =
         match fileAttr with
         | FileAttributes.Normal -> true
         | _ -> fileAttr = LanguagePrimitives.EnumOfValue 0
