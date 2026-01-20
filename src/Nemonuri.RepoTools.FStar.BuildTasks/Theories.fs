@@ -61,14 +61,7 @@ module ProcessTheory =
 
 module StringTheory =
 
-    [<return: Struct>]
     [<CompiledNameAttribute("TryGetNotNullOrWhiteSpace")>]
-    let (|NotNullOrWhiteSpace|_|) (value: string) =
-        if System.String.IsNullOrWhiteSpace value then ValueSome value else ValueNone
+    let (|NotNullOrWhiteSpace|_|) (value: string | null) : string option =
+        if System.String.IsNullOrWhiteSpace value then None else Some value
     
-
-
-
-
-
-

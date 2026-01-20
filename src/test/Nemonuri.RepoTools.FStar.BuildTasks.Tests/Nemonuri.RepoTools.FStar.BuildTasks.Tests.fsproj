@@ -14,11 +14,20 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Include="UnitTest1.fs" />
+    <Compile Include="GeneratePrivateFStarConfigJsonTest.fs" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="xunit.v3.mtp-v2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <AssemblyMetadata Include="RealFStarExePath" Value="$(RealFStarExePath)" Condition="Exists('$(RealFStarExePath)')" />
+    <AssemblyMetadata Include="RealFStarExePath" Value="" Condition="!Exists('$(RealFStarExePath)')" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Nemonuri.RepoTools.FStar.BuildTasks\Nemonuri.RepoTools.FStar.BuildTasks.fsproj" />
   </ItemGroup>
 
 </Project>
