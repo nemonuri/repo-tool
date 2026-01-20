@@ -1,4 +1,5 @@
 ﻿
+using System.Collections;
 using System.Diagnostics.CodeAnalysis;
 using Nemonuri.RepoTools.TestRuntime.Extensions;
 
@@ -26,4 +27,3 @@ public static class MockMSBuildTheory
     [field: AllowNull]
     public static IBuildEngine LooseBuildEngine => field ??= new Mock<IBuildEngine>(MockBehavior.Loose).Object;
 }
-

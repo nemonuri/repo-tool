@@ -39,7 +39,7 @@ let TestRealFStarExePathIfNotNone() =
         GeneratePrivateFStarConfigJson(
             FStarExe = realPath,
             OutDirectory = System.IO.Path.Combine [|System.AppContext.BaseDirectory; "out-dir"|],
-            BuildEngine = MockMSBuildTheory.LooseBuildEngine
+            BuildEngine = ConsoleWriterMockBuildEngine()
         ).Execute()
         |> Assert.True
 

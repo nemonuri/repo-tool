@@ -16,9 +16,7 @@
     </PackageReference>
     <PackageReference Include="CommunityToolkit.Diagnostics" />
     <PackageReference Include="Moq" />
-    <PackageReference Include="Microsoft.Build.Framework">
-      <ExcludeAssets>runtime</ExcludeAssets>
-    </PackageReference>
+    <PackageReference Include="Microsoft.Build.Framework" />
   </ItemGroup>
 
 </Project>
