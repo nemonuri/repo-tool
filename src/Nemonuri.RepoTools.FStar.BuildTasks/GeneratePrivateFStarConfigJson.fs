@@ -50,27 +50,22 @@ type public GeneratePrivateFStarConfigJson() =
             if PathTheory.isPathContainsInvalidPathChars path then 
                 logError "Invalid path" pathExpr path
             else
-            true
+                true
 
         let checkPath path pathExpr =
             if System.String.IsNullOrWhiteSpace path then
                 logError "Empty path" pathExpr path
+            elif
+                areAllPathCharsValid path pathExpr |> not then false
             else
-            if areAllPathCharsValid path pathExpr |> not then false
-            else
-            true
+                true
 
         try
-            if areAllPathCharsValid __.Prefix (nameof __.Prefix) |> not then false
-            else
+            if areAllPathCharsValid __.Prefix (nameof __.Prefix) |> not then false else
 
             let checkFStarExe =
                 if checkPath fee fe |> not then false
-                else
-
-                if F.Exists fe |> not then 
-                    logError "File is not exist" fee fe
-                else
+                elif F.Exists fe |> not then logError "File is not exist" fee fe else
 
                 // if F.GetAttributes fe |> FileTheory.isMaybeExecutable |> not then
                 //    __.Log.LogMessage("{0}", F.GetAttributes fe)
@@ -91,13 +86,14 @@ type public GeneratePrivateFStarConfigJson() =
             if checkFStarExe = false then false else
 
             let checkOutDirectory =
-                if checkPath od ode |> not then None
-                else
+                if checkPath od ode |> not then None else
+                
                 let odInfo =
                     if D.Exists od |> not then 
                         __.Log.LogMessage("New directory created. {0} = {1}", ode, od)
                         D.CreateDirectory od
-                    else DirectoryInfo od
+                    else 
+                        DirectoryInfo od
                 Some odInfo
             
             if Option.isNone checkOutDirectory then false else
@@ -116,6 +112,7 @@ type public GeneratePrivateFStarConfigJson() =
 
             append "{"
             append $$"""  "_comment": "This file is auto generated from {{generatorName}}. Do not edit manually.", """
+            append $$"""  "fstar_exe": "{{fe}}", """
             append $$"""  "options": [{{__.Options |> Array.map getItemSpec |> String.concat ``, ``}}], """
             append $$"""  "include_dirs": [{{__.IncludeDirs |> Array.map getItemSpec |> String.concat ``, ``}}] """
             append "}"
