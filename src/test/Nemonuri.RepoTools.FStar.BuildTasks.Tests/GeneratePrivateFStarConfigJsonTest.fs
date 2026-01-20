@@ -2,6 +2,7 @@ module GeneratePrivateFStarConfigJsonTest
 
 open Xunit
 open Nemonuri.RepoTools.FStar.BuildTasks
+open Nemonuri.RepoTools.TestRuntime;
 
 // Reference: https://github.com/dotnet/fsharp/blob/main/tests/fsharp/tests.fs
 // - F# Xunit 은 별도의 TestOutputHelper 같은 게 없나보네
@@ -37,7 +38,8 @@ let TestRealFStarExePathIfNotNone() =
     | Some realPath -> 
         GeneratePrivateFStarConfigJson(
             FStarExe = realPath,
-            OutDirectory = System.IO.Path.Combine [|System.AppContext.BaseDirectory; "out-dir"|]
+            OutDirectory = System.IO.Path.Combine [|System.AppContext.BaseDirectory; "out-dir"|],
+            BuildEngine = MockMSBuildTheory.LooseBuildEngine
         ).Execute()
         |> Assert.True
 

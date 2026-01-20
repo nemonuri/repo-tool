@@ -19,6 +19,7 @@
 
   <ItemGroup>
     <PackageReference Include="xunit.v3.mtp-v2" />
+    <PackageReference Include="Microsoft.Build.Utilities.Core" />
   </ItemGroup>
 
   <ItemGroup>
@@ -28,6 +29,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\Nemonuri.RepoTools.FStar.BuildTasks\Nemonuri.RepoTools.FStar.BuildTasks.fsproj" />
+    <ProjectReference Include="..\..\Nemonuri.RepoTools.TestRuntime\Nemonuri.RepoTools.TestRuntime.csproj" />
   </ItemGroup>
 
 </Project>

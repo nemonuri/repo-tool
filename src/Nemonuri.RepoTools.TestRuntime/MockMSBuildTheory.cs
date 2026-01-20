@@ -1,4 +1,5 @@
 ﻿
+using System.Diagnostics.CodeAnalysis;
 using Nemonuri.RepoTools.TestRuntime.Extensions;
 
 namespace Nemonuri.RepoTools.TestRuntime;
@@ -18,5 +19,11 @@ public static class MockMSBuildTheory
                 .Callback<string, string>(clonedMdTable.AddOrUpdate);
         return taskItem.Object;
     }
+
+    [field: AllowNull]
+    public static ITaskItem LooseTaskItem => field ??= new Mock<ITaskItem>(MockBehavior.Loose).Object;
+
+    [field: AllowNull]
+    public static IBuildEngine LooseBuildEngine => field ??= new Mock<IBuildEngine>(MockBehavior.Loose).Object;
 }
 
