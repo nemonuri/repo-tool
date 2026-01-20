@@ -59,6 +59,13 @@ module ProcessTheory =
         finally
             proc.Kill()
 
+module StringTheory =
+
+    [<return: Struct>]
+    [<CompiledNameAttribute("TryGetNotNullOrWhiteSpace")>]
+    let (|NotNullOrWhiteSpace|_|) (value: string) =
+        if System.String.IsNullOrWhiteSpace value then ValueSome value else ValueNone
+    
 
 
 

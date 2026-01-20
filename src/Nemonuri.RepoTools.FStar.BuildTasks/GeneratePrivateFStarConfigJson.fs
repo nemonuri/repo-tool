@@ -14,6 +14,9 @@ module FStarConfigJson =
     [<Literal>]
     let suffix = ".fst.config.json"
 
+    [<Literal>]
+    let defaultGeneratorName = "Nemonuri.RepoTools.FStar"
+
     let getFullPath directoryPath prefix = Path.Combine(directoryPath, prefix + suffix)
 
 type public GeneratePrivateFStarConfigJson() =
@@ -32,6 +35,8 @@ type public GeneratePrivateFStarConfigJson() =
     member val Prefix: string = "" with get,set
 
     member val SkipVersionCommand: bool = false with get,set
+
+    member val GeneratorName: string = "" with get,set
 
     override __.Execute(): bool =
         let logError message valueExpr value = __.Log.LogError ("{0}. {1} = {2}", message, valueExpr, value); false
@@ -103,9 +108,13 @@ type public GeneratePrivateFStarConfigJson() =
             let append (text : string) = sb.AppendLine text |> ignore
             let ``, ``= ", "
             let getItemSpec (ti: ITaskItem) = ti.ItemSpec
+            let generatorName =
+                match __.GeneratorName with
+                | StringTheory.NotNullOrWhiteSpace v -> v
+                | _ -> FStarConfigJson.defaultGeneratorName
 
             append "{"
-            append $$"""  "_comment": "This file is auto generated from {{__.BuildEngine5.ProjectFileOfTaskNode |> Path.GetFileName}}. Do not edit.", """
+            append $$"""  "_comment": "This file is auto generated from {{generatorName}}. Do not edit manually.", """
             append $$"""  "options": [{{__.Options |> Array.map getItemSpec |> String.concat ``, ``}}], """
             append $$"""  "include_dirs": [{{__.IncludeDirs |> Array.map getItemSpec |> String.concat ``, ``}}] """
             append "}"

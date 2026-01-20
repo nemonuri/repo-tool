@@ -6,6 +6,7 @@
     <RootNamespace>Nemonuri.RepoTools.FStar.BuildTasks.Tests</RootNamespace>
     <TargetFramework>net8.0</TargetFramework>
     <TestingPlatformDotnetTestSupport>true</TestingPlatformDotnetTestSupport>
+    <MockFStarExeRootPath>$(ArtifactsPath)mock-fstar-exe</MockFStarExeRootPath>
   </PropertyGroup>
 
   <ItemGroup>
