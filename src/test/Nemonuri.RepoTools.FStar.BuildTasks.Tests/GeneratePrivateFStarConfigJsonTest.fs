@@ -32,7 +32,7 @@ let realFStarExePathOrNone =
             | _ -> None
 
 [<Fact>]
-let TestRealFStarExePathIfNotNone() =
+let TestRealFStarExePathIfSome() =
     match realFStarExePathOrNone with
     | None -> log "%s is None. Skip this test." (nameof realFStarExePathOrNone)
     | Some realPath -> 
@@ -42,5 +42,3 @@ let TestRealFStarExePathIfNotNone() =
             BuildEngine = ConsoleWriterMockBuildEngine()
         ).Execute()
         |> Assert.True
-
-    
