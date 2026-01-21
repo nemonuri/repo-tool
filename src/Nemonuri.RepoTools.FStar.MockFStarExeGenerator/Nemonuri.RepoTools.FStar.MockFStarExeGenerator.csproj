@@ -10,24 +10,50 @@
     <PublishAot>true</PublishAot>
     <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
     <LangVersion>14</LangVersion>
+    
+    <!-- 
+    - Trim framework library features
+      - https://learn.microsoft.com/en-us/dotnet/core/deploying/trimming/trimming-options
+    -->
+    <DebuggerSupport>false</DebuggerSupport>
+    <EventSourceSupport>false</EventSourceSupport>
+    <InvariantGlobalization>false</InvariantGlobalization>
+    <MetricsSupport>false</MetricsSupport>
+    <StackTraceSupport>false</StackTraceSupport>
   </PropertyGroup>
   
   <ItemGroup Condition="$(CompileList) != ''">
     <Compile Include="$(CompileList)" />
   </ItemGroup>
 
-  <Target Name="PublishAll" Outputs="@(MockFStarExe)" >
-    
+  <Target Name="PreparePublishAll" >
     <ItemGroup>
       <ToCompile Include="return0;return1;stderr-version;stdin;stdout-version" />
+      <ToCompile Update="@(ToCompile)">
+        <_FullPath>$(MSBuildThisFileDirectory)%(ToCompile.Identity).cs</_FullPath>
+      </ToCompile>
     </ItemGroup>
+  </Target>
+  
+  <!-- 
+  - MSBuild incremental builds for new or stale targets
+    - https://learn.microsoft.com/en-us/visualstudio/msbuild/how-to-build-incrementally
+    - 'Inputs', 'Outputs' should be file path, to use incremental builds.
+  -->
+  <Target Name="PublishAll"
+    Inputs="$(MSBuildThisFileFullPath);@(ToCompile->'%(_FullPath)')"
+    Outputs="@(MockFStarExe)"
+    DependsOnTargets="PreparePublishAll">
     
     <MSBuild Projects="$(MSBuildThisFileFullPath)"
       Properties="Configuration=Release;CompileList=%(ToCompile.Identity).cs;AssemblyName=%(ToCompile.Identity);NuGetInteractive=true;_IsPublishing=true"
       Targets="Restore;Publish">
     </MSBuild>
 
-    <!-- 이제....Native Aot 로 생성된 파일들을 어떻게 찾지? -->
+    <!-- Native Aot 로 생성된 파일들 경로 얻기 -->
+    <ItemGroup>
+      <MockFStarExe Include="$(MSBuildProjectDirectory)/$(OutputPath)/native/*$(_NativeExecutableExtension)" />
+    </ItemGroup>
     
   </Target>
 
