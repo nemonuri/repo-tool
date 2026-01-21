@@ -44,4 +44,10 @@
     </ItemGroup>
   </Target>
 
+  <Target Name="_ComputeRunArguments" BeforeTargets="ComputeRunArguments">
+    <PropertyGroup>
+      <RunArguments>$(RunArguments) -ctrf $(MSBuildProjectFile).$([System.DateTime]::Now.Ticks).log</RunArguments>
+    </PropertyGroup>
+  </Target>
+
 </Project>

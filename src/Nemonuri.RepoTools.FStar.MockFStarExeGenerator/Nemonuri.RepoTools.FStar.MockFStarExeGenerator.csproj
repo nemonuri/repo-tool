@@ -15,12 +15,9 @@
     <!-- 
     - Trim framework library features
       - https://learn.microsoft.com/en-us/dotnet/core/deploying/trimming/trimming-options
+    - How can I make .exe file, more fast?
     -->
-    <DebuggerSupport>false</DebuggerSupport>
-    <EventSourceSupport>false</EventSourceSupport>
-    <InvariantGlobalization>false</InvariantGlobalization>
-    <MetricsSupport>false</MetricsSupport>
-    <StackTraceSupport>false</StackTraceSupport>
+    <InvariantGlobalization>true</InvariantGlobalization>
   </PropertyGroup>
   
   <ItemGroup Condition="$(CompileList) != ''">

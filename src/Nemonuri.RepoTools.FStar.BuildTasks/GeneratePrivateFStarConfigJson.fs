@@ -36,7 +36,7 @@ type public GeneratePrivateFStarConfigJson() =
 
     member val SkipVersionCommand: bool = false with get,set
 
-    member val GeneratorName: string = "" with get,set
+    member val GeneratorName: string = FStarConfigJson.defaultGeneratorName with get,set
 
     override __.Execute(): bool =
         let logError message valueExpr value = __.Log.LogError("{0}. {1} = {2}", message, valueExpr, value); false
@@ -65,12 +65,11 @@ type public GeneratePrivateFStarConfigJson() =
 
             let checkFStarExe =
                 if checkPath fee fe |> not then false
-                elif F.Exists fe |> not then logError "File is not exist" fee fe else
-
-                // if F.GetAttributes fe |> FileTheory.isMaybeExecutable |> not then
-                //    __.Log.LogMessage("{0}", F.GetAttributes fe)
-                //    logError "File is not executable" fee fe
-                // else
+                elif F.Exists fe |> not then 
+                    match D.Exists fe with
+                    | true -> logError "Not file, but directory" fee fe 
+                    | false -> logError "File is not exist" fee fe 
+                else
 
                 __.Log.LogMessage("Invoke version command. Command = {0} {1}", fe, "--version")
                 match ProcessTheory.invokeVersionCommand fe timeOut with
@@ -104,17 +103,13 @@ type public GeneratePrivateFStarConfigJson() =
             let sb = StringBuilder()
             let append (text : string) = sb.AppendLine text |> ignore
             let ``, ``= ", "
-            let getItemSpec (ti: ITaskItem) = ti.ItemSpec
-            let generatorName =
-                match __.GeneratorName with
-                | StringTheory.NotNullOrWhiteSpace v -> v
-                | _ -> FStarConfigJson.defaultGeneratorName
+            let getItemSpec (ti: ITaskItem) = $"\"{ti.ItemSpec}\""
             
             let toFullPathAndJsonEscape (v: string) : string =
                 (Path.GetFullPath v).Replace(@"\", @"\\")
 
             append "{"
-            append $$"""  "_comment": "This file is auto generated from {{generatorName}}. Do not edit manually.", """
+            append $$"""  "_comment": "This file is auto generated from {{__.GeneratorName}}. Do not edit manually.", """
             append $$"""  "fstar_exe": "{{toFullPathAndJsonEscape fe}}", """
             append $$"""  "options": [{{__.Options |> Array.map getItemSpec |> String.concat ``, ``}}], """
             append $$"""  "include_dirs": [{{__.IncludeDirs |> Array.map getItemSpec |> String.concat ``, ``}}] """

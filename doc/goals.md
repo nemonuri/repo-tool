@@ -46,8 +46,7 @@
 
 
 2. Assume Output
-    - Kind of result
-      - **TaskSuccess** is success(true) or failure(false) of 'GeneratePrivateFStarConfigJson' task
+    - **TaskSuccess** is success(true) or failure(false) of 'GeneratePrivateFStarConfigJson' task
 
 3. Expected Result
 

@@ -38,7 +38,8 @@ module ProcessTheory =
             Arguments = versionCommandArg,
             UseShellExecute = false,
             RedirectStandardOutput = true,
-            RedirectStandardError = true
+            RedirectStandardError = true,
+            RedirectStandardInput = true
         )
         let proc = new Process(StartInfo = startInfo)
         let mutable errorMessage = ""

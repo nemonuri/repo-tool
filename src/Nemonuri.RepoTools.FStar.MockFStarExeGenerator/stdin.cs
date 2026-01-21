@@ -1,4 +1,4 @@
 
-Console.ReadLine();
+Console.ReadKey();
 
 return 0;
