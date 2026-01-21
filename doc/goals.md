@@ -34,8 +34,6 @@
       - **directory.fstar.exe** is directory.
       - **not-exist.fstar.exe** is not exist.
       - **fstar.txt** is text file.
-      - **readonly.fstar.exe** is readonly.
-      - **archived.fstar.zip** is archived.
       - **return1.fstar.exe** just returns 1.
       - **return0.fstar.exe** just returns 0.
       - **stderr-version.fstar.exe** messages valid version to stderr, and returns 0.

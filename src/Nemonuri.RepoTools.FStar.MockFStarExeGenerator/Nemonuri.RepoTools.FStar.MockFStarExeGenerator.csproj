@@ -1,0 +1,35 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+    <IsPublishable>true</IsPublishable>
+    <PublishAot>true</PublishAot>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+  </PropertyGroup>
+  
+  <ItemGroup Condition="$(CompileList) != ''">
+    <Compile Include="$(CompileList)" />
+  </ItemGroup>
+
+  <Target Name="_PublishCore" Outputs="@(MockFStarExe)"
+    Condition="$(CompileList) != ''"
+    AfterTargets="Publish">
+    
+    <ItemGroup>
+      <ToCompile Include="return0;return1;stderr-version;stdin;stdout-version" />
+    </ItemGroup>
+    
+    <MSBuild Projects="$(MSBuildThisFilePath)"
+      Properties="Configuration=Release;CompileList=%(ToCompile.Identity).cs;AssemblyName=%(ToCompile.Identity)"
+      Targets="Publish">
+    </MSBuild>
+    
+    <!-- 이제....Native Aot 로 생성된 파일들을 어떻게 찾지? -->
+    
+  </Target>
+
+</Project>
