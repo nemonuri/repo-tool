@@ -28,10 +28,11 @@ Specifies the path to the output directory, relative to the project directory, f
 
 - 이거다! project directory 와 OutputPath 를 이용해, TFM 과 RID 가 명세된 폴더명을 구할 수 있어!
   - 다만, Configuration 이 Debug 인지, Relation 인지는 확실하게 해야겠네...
+  - 수정: project directory 는 필요 없다...
 - 그리고 결과물 경로는, 
 
 ```
-$(MSBuildProjectDirectory)/$(OutputPath)/publish/$(AssemblyName)$(_NativeExecutableExtension)
+$(OutputPath)/publish/$(AssemblyName)$(_NativeExecutableExtension)
 ```
 
 - ...결국 완전히 stable 한 것은 무리!

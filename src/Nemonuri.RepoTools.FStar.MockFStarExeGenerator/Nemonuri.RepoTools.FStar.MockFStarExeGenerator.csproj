@@ -10,7 +10,8 @@
     <PublishAot>true</PublishAot>
     <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
     <LangVersion>14</LangVersion>
-    
+    <Configuration>Release</Configuration>
+
     <!-- 
     - Trim framework library features
       - https://learn.microsoft.com/en-us/dotnet/core/deploying/trimming/trimming-options
@@ -25,15 +26,20 @@
   <ItemGroup Condition="$(CompileList) != ''">
     <Compile Include="$(CompileList)" />
   </ItemGroup>
-
-  <Target Name="PreparePublishAll" Outputs="@(ToCompile)">
+  
+  <Target Name="PrepareForPublishAll" >
     <ItemGroup>
       <ToCompileFileName Include="return0;return1;stderr-version;stdin;stdout-version" />
       <ToCompile
         Include="@(ToCompileFileName->'$(MSBuildThisFileDirectory)%(Identity).cs')">
       </ToCompile>
     </ItemGroup>
+    <PropertyGroup Condition="$(_NativeExecutableExtension) == ''">
+      <_NativeExecutableExtension Condition="$([System.OperatingSystem]::IsWindows())">.exe</_NativeExecutableExtension>
+      <_NativeExecutableExtension Condition="!$([System.OperatingSystem]::IsWindows())"></_NativeExecutableExtension>
+    </PropertyGroup>
   </Target>
+
 
   <!-- 
   - MSBuild incremental builds for new or stale targets
@@ -42,11 +48,11 @@
   -->
   <Target Name="PublishAll"
     Inputs="$(MSBuildThisFileFullPath);@(ToCompile)"
-    Outputs="@(ToCompile->'$(MSBuildProjectDirectory)/$(OutputPath)/native/%(FileName)$(_NativeExecutableExtension)')"
-    DependsOnTargets="PreparePublishAll">
+    Outputs="@(ToCompile->'$(OutputPath)/native/%(FileName)$(_NativeExecutableExtension)')"
+    DependsOnTargets="PrepareForPublishAll">
     
     <MSBuild Projects="$(MSBuildThisFileFullPath)"
-      Properties="Configuration=Release;CompileList=%(ToCompile.Identity);AssemblyName=%(ToCompile.FileName);NuGetInteractive=true;_IsPublishing=true"
+      Properties="Configuration=Release;CompileList=%(ToCompile.FullPath);AssemblyName=%(ToCompile.FileName);NuGetInteractive=true;_IsPublishing=true"
       Targets="Restore;Publish">
     </MSBuild>
     
