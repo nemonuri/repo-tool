@@ -39,7 +39,7 @@
         </PropertyGroup>
         
         <MSBuild Projects="$(MockFStarExeGeneratorPath)"
-            Targets="PublishAll">
+            Targets="PublishAll" Properties="Configuration=Release">
             <Output
                 TaskParameter="TargetOutputs"
                 ItemName="MockFStarExe" />

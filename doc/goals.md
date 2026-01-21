@@ -33,11 +33,12 @@
     - Set of 'fstar.exe'
       - **directory.fstar.exe** is directory.
       - **not-exist.fstar.exe** is not exist.
-      - **fstar.txt** is text file.
+      - **txt.fstar.exe** is text file.
       - **return1.fstar.exe** just returns 1.
       - **return0.fstar.exe** just returns 0.
       - **stderr-version.fstar.exe** messages valid version to stderr, and returns 0.
-      - **stdout-version.fstar.exe** messages valid version to stdout, and returns 1.
+      - **stdout1-version.fstar.exe** messages valid version to stdout, and returns 1.
+      - **stdout0-version.fstar.exe** messages valid version to stdout, and returns 0.
       - **stdin.fstar.exe** waits until stdin
 
 

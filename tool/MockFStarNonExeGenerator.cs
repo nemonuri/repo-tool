@@ -17,7 +17,7 @@ toStdOuts.Add(Directory.CreateDirectory(Path.Combine(dirFullPath, "directory.fst
 
 // fstar.txt
 {
-    string txtPath = Path.Combine(dirFullPath, "fstar.txt");
+    string txtPath = Path.Combine(dirFullPath, "txt.fstar.exe");
     File.WriteAllText(txtPath, "");
     toStdOuts.Add(txtPath);
 }

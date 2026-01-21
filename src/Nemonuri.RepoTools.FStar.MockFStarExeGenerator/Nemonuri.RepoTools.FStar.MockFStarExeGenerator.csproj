@@ -29,7 +29,8 @@
   
   <Target Name="PrepareForPublishAll" >
     <ItemGroup>
-      <ToCompileFileName Include="return0;return1;stderr-version;stdin;stdout-version" />
+      <ToCompileFileName
+        Include="return0;return1;stderr-version;stdin;stdout0-version;stdout1-version" />
       <ToCompile
         Include="@(ToCompileFileName->'$(MSBuildThisFileDirectory)%(Identity).cs')">
       </ToCompile>

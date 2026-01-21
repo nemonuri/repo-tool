@@ -1,5 +1,7 @@
 module GeneratePrivateFStarConfigJsonTest
 
+#nowarn "3261"
+
 open Xunit
 open Nemonuri.RepoTools.FStar.BuildTasks
 open Nemonuri.RepoTools.TestRuntime;
@@ -13,23 +15,39 @@ type Amd = System.Reflection.AssemblyMetadataAttribute
 [<Literal>]
 let realFStarExePath = "RealFStarExePath"
 
+[<Literal>]
+let mockFStarExePath = "MockFStarExePath"
+
 [<RequireQualifiedAccess>]
 type private _Dummy = _Dummy
 
-let realFStarExePathOrNone =
+let getAssemblyMetadataAttributes =
     typeof<_Dummy>.Assembly.GetCustomAttributes(typeof<Amd>, false)
-    |> Seq.tryFind (fun md -> 
-        match md with
-        | :? Amd as amd -> amd.Key = realFStarExePath
-        | _ -> false
-    )
+    |> System.Linq.Enumerable.OfType<Amd>
+
+let realFStarExePathOrNone =
+    getAssemblyMetadataAttributes
+    |> Seq.tryFind (fun amd -> amd.Key = realFStarExePath)
     |> function
         | None -> None
-        | Some v -> 
-            let amd = v :?> Amd
+        | Some amd -> 
             match amd.Value with
             | StringTheory.NotNullOrWhiteSpace s -> Some s
             | _ -> None
+
+let tryGetMockFStarExePath (starting: string) =
+    getAssemblyMetadataAttributes
+    |> Seq.filter (fun amd -> amd.Key = mockFStarExePath)
+    |> Seq.tryFind (fun amd ->
+        match amd.Value with
+        | StringTheory.NotNullOrWhiteSpace v -> 
+            v.Trim() 
+            |> System.IO.Path.GetFileName
+            |> fun v -> v <> null && v.StartsWith starting
+        | _ -> false
+    )
+    |> Option.map (fun amd -> MSBuildIntrinsicFunctions.NormalizePath amd.Value )
+
 
 [<Fact>]
 let TestRealFStarExePathIfSome() =
@@ -43,6 +61,31 @@ let TestRealFStarExePathIfSome() =
         ).Execute()
         |> Assert.True
 
+
+let TestMockFStarExePath_Member : TheoryData<string, bool> =
+    TheoryData<_,_>(seq {        
+        struct ("directory.fstar", false)
+        struct ("not-exist.fstar", false)
+        struct ("txt.fstar", false)
+        struct ("return1.fstar", false)
+        struct ("return0.fstar", false)
+        struct ("stderr-version", false)
+        struct ("stdout1-version", true)
+        struct ("stdout0-version", true)
+    })
+
+[<Theory>]
+[<MemberData(nameof(TestMockFStarExePath_Member))>]
+let TestMockFStarExePath (starting: string) (expected: bool) =
+    match tryGetMockFStarExePath starting with
+    | None -> failwith $"Cannot find mock F*. Starting = {starting}"
+    | Some mockPath ->
+        GeneratePrivateFStarConfigJson(
+            FStarExe = mockPath,
+            OutDirectory = System.IO.Path.Combine [|System.AppContext.BaseDirectory; "out-dir"|],
+            BuildEngine = ConsoleWriterMockBuildEngine()
+        ).Execute()
+        |> fun actual -> Assert.Equal(expected, actual)
 
 
 
