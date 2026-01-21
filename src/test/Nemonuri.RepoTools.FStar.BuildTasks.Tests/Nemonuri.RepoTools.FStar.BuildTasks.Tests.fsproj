@@ -31,7 +31,8 @@
     <ProjectReference Include="..\..\Nemonuri.RepoTools.TestRuntime\Nemonuri.RepoTools.TestRuntime.csproj" />
   </ItemGroup>
 
-  <Target Name="GenerateMockFStarExePathes" BeforeTargets="BeforeCompile">
+  <Target Name="GenerateMockFStarExePathes" BeforeTargets="BeforeCompile" 
+    Condition="$(DesignTimeBuild) != 'true'">
     <MSBuild Projects="$(RepoRootPath)Tool.proj"
       Targets="GenerateMockFStarExe">
       

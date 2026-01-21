@@ -15,7 +15,6 @@
       <IncludeAssets>contentfiles</IncludeAssets>
     </PackageReference>
     <PackageReference Include="CommunityToolkit.Diagnostics" />
-    <PackageReference Include="Moq" />
     <PackageReference Include="Microsoft.Build.Framework" />
   </ItemGroup>
 
