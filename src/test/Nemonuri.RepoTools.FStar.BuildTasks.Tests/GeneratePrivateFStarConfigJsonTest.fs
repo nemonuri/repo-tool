@@ -1,7 +1,5 @@
 module GeneratePrivateFStarConfigJsonTest
 
-#nowarn "3261"
-
 open Xunit
 open Nemonuri.RepoTools.FStar.BuildTasks
 open Nemonuri.RepoTools.TestRuntime;
@@ -43,11 +41,11 @@ let tryGetMockFStarExePath (starting: string) =
         | StringTheory.NotNullOrWhiteSpace v -> 
             v.Trim() 
             |> System.IO.Path.GetFileName
-            |> fun v -> v <> null && v.StartsWith starting
+            |> fun v -> (nonNull v).StartsWith starting
         | _ -> false
     )
-    |> Option.map (fun amd -> MSBuildIntrinsicFunctions.NormalizePath amd.Value )
-
+    |> Option.map (fun amd -> MSBuildIntrinsicFunctions.NormalizePath (nonNull amd.Value) )
+    
 
 [<Fact>]
 let TestRealFStarExePathIfSome() =
