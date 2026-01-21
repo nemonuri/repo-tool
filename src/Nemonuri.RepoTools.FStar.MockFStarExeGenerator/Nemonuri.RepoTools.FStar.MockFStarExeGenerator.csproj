@@ -26,34 +26,29 @@
     <Compile Include="$(CompileList)" />
   </ItemGroup>
 
-  <Target Name="PreparePublishAll" >
+  <Target Name="PreparePublishAll" Outputs="@(ToCompile)">
     <ItemGroup>
-      <ToCompile Include="return0;return1;stderr-version;stdin;stdout-version" />
-      <ToCompile Update="@(ToCompile)">
-        <_FullPath>$(MSBuildThisFileDirectory)%(ToCompile.Identity).cs</_FullPath>
+      <ToCompileFileName Include="return0;return1;stderr-version;stdin;stdout-version" />
+      <ToCompile
+        Include="@(ToCompileFileName->'$(MSBuildThisFileDirectory)%(Identity).cs')">
       </ToCompile>
     </ItemGroup>
   </Target>
-  
+
   <!-- 
   - MSBuild incremental builds for new or stale targets
     - https://learn.microsoft.com/en-us/visualstudio/msbuild/how-to-build-incrementally
     - 'Inputs', 'Outputs' should be file path, to use incremental builds.
   -->
   <Target Name="PublishAll"
-    Inputs="$(MSBuildThisFileFullPath);@(ToCompile->'%(_FullPath)')"
-    Outputs="@(MockFStarExe)"
+    Inputs="$(MSBuildThisFileFullPath);@(ToCompile)"
+    Outputs="@(ToCompile->'$(MSBuildProjectDirectory)/$(OutputPath)/native/%(FileName)$(_NativeExecutableExtension)')"
     DependsOnTargets="PreparePublishAll">
     
     <MSBuild Projects="$(MSBuildThisFileFullPath)"
-      Properties="Configuration=Release;CompileList=%(ToCompile.Identity).cs;AssemblyName=%(ToCompile.Identity);NuGetInteractive=true;_IsPublishing=true"
+      Properties="Configuration=Release;CompileList=%(ToCompile.Identity);AssemblyName=%(ToCompile.FileName);NuGetInteractive=true;_IsPublishing=true"
       Targets="Restore;Publish">
     </MSBuild>
-
-    <!-- Native Aot 로 생성된 파일들 경로 얻기 -->
-    <ItemGroup>
-      <MockFStarExe Include="$(MSBuildProjectDirectory)/$(OutputPath)/native/*$(_NativeExecutableExtension)" />
-    </ItemGroup>
     
   </Target>
 
