@@ -73,6 +73,9 @@ let TestMockFStarExePath_Member : TheoryData<string, bool> =
         struct ("stdout1-version", true)
         struct ("stdout0-version", true) // ← Canon
         struct ("stdin", false)
+        struct ("stdin_readline", false)
+        struct ("sleep1s-stdout0-version.fstar", true)
+        struct ("sleep10s-stdout0-version.fstar", false)
     })
 
 [<Theory>]

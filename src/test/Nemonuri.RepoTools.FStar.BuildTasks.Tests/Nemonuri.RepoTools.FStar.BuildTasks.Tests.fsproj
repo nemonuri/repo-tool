@@ -46,7 +46,7 @@
 
   <Target Name="_ComputeRunArguments" BeforeTargets="ComputeRunArguments">
     <PropertyGroup>
-      <RunArguments>$(RunArguments) -ctrf $(MSBuildProjectFile).$([System.DateTime]::Now.Ticks).log</RunArguments>
+      <RunArguments>$(RunArguments) -trx $(TestArtifactsPath)$(MSBuildProjectFile).$([System.DateTime]::Now.Ticks).xml</RunArguments>
     </PropertyGroup>
   </Target>
 

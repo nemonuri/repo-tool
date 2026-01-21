@@ -27,7 +27,7 @@
   <Target Name="PrepareForPublishAll" >
     <ItemGroup>
       <ToCompileFileName
-        Include="return0;return1;stderr-version;stdin;stdout0-version;stdout1-version;sleep1s-stdout0-version;sleep10s-stdout0-version" />
+        Include="return0;return1;stderr-version;stdin;stdin_readline;stdout0-version;stdout1-version;sleep1s-stdout0-version;sleep10s-stdout0-version" />
       <ToCompile
         Include="@(ToCompileFileName->'$(MSBuildThisFileDirectory)%(Identity).cs')">
       </ToCompile>

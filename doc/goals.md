@@ -39,7 +39,8 @@
       - **stderr-version.fstar.exe** messages valid version to stderr, and returns 0.
       - **stdout1-version.fstar.exe** messages valid version to stdout, and returns 1.
       - **stdout0-version.fstar.exe** messages valid version to stdout, and returns 0.
-      - **stdin.fstar.exe** waits until stdin.
+      - **stdin.fstar.exe** waits until stdin(ReadKey), messages valid version to stdout, and returns 0.
+      - **stdin_readline.fstar.exe** waits until stdin(ReadLine), messages valid version to stdout, and returns 0.
       - **sleep1s-stdout0-version.fstar.exe** sleeps 1 second, and messages valid version to stdout, and returns 0.
       - **sleep10s-stdout0-version.fstar.exe** sleeps 10 second, and messages valid version to stdout, and returns 0.
     - Mock MSBuild engine, which executes 'GeneratePrivateFStarConfigJson' task
