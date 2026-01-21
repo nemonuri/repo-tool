@@ -49,11 +49,11 @@
   -->
   <Target Name="PublishAll"
     Inputs="$(MSBuildThisFileFullPath);@(ToCompile)"
-    Outputs="@(ToCompile->'$(OutputPath)/native/%(FileName)$(_NativeExecutableExtension)')"
+    Outputs="@(ToCompile->'$(OutputPath)/native/%(FileName).fstar$(_NativeExecutableExtension)')"
     DependsOnTargets="PrepareForPublishAll">
     
     <MSBuild Projects="$(MSBuildThisFileFullPath)"
-      Properties="Configuration=Release;CompileList=%(ToCompile.FullPath);AssemblyName=%(ToCompile.FileName);NuGetInteractive=true;_IsPublishing=true"
+      Properties="Configuration=Release;CompileList=%(ToCompile.FullPath);AssemblyName=%(ToCompile.FileName).fstar;NuGetInteractive=true;_IsPublishing=true"
       Targets="Restore;Publish">
     </MSBuild>
     
