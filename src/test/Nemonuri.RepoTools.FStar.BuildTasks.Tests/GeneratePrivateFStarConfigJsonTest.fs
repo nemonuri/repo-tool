@@ -71,7 +71,8 @@ let TestMockFStarExePath_Member : TheoryData<string, bool> =
         struct ("return0.fstar", false)
         struct ("stderr-version", false)
         struct ("stdout1-version", true)
-        struct ("stdout0-version", true)
+        struct ("stdout0-version", true) // ← Canon
+        struct ("stdin", false)
     })
 
 [<Theory>]
@@ -87,5 +88,12 @@ let TestMockFStarExePath (starting: string) (expected: bool) =
         ).Execute()
         |> fun actual -> Assert.Equal(expected, actual)
 
+let getCanonFStarMockExe = 
+    let starting = "stdout0-version"
+    lazy (    
+        match tryGetMockFStarExePath starting with
+        | None -> failwith $"Cannot find mock F*. Starting = {starting}"
+        | Some mockPath -> mockPath
+    )
 
 
