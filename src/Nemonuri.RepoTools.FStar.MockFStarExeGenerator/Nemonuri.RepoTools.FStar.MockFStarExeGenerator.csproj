@@ -23,7 +23,7 @@
     </ItemGroup>
     
     <MSBuild Projects="$(MSBuildThisFileFullPath)"
-      Properties="Configuration=Release;CompileList=%(ToCompile.Identity).cs;AssemblyName=%(ToCompile.Identity)"
+      Properties="Configuration=Release;CompileList=%(ToCompile.Identity).cs;AssemblyName=%(ToCompile.Identity);NuGetInteractive=true;_IsPublishing=true"
       Targets="Restore;Publish">
     </MSBuild>
 
