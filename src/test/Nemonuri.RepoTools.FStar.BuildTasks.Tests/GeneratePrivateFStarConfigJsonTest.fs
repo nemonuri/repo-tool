@@ -100,3 +100,5 @@ let getCanonFStarMockExe =
     )
 
 
+let AtExpectedFilePath_FStarConfigJsonShouldBeExist =
+    ()

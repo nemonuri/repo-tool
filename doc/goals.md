@@ -62,6 +62,7 @@
 | stdout1-version.fstar | true | Exitcode will be ignored. |
 | stdout0-version.fstar | true ||
 | stdin.fstar | false ||
+| stdin_readline.fstar | false ||
 | sleep1s-stdout0-version.fstar | true ||
 | sleep10s-stdout0-version.fstar | false ||
 

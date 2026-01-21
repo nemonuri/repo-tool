@@ -8,7 +8,7 @@
 
   <ItemGroup>
     <Compile Include="Theories.fs" />
-    <Compile Include="GeneratePrivateFStarConfigJson.fs" />
+    <Compile Include="FStarConfigJsonTheory.fs" /><Compile Include="GeneratePrivateFStarConfigJson.fs" />
   </ItemGroup>
 
   <ItemGroup>

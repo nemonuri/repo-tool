@@ -9,16 +9,6 @@ type private F = System.IO.File
 type private D = System.IO.Directory
 type private Ir = ProcessTheory.InvokeResult
 
-module FStarConfigJson =
-
-    [<Literal>]
-    let suffix = ".fst.config.json"
-
-    [<Literal>]
-    let defaultGeneratorName = "Nemonuri.RepoTools.FStar"
-
-    let getFullPath directoryPath prefix = Path.Combine(directoryPath, prefix + suffix)
-
 type public GeneratePrivateFStarConfigJson() =
     inherit Microsoft.Build.Utilities.Task()
 
@@ -36,7 +26,7 @@ type public GeneratePrivateFStarConfigJson() =
 
     member val SkipVersionCommand: bool = false with get,set
 
-    member val GeneratorName: string = FStarConfigJson.defaultGeneratorName with get,set
+    member val GeneratorName: string = FStarConfigJsonTheory.DefaultGeneratorName with get,set
 
     override __.Execute(): bool =
         let logError message valueExpr value = __.Log.LogError("{0}. {1} = {2}", message, valueExpr, value); false
@@ -116,7 +106,7 @@ type public GeneratePrivateFStarConfigJson() =
             append "}"
 
             let fcjContent = sb.ToString()
-            let fcjFilePath = FStarConfigJson.getFullPath odInfo.FullName __.Prefix
+            let fcjFilePath = FStarConfigJsonTheory.getFullPath odInfo.FullName __.Prefix
             F.WriteAllText (fcjFilePath, fcjContent)
 
             __.Log.LogMessage("File written. Path = {0}", fcjFilePath)
