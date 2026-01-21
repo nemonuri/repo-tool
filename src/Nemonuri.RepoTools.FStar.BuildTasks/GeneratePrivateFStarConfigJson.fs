@@ -32,7 +32,7 @@ type public GeneratePrivateFStarConfigJson() =
     [<Required>]
     member val OutDirectory: string = "" with get,set
 
-    member val Prefix: string = "" with get,set
+    member val Prefix: string = "sdk.g" with get,set
 
     member val SkipVersionCommand: bool = false with get,set
 

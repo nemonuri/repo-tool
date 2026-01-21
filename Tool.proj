@@ -54,7 +54,7 @@
         </Exec>
         
         <Error Condition="$(GenerateMockFStarExe_ExitCode) != 0"
-            Text="Exec failed. ExitCode = $(GenerateMockFStarExe_ExitCode)" />
+            Text="Exec failed. ExitCode = $(GenerateMockFStarExe_ExitCode), ConsoleOutput = $(GenerateMockFStarExe_ConsoleOutput)" />
         
         <ItemGroup>
             <MockFStarExe Include="@(GenerateMockFStarExe_ConsoleOutput)" />
