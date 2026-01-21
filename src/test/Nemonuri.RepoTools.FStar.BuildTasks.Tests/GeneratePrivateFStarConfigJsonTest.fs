@@ -62,7 +62,7 @@ let TestRealFStarExePathIfSome() =
         |> Assert.True
 
 
-let TestMockFStarExePath_Member : TheoryData<string, bool> =
+let Members1 : TheoryData<string, bool> =
     TheoryData<_,_>(seq {        
         struct ("directory.fstar", false)
         struct ("not-exist.fstar", false)
@@ -79,7 +79,7 @@ let TestMockFStarExePath_Member : TheoryData<string, bool> =
     })
 
 [<Theory>]
-[<MemberData(nameof(TestMockFStarExePath_Member))>]
+[<MemberData(nameof(Members1))>]
 let TestMockFStarExePath (starting: string) (expected: bool) =
     match tryGetMockFStarExePath starting with
     | None -> failwith $"Cannot find mock F*. Starting = {starting}"
@@ -99,6 +99,12 @@ let getCanonFStarMockExe =
         | Some mockPath -> mockPath
     )
 
+let Members2 : TheoryData<string> =
+    TheoryData<_>( seq {
+        FStarConfigJsonTheory.GeneratorDefaultPrefix
+        ""
+        "Hello"
+    })
 
-let AtExpectedFilePath_FStarConfigJsonShouldBeExist =
+let ExpectedPath_FileShouldBeExistAndValid (prefix: string) =
     ()

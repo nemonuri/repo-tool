@@ -17,6 +17,8 @@
       <PrivateAssets Condition="$(Configuration) == 'Release'">all</PrivateAssets>
       <ExcludeAssets Condition="$(Configuration) == 'Release'">runtime</ExcludeAssets>
     </PackageReference>
+    <PackageReference Include="System.Text.Json" 
+      Condition="!$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0'))" />
   </ItemGroup>
 
 </Project>

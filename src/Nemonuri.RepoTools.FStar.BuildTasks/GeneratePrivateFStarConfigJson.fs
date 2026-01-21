@@ -4,6 +4,7 @@ open Microsoft.Build.Framework
 open System.IO
 open System.Text
 open System.Text.RegularExpressions
+open FStarConfigJsonTheory
 
 type private F = System.IO.File
 type private D = System.IO.Directory
@@ -22,11 +23,11 @@ type public GeneratePrivateFStarConfigJson() =
     [<Required>]
     member val OutDirectory: string = "" with get,set
 
-    member val Prefix: string = "sdk.g" with get,set
+    member val Prefix: string = GeneratorDefaultPrefix with get,set
 
     member val SkipVersionCommand: bool = false with get,set
 
-    member val GeneratorName: string = FStarConfigJsonTheory.DefaultGeneratorName with get,set
+    member val GeneratorName: string = DefaultGeneratorName with get,set
 
     override __.Execute(): bool =
         let logError message valueExpr value = __.Log.LogError("{0}. {1} = {2}", message, valueExpr, value); false
@@ -99,10 +100,10 @@ type public GeneratePrivateFStarConfigJson() =
                 (Path.GetFullPath v).Replace(@"\", @"\\")
 
             append "{"
-            append $$"""  "_comment": "This file is auto generated from {{__.GeneratorName}}. Do not edit manually.", """
-            append $$"""  "fstar_exe": "{{toFullPathAndJsonEscape fe}}", """
-            append $$"""  "options": [{{__.Options |> Array.map getItemSpec |> String.concat ``, ``}}], """
-            append $$"""  "include_dirs": [{{__.IncludeDirs |> Array.map getItemSpec |> String.concat ``, ``}}] """
+            append $$"""  "{{CommentPropertyName}}": "{{CommentContentHeader}} {{__.GeneratorName}}. Do not edit manually.", """
+            append $$"""  "{{FStarExePropertyName}}": "{{toFullPathAndJsonEscape fe}}", """
+            append $$"""  "{{OptionsPropertyName}}": [{{__.Options |> Array.map getItemSpec |> String.concat ``, ``}}], """
+            append $$"""  "{{IncludeDirectoriesPropertyName}}": [{{__.IncludeDirs |> Array.map getItemSpec |> String.concat ``, ``}}] """
             append "}"
 
             let fcjContent = sb.ToString()

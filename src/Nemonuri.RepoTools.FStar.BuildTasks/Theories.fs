@@ -12,13 +12,6 @@ module PathTheory =
         String.exists isInvalidChar path
 
 
-module FileTheory =
-
-    let isMaybeExecutable (fileAttr: FileAttributes) =
-        match fileAttr with
-        | FileAttributes.Normal -> true
-        | _ -> fileAttr = LanguagePrimitives.EnumOfValue 0
-
 module ProcessTheory =
 
     open System.Diagnostics
@@ -70,4 +63,4 @@ module StringTheory =
     [<CompiledNameAttribute("TryGetNotNullOrWhiteSpace")>]
     let (|NotNullOrWhiteSpace|_|) (value: string | null) : string option =
         if System.String.IsNullOrWhiteSpace value then None else Some value
-    
+
