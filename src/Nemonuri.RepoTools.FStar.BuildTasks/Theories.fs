@@ -43,16 +43,21 @@ module ProcessTheory =
         )
         let proc = new Process(StartInfo = startInfo)
         let mutable errorMessage = ""
-        proc.ErrorDataReceived.Add(fun evArg -> errorMessage <- evArg.Data) 
+        proc.ErrorDataReceived.Add(fun evArg -> errorMessage <- errorMessage + evArg.Data) 
+        let mutable stdoutMessage = ""
+        proc.OutputDataReceived.Add(fun evArg -> stdoutMessage <- stdoutMessage + evArg.Data)
         proc.Start() |> ignore
         proc.BeginErrorReadLine()
+        proc.BeginOutputReadLine()
         try
             try
-                Async.RunSynchronously(proc.StandardOutput.ReadToEndAsync() |> Async.AwaitTask, millisecondsTimeout) 
-                    |> fun s -> 
-                        match System.String.IsNullOrWhiteSpace s with
-                        | false -> StdOut s
-                        | true -> StdErr errorMessage
+                match proc.WaitForExit millisecondsTimeout with
+                | false -> TimeOut
+                | true -> 
+                    if System.String.IsNullOrWhiteSpace stdoutMessage then
+                        StdErr errorMessage
+                    else
+                        StdOut stdoutMessage
             with e ->
                 match e with
                 | :? System.TimeoutException -> TimeOut
