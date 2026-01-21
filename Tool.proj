@@ -39,11 +39,27 @@
         </PropertyGroup>
         
         <MSBuild Projects="$(MockFStarExeGeneratorPath)"
-            Target="PublishAll">
+            Targets="PublishAll">
             <Output
                 TaskParameter="TargetOutputs"
                 ItemName="MockFStarExe" />
         </MSBuild>
+        <Exec
+            Command="dotnet run $(ToolRootPath)MockFStarNonExeGenerator.cs -- $(TestArtifactsPath)mock-fstar-exe"
+            ConsoleToMsBuild="true"
+            WorkingDirectory="$(ToolRootPath)">
+            
+            <Output TaskParameter="ExitCode" PropertyName="GenerateMockFStarExe_ExitCode" />
+            <Output TaskParameter="ConsoleOutput" ItemName="GenerateMockFStarExe_ConsoleOutput" />
+        </Exec>
+        
+        <Error Condition="$(GenerateMockFStarExe_ExitCode) != 0"
+            Text="Exec failed. ExitCode = $(GenerateMockFStarExe_ExitCode)" />
+        
+        <ItemGroup>
+            <MockFStarExe Include="@(GenerateMockFStarExe_ConsoleOutput)" />
+            <MockFStarExe Include="$(TestArtifactsPath)mock-fstar-exe/not-exist.fstar.exe" />
+        </ItemGroup>
         
     </Target>
 

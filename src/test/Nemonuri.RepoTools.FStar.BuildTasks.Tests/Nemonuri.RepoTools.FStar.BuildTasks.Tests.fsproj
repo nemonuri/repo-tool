@@ -31,4 +31,16 @@
     <ProjectReference Include="..\..\Nemonuri.RepoTools.TestRuntime\Nemonuri.RepoTools.TestRuntime.csproj" />
   </ItemGroup>
 
+  <Target Name="GenerateMockFStarExePathes" BeforeTargets="BeforeCompile">
+    <MSBuild Projects="$(RepoRootPath)Tool.proj"
+      Targets="GenerateMockFStarExe">
+      
+      <Output TaskParameter="TargetOutputs" ItemName="MockFStarExe" />
+    </MSBuild>
+    
+    <ItemGroup>
+      <AssemblyMetadata Include="MockFStarExePath" Value="%(MockFStarExe.Identity)" />
+    </ItemGroup>
+  </Target>
+
 </Project>
