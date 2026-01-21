@@ -7,5 +7,6 @@
     <SrcRootPath>$(RepoRootPath)src/</SrcRootPath>
     <TestRootPath>$(SrcRootPath)test/</TestRootPath>
     <TestPackageRootPath>$(ArtifactsPath)test-package/</TestPackageRootPath>
+    <TestArtifactsPath>$(ArtifactsPath)test/</TestArtifactsPath>
   </PropertyGroup>
 </Project>

@@ -3,6 +3,8 @@
     <PropertyGroup>
         <TargetFramework>netstandard2.0</TargetFramework>
         <ToolRootPath>$(RepoRootPath)tool/</ToolRootPath>
+        <SrcRootPath>$(SrcRootPath)</SrcRootPath>
+        <TestArtifactsPath>$(TestArtifactsPath)</TestArtifactsPath>
     </PropertyGroup>
     
     <Target Name="Invoke">
@@ -23,12 +25,26 @@
         </PropertyGroup>
         
         <MSBuild
-            Projects="$(ToolRootPath)RestoreTestPackage.proj"
+            Projects="$(ToolRootPath)proj/RestoreTestPackage.proj"
             Targets="RestoreAndGetTestPackagePath"
             Properties="$(_Properties)">
             
             <Output TaskParameter="TargetOutputs" ItemName="TestPackagePath" />
         </MSBuild>
+    </Target>
+
+    <Target Name="GenerateMockFStarExe" Returns="@(MockFStarExe)" >
+        <PropertyGroup>
+            <MockFStarExeGeneratorPath>$(SrcRootPath)Nemonuri.RepoTools.FStar.MockFStarExeGenerator/Nemonuri.RepoTools.FStar.MockFStarExeGenerator.csproj</MockFStarExeGeneratorPath>
+        </PropertyGroup>
+        
+        <MSBuild Projects="$(MockFStarExeGeneratorPath)"
+            Target="PublishAll">
+            <Output
+                TaskParameter="TargetOutputs"
+                ItemName="MockFStarExe" />
+        </MSBuild>
+        
     </Target>
 
 </Project>
