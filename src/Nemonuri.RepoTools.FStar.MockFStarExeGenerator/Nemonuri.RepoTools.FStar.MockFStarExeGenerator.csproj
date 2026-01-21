@@ -9,25 +9,24 @@
     <IsPublishable>true</IsPublishable>
     <PublishAot>true</PublishAot>
     <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <LangVersion>14</LangVersion>
   </PropertyGroup>
   
   <ItemGroup Condition="$(CompileList) != ''">
     <Compile Include="$(CompileList)" />
   </ItemGroup>
 
-  <Target Name="_PublishCore" Outputs="@(MockFStarExe)"
-    Condition="$(CompileList) != ''"
-    AfterTargets="Publish">
+  <Target Name="PublishAll" Outputs="@(MockFStarExe)" >
     
     <ItemGroup>
       <ToCompile Include="return0;return1;stderr-version;stdin;stdout-version" />
     </ItemGroup>
     
-    <MSBuild Projects="$(MSBuildThisFilePath)"
+    <MSBuild Projects="$(MSBuildThisFileFullPath)"
       Properties="Configuration=Release;CompileList=%(ToCompile.Identity).cs;AssemblyName=%(ToCompile.Identity)"
-      Targets="Publish">
+      Targets="Restore;Publish">
     </MSBuild>
-    
+
     <!-- 이제....Native Aot 로 생성된 파일들을 어떻게 찾지? -->
     
   </Target>
