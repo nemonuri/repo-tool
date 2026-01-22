@@ -14,7 +14,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Include="GeneratePrivateFStarConfigJsonTest.fs" />
+    <Compile Include="GenerateFStarConfigJsonTest.fs" />
   </ItemGroup>
 
   <ItemGroup>
@@ -31,10 +31,8 @@
     <ProjectReference Include="..\..\Nemonuri.RepoTools.TestRuntime\Nemonuri.RepoTools.TestRuntime.csproj" />
   </ItemGroup>
 
-  <Target Name="GenerateMockFStarExePathes" BeforeTargets="BeforeCompile" 
-    Condition="$(DesignTimeBuild) != 'true'">
-    <MSBuild Projects="$(RepoRootPath)Tool.proj"
-      Targets="GenerateMockFStarExe">
+  <Target Name="GenerateMockFStarExePathes" BeforeTargets="BeforeCompile" Condition="$(DesignTimeBuild) != 'true'">
+    <MSBuild Projects="$(RepoRootPath)Tool.proj" Targets="GenerateMockFStarExe">
       
       <Output TaskParameter="TargetOutputs" ItemName="MockFStarExe" />
     </MSBuild>

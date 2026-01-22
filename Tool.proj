@@ -9,29 +9,6 @@
     
     <Target Name="Invoke">
     </Target>
-    
-    <Target Name="RestoreTestPackage" Returns="@(TestPackagePath)">
-        <!-- Requried input properties -->
-        <Error Condition="$(TestPackageRootPath) == ''" Text="'TestPackageRootPath' property required." />
-        <Error Condition="$(TestPackageId) == ''" Text="'TestPackageId' property required." />
-        <Error Condition="$(TestPackageVersion) == ''" Text="'TestPackageVersion' property required." />
-        <Error Condition="$(TestPackageTargetFramework) == ''" Text="'TestPackageTargetFramework' property required." />
-        
-        <PropertyGroup>
-            <_Properties>TestPackageRootPath=$(TestPackageRootPath)</_Properties>
-            <_Properties>$(_Properties);TestPackageId=$(TestPackageId)</_Properties>
-            <_Properties>$(_Properties);TestPackageVersion=$(TestPackageVersion)</_Properties>
-            <_Properties>$(_Properties);TestPackageTargetFramework=$(TestPackageTargetFramework)</_Properties>
-        </PropertyGroup>
-        
-        <MSBuild
-            Projects="$(ToolRootPath)proj/RestoreTestPackage.proj"
-            Targets="RestoreAndGetTestPackagePath"
-            Properties="$(_Properties)">
-            
-            <Output TaskParameter="TargetOutputs" ItemName="TestPackagePath" />
-        </MSBuild>
-    </Target>
 
     <Target Name="GenerateMockFStarExe" Returns="@(MockFStarExe)" >
         <PropertyGroup>

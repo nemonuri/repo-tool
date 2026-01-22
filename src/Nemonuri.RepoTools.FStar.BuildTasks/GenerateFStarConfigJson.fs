@@ -10,7 +10,7 @@ type private F = System.IO.File
 type private D = System.IO.Directory
 type private Ir = ProcessTheory.InvokeResult
 
-type public GeneratePrivateFStarConfigJson() =
+type public GenerateFStarConfigJson() =
     inherit Microsoft.Build.Utilities.Task()
 
     [<Required>]

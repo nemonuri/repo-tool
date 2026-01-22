@@ -1,4 +1,4 @@
-module GeneratePrivateFStarConfigJsonTest
+module GenerateFStarConfigJsonTest
 
 open Xunit
 open Nemonuri.RepoTools.FStar.BuildTasks
@@ -11,10 +11,10 @@ let log = printfn
 type Amd = System.Reflection.AssemblyMetadataAttribute
 
 [<Literal>]
-let realFStarExePath = "RealFStarExePath"
+let RealFStarExePath = "RealFStarExePath"
 
 [<Literal>]
-let mockFStarExePath = "MockFStarExePath"
+let MockFStarExePath = "MockFStarExePath"
 
 [<RequireQualifiedAccess>]
 type private _Dummy = _Dummy
@@ -25,7 +25,7 @@ let getAssemblyMetadataAttributes =
 
 let realFStarExePathOrNone =
     getAssemblyMetadataAttributes
-    |> Seq.tryFind (fun amd -> amd.Key = realFStarExePath)
+    |> Seq.tryFind (fun amd -> amd.Key = RealFStarExePath)
     |> function
         | None -> None
         | Some amd -> 
@@ -35,7 +35,7 @@ let realFStarExePathOrNone =
 
 let tryGetMockFStarExePath (starting: string) =
     getAssemblyMetadataAttributes
-    |> Seq.filter (fun amd -> amd.Key = mockFStarExePath)
+    |> Seq.filter (fun amd -> amd.Key = MockFStarExePath)
     |> Seq.tryFind (fun amd ->
         match amd.Value with
         | StringTheory.NotNullOrWhiteSpace v -> 
@@ -45,14 +45,14 @@ let tryGetMockFStarExePath (starting: string) =
         | _ -> false
     )
     |> Option.map (fun amd -> MSBuildIntrinsicFunctions.NormalizePath (nonNull amd.Value) )
-    
+
 
 [<Fact>]
 let TestRealFStarExePathIfSome() =
     match realFStarExePathOrNone with
     | None -> log "%s is None. Skip this test." (nameof realFStarExePathOrNone)
     | Some realPath -> 
-        GeneratePrivateFStarConfigJson(
+        GenerateFStarConfigJson(
             FStarExe = realPath,
             OutDirectory = System.IO.Path.Combine [|System.AppContext.BaseDirectory; "out-dir"|],
             BuildEngine = ConsoleWriterMockBuildEngine()
@@ -82,7 +82,7 @@ let TestMockFStarExePath (starting: string) (expected: bool) =
     match tryGetMockFStarExePath starting with
     | None -> failwith $"Cannot find mock F*. Starting = {starting}"
     | Some mockPath ->
-        GeneratePrivateFStarConfigJson(
+        GenerateFStarConfigJson(
             FStarExe = mockPath,
             OutDirectory = System.IO.Path.Combine [|System.AppContext.BaseDirectory; "out-dir"|],
             BuildEngine = ConsoleWriterMockBuildEngine()
@@ -109,7 +109,7 @@ let Members2 : TheoryData<string> =
 let ExpectedPath_FileShouldBeExistAndValid (prefix: string) =
     let outDirectory = System.IO.Path.Combine [|System.AppContext.BaseDirectory; "out-dir"; System.DateTime.Now.Ticks.ToString(); prefix|]
     let expectedPath = FStarConfigJsonTheory.getFullPath outDirectory prefix
-    GeneratePrivateFStarConfigJson(
+    GenerateFStarConfigJson(
         FStarExe = getCanonFStarMockExe.Force(),
         OutDirectory = outDirectory,
         BuildEngine = ConsoleWriterMockBuildEngine(),
