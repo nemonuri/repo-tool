@@ -1,12 +1,11 @@
 <Project Sdk="Microsoft.NET.Sdk">
-
   <PropertyGroup>
     <Nullable>enable</Nullable>
     <OutputType>Exe</OutputType>
     <RootNamespace>Nemonuri.RepoTools.FStar.BuildTasks.Tests</RootNamespace>
     <TargetFramework>net8.0</TargetFramework>
     <TestingPlatformDotnetTestSupport>true</TestingPlatformDotnetTestSupport>
-    <MockFStarExeRootPath>$(ArtifactsPath)mock-fstar-exe</MockFStarExeRootPath>
+    <TestingPlatformCommandLineArguments>$(TestingPlatformCommandLineArguments) --report-xunit-html </TestingPlatformCommandLineArguments>
   </PropertyGroup>
 
   <ItemGroup>
@@ -14,6 +13,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Include="AssemblyInfo.fs" />
     <Compile Include="GenerateFStarConfigJsonTest.fs" />
   </ItemGroup>
 
@@ -33,19 +33,19 @@
 
   <Target Name="GenerateMockFStarExePathes" BeforeTargets="BeforeCompile" Condition="$(DesignTimeBuild) != 'true'">
     <MSBuild Projects="$(RepoRootPath)Tool.proj" Targets="GenerateMockFStarExe">
-      
       <Output TaskParameter="TargetOutputs" ItemName="MockFStarExe" />
     </MSBuild>
-    
     <ItemGroup>
       <AssemblyMetadata Include="MockFStarExePath" Value="%(MockFStarExe.Identity)" />
     </ItemGroup>
   </Target>
 
+  <!-- 
   <Target Name="_ComputeRunArguments" BeforeTargets="ComputeRunArguments">
     <PropertyGroup>
       <RunArguments>$(RunArguments) -trx $(TestArtifactsPath)$(MSBuildProjectFile).$([System.DateTime]::Now.Ticks).xml</RunArguments>
     </PropertyGroup>
   </Target>
+   -->
 
 </Project>

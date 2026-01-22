@@ -13,6 +13,8 @@ type private Ir = ProcessTheory.InvokeResult
 type public GenerateFStarConfigJson() =
     inherit Microsoft.Build.Utilities.Task()
 
+    let [<Literal>] timeOut = 3000
+
     [<Required>]
     member val FStarExe: string = "" with get,set
 
@@ -33,7 +35,6 @@ type public GenerateFStarConfigJson() =
         let logError message valueExpr value = __.Log.LogError("{0}. {1} = {2}", message, valueExpr, value); false
         let fe = __.FStarExe
         let fee = nameof __.FStarExe
-        let timeOut = 5000
         let od = __.OutDirectory
         let ode = nameof __.OutDirectory
 
