@@ -118,7 +118,9 @@ type public GenerateFStarConfigJson() =
 
             __.Log.LogMessage("File written. Path = {0}", fcjFilePath)
 
-            __.GeneratedFilePath <- Microsoft.Build.Utilities.TaskItem fcjFilePath
+            match __.GeneratedFilePath with
+            | Null _ -> __.GeneratedFilePath <- Microsoft.Build.Utilities.TaskItem fcjFilePath
+            | NonNull v -> v.ItemSpec <- fcjFilePath
 
             true
             

@@ -106,15 +106,16 @@ let Members2 : TheoryData<string> =
 
 [<Theory>]
 [<MemberData(nameof(Members2))>]
-let ExpectedPath_FileShouldBeExistAndValid (prefix: string) =
+let GeneratedFilePath_FileShouldBeExistAndValid (prefix: string) =
     let outDirectory = System.IO.Path.Combine [|System.AppContext.BaseDirectory; "out-dir"; System.DateTime.Now.Ticks.ToString(); prefix|]
-    let expectedPath = FStarConfigJsonTheory.getFullPath outDirectory prefix
+    let generatedFilePathBox = MockTaskItem ""
     GenerateFStarConfigJson(
         FStarExe = getCanonFStarMockExe.Force(),
         OutDirectory = outDirectory,
         BuildEngine = ConsoleWriterMockBuildEngine(),
-        Prefix = prefix
+        Prefix = prefix,
+        GeneratedFilePath = generatedFilePathBox
     ).Execute()
     |> Assert.True
-    Assert.True (FStarConfigJsonTheory.isMaybeGeneratedFile expectedPath)
+    Assert.True (FStarConfigJsonTheory.isMaybeGeneratedFile generatedFilePathBox.ItemSpec)
 

@@ -5,34 +5,47 @@ namespace Nemonuri.RepoTools.TestRuntime;
 
 public class MockTaskItem : ITaskItem
 {
-    public string GetMetadata(string metadataName)
+    public string ItemSpec { get; set; }
+
+    private readonly Dictionary<string, string> _metadatas;
+
+    public MockTaskItem(string itemSpec, Dictionary<string, string>? metadatas = null)
     {
-        throw new NotImplementedException();
+        ItemSpec = itemSpec;
+        _metadatas = metadatas is null ? new() : new(metadatas);
     }
+
+    public string GetMetadata(string metadataName) => _metadatas[metadataName];
 
     public void SetMetadata(string metadataName, string metadataValue)
     {
-        throw new NotImplementedException();
+        if (_metadatas.ContainsKey(metadataName))
+        {
+            _metadatas[metadataName] = metadataValue;
+        }
+        else
+        {
+            _metadatas.Add(metadataName, metadataValue);
+        }
     }
 
-    public void RemoveMetadata(string metadataName)
-    {
-        throw new NotImplementedException();
-    }
+    public void RemoveMetadata(string metadataName) => _metadatas.Remove(metadataName);
 
     public void CopyMetadataTo(ITaskItem destinationItem)
     {
-        throw new NotImplementedException();
+        foreach (var kv in _metadatas)
+        {
+            destinationItem.SetMetadata(kv.Key, kv.Value);
+        }
     }
 
     public IDictionary CloneCustomMetadata()
     {
-        throw new NotImplementedException();
+        return new Hashtable(_metadatas);
     }
 
-    public string ItemSpec { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
 
-    public ICollection MetadataNames => throw new NotImplementedException();
+    public ICollection MetadataNames => _metadatas.Keys;
 
-    public int MetadataCount => throw new NotImplementedException();
+    public int MetadataCount => _metadatas.Count;
 }
