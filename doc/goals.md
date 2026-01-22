@@ -68,3 +68,59 @@
 
 
 ### Deploy senario
+
+(TODO)
+
+## 2. `EditGeneratedFStarConfigJson` MSBuild Task
+
+- Automate editing '.fst.config.json'
+  - Restricted to auto-generated. (by 'GenerateFStarConfigJson')
+  - Do not edit manual config.
+
+### Usage senario
+
+1. Assume
+    - A data type **FStarConfigJsonModel** exist.
+    - A MSBuild target **Trigger** exist, which contains 'EditGeneratedFStarConfigJson' task.
+    - Kinds of **F\* Toolset Directory Layout** (a.k.a. 'F\* Layout') exist.
+        1. Unknown
+        2. GithubRelease
+        3. NuGetPackage
+    - For each 'F\* Layout', resolve and create 'FStarConfigJsonModel' method exists.
+    - An immutable string **F\* Config File Path** (a.k.a. 'Cfg Path') exist. 
+    - 'EditGeneratedFStarConfigJson' can get 'Cfg Path'.
+    - 'The task' is alias of 'EditGeneratedFStarConfigJson'
+
+2. **Bob** writes main fstar bin path to 'FStarExePath', and invoke 'Trigger'. 'EditGeneratedFStarConfigJson' task begins.
+
+3. First, 'the task' checks that auto-generated F\* config file exists at 'Cfg Path'.
+    - If not, throw error.
+
+4. 'The task' get **F\* exe** path from 'Cfg Path'
+
+5. 'The task' assume 'F\* Layout' is 'GithubRelease', and resolve.
+    1. If failed, repeat. (NuGetPackage → Unknown order)
+    2. If failed, throw error.
+
+6. 'The task' crates 'FStarConfigJsonModel' instance, and normalize it.
+    1. If failed, throw error.
+
+7. 'The task' serializes 'FStarConfigJsonModel' instance to string, and edit file of 'Cfg Path'.
+
+8. Done!
+
+### Test senario
+
+1. Assume Input
+    - Kind of 'F\* Layout'
+        - (...)
+    - Kind of 'Cfg Path'
+        - (...)
+
+### Note
+
+- How can 'EditGeneratedFStarConfigJson' task get 'Cfg Path'?
+  - Use [MSBuildProjectExtensionsPath](https://learn.microsoft.com/en-us/nuget/reference/msbuild-targets#restore-properties), like NuGet!
+    - per project
+  - Or, [IntermediateOutputPath](https://learn.microsoft.com/en-us/visualstudio/msbuild/common-msbuild-project-properties)
+    - per (project, configuration, tfm, rid)

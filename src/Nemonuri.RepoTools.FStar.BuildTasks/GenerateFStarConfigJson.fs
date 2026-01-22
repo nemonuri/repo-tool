@@ -31,6 +31,9 @@ type public GenerateFStarConfigJson() =
 
     member val GeneratorName: string = DefaultGeneratorName with get,set
 
+    [<Output>]
+    member val GeneratedFilePath: ITaskItem | null = null with get,set
+
     override __.Execute(): bool =
         let logError message valueExpr value = __.Log.LogError("{0}. {1} = {2}", message, valueExpr, value); false
         let fe = __.FStarExe
@@ -62,6 +65,8 @@ type public GenerateFStarConfigJson() =
                     | true -> logError "Not file, but directory" fee fe 
                     | false -> logError "File is not exist" fee fe 
                 else
+
+                if __.SkipVersionCommand then true else
 
                 __.Log.LogMessage("Invoke version command. Command = {0} {1}", fe, "--version")
                 match ProcessTheory.invokeVersionCommand fe timeOut with
@@ -112,6 +117,8 @@ type public GenerateFStarConfigJson() =
             F.WriteAllText (fcjFilePath, fcjContent)
 
             __.Log.LogMessage("File written. Path = {0}", fcjFilePath)
+
+            __.GeneratedFilePath <- Microsoft.Build.Utilities.TaskItem fcjFilePath
 
             true
             
