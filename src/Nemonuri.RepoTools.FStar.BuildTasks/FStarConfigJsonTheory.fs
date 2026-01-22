@@ -6,7 +6,7 @@ open System.Text.Json.Nodes;
 
 module BoolOperationTheory =
 
-    let (|&>) (left: bool) (right: bool) = left && right
+    let inline (|&>) (left: bool) (right: bool) = left && right
 
 
 module FStarConfigJsonTheory =
@@ -83,8 +83,11 @@ module FStarConfigJsonTheory =
         isMaybeValidJsonObject jo
         |&> jo.ContainsKey CommentPropertyName
         |&> match jo[CommentPropertyName].GetValueKind() with
-            | JsonValueKind.String | JsonValueKind.Array -> true
+            | JsonValueKind.String -> true
             | _ -> false
+        |&> match jo[CommentPropertyName].AsValue().GetValue<string>() with
+            | Null _ -> false
+            | NonNull str -> str.Trim().StartsWith CommentContentHeader
     
     let isMaybeGeneratedText jsonText =
         match tryParseToJsonObject jsonText with
