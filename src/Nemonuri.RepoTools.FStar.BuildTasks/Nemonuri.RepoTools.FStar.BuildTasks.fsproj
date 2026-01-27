@@ -8,7 +8,9 @@
 
   <ItemGroup>
     <Compile Include="Theories.fs" />
-    <Compile Include="FStarConfigJsonTheory.fs" /><Compile Include="GenerateFStarConfigJson.fs" />
+    <Compile Include="FStarConfigJsonTheory.fs" />
+    <Compile Include="FStarConfigJsonModel.fs" />
+    <Compile Include="GenerateFStarConfigJson.fs" />
   </ItemGroup>
 
   <ItemGroup>
@@ -17,8 +19,7 @@
       <PrivateAssets Condition="$(Configuration) == 'Release'">all</PrivateAssets>
       <ExcludeAssets Condition="$(Configuration) == 'Release'">runtime</ExcludeAssets>
     </PackageReference>
-    <PackageReference Include="System.Text.Json" 
-      Condition="!$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0'))" />
+    <PackageReference Include="System.Text.Json" Condition="!$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0'))" />
   </ItemGroup>
 
 </Project>

@@ -3,6 +3,7 @@ namespace Nemonuri.RepoTools.FStar.BuildTasks
 open System.IO
 open System.Text.Json;
 open System.Text.Json.Nodes;
+open System.Runtime.ExceptionServices;
 
 module BoolOperationTheory =
 
@@ -58,11 +59,26 @@ module FStarConfigJsonTheory =
             | JsonValueKind.Array -> true
             | _ -> false
 
-    let private tryParseToJsonObject (jsonText: string) =
-        JsonNode.Parse(jsonText, jsonNodeOptions, jsonDocumentOptions)
-        |> function
-            | :? JsonObject as jo -> Some jo
-            | _ -> None
+    [<RequireQualifiedAccess>]
+    type ParseToJsonObjectResult =
+    | Success of JsonObject
+    | NotJsonObject of JsonNode
+    | JsonException of ExceptionDispatchInfo
+
+    let parseToJsonObject (jsonText: string) : ParseToJsonObjectResult =
+        try
+            JsonNode.Parse(jsonText, jsonNodeOptions, jsonDocumentOptions)
+            |> fun jn -> 
+                match jn with
+                | :? JsonObject as jo -> ParseToJsonObjectResult.Success jo
+                | _ -> ParseToJsonObjectResult.NotJsonObject jn
+        with
+            | :? JsonException as e-> ParseToJsonObjectResult.JsonException (ExceptionDispatchInfo.Capture e)
+
+    let tryParseToJsonObject jsonText =
+        match parseToJsonObject jsonText with
+        | ParseToJsonObjectResult.Success jo -> Some jo
+        | _ -> None
 
     let isMaybeValidText jsonText =
         match tryParseToJsonObject jsonText with
