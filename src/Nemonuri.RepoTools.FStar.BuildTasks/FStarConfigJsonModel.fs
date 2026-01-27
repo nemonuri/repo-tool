@@ -54,4 +54,33 @@ module FStarConfigJsonModelTheory =
             yield toKv IncludeDirectoriesPropertyName (model.IncludeDirectories |> Array.map JsonValue.op_Implicit |> fun items -> JsonArray items )
             yield! model.Extra |> Option.map (fun v -> v :> KeyValuePair<string, JsonNode> seq) |> Option.defaultValue Seq.empty
         } |> propertiesToJsonObject
+    
+    let tryGetComment (model: FStarConfigJsonModel) : string option =
+        match model.Extra with
+        | None -> None
+        | Some jo ->
+            let mutable jsonNodeRef = Unchecked.defaultof<JsonNode>
+            if jo.TryGetPropertyValue(CommentPropertyName, &jsonNodeRef) then
+                jsonNodeRef.AsValue().GetValue<string>() |> Some
+            else
+                None
+    
+    let withComment (model: FStarConfigJsonModel) (comment: string) : FStarConfigJsonModel =
+        let ext = Option.defaultValue (JsonObject jsonNodeOptions) model.Extra
+
+        let newExt = 
+            let clonedExt = ext.DeepClone().AsObject()
+            if clonedExt.ContainsKey CommentPropertyName then
+                clonedExt[CommentPropertyName] <- JsonValue.op_Implicit comment
+            else
+                clonedExt.Add(CommentPropertyName, JsonValue.op_Implicit comment)
+            clonedExt
+            
+        {   FStarExe = model.FStarExe; 
+            Options = model.Options; 
+            IncludeDirectories = model.IncludeDirectories; 
+            Extra = Some newExt }
+
+        
+
 
