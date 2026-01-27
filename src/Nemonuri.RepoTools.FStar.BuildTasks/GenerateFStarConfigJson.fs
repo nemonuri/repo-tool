@@ -97,35 +97,19 @@ type public GenerateFStarConfigJson() =
             let odInfo = checkOutDirectory.Value
 
             // build json string
-            let sb = StringBuilder()
-            let append (text : string) = sb.AppendLine text |> ignore
+            (*
             let ``, ``= ", "
             let getItemSpec (ti: ITaskItem) = $"\"{ti.ItemSpec}\""
-            
-            let toFullPathAndJsonEscape (v: string) : string =
-                (Path.GetFullPath v).Replace(@"\", @"\\")
+            let toFullPathAndJsonEscape (v: string) : string = (Path.GetFullPath v).Replace(@"\", @"\\")
+            *)
 
-
-            append "{"
-            append $$"""  "{{CommentPropertyName}}": "{{CommentContentHeader}} {{__.GeneratorName}}. Do not edit manually.", """
-            append $$"""  "{{FStarExePropertyName}}": "{{toFullPathAndJsonEscape fe}}", """
-            append $$"""  "{{OptionsPropertyName}}": [{{__.Options |> Array.map getItemSpec |> String.concat ``, ``}}], """
-            append $$"""  "{{IncludeDirectoriesPropertyName}}": [{{__.IncludeDirs |> Array.map getItemSpec |> String.concat ``, ``}}] """
-            append "}"
-
-            let model: FStarConfigJsonModel = 
-                { FStarExe = toFullPathAndJsonEscape fe;
+            let fcjContent = 
+                { FStarExe = fe;
                     Options = [||];
                     IncludeDirectories = [||];
                     Extra = None }
-
-            model
-            |> FStarConfigJsonModelTheory.withFormattedComment __.GeneratorName
-            |> FStarConfigJsonModelTheory.toJsonString
-            |> __.Log.LogMessage
-
-
-            let fcjContent = sb.ToString()
+                |> FStarConfigJsonModelTheory.withFormattedComment __.GeneratorName
+                |> FStarConfigJsonModelTheory.toJsonString
             let fcjFilePath = FStarConfigJsonTheory.getFullPath odInfo.FullName __.Prefix
             F.WriteAllText (fcjFilePath, fcjContent)
 

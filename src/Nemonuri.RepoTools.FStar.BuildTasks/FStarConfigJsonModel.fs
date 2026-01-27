@@ -88,8 +88,14 @@ module FStarConfigJsonModelTheory =
         $"{CommentContentHeader} {generatorName}. Do not edit manually."
         |> withComment model
 
+    let jsonSerializerOptions : JsonSerializerOptions =
+        JsonSerializerOptions(
+            JsonSerializerDefaults.General,
+            WriteIndented = true
+        )
+
     let toJsonString (model: FStarConfigJsonModel) : string =
-        model |> toJsonObject |> _.ToJsonString()
+        model |> toJsonObject |> _.ToJsonString(jsonSerializerOptions)
         
 
 
