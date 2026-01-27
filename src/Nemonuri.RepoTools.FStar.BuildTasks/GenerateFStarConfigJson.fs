@@ -105,12 +105,25 @@ type public GenerateFStarConfigJson() =
             let toFullPathAndJsonEscape (v: string) : string =
                 (Path.GetFullPath v).Replace(@"\", @"\\")
 
+
             append "{"
             append $$"""  "{{CommentPropertyName}}": "{{CommentContentHeader}} {{__.GeneratorName}}. Do not edit manually.", """
             append $$"""  "{{FStarExePropertyName}}": "{{toFullPathAndJsonEscape fe}}", """
             append $$"""  "{{OptionsPropertyName}}": [{{__.Options |> Array.map getItemSpec |> String.concat ``, ``}}], """
             append $$"""  "{{IncludeDirectoriesPropertyName}}": [{{__.IncludeDirs |> Array.map getItemSpec |> String.concat ``, ``}}] """
             append "}"
+
+            let model: FStarConfigJsonModel = 
+                { FStarExe = toFullPathAndJsonEscape fe;
+                    Options = [||];
+                    IncludeDirectories = [||];
+                    Extra = None }
+
+            model
+            |> FStarConfigJsonModelTheory.withFormattedComment __.GeneratorName
+            |> FStarConfigJsonModelTheory.toJsonString
+            |> __.Log.LogMessage
+
 
             let fcjContent = sb.ToString()
             let fcjFilePath = FStarConfigJsonTheory.getFullPath odInfo.FullName __.Prefix
@@ -126,5 +139,8 @@ type public GenerateFStarConfigJson() =
             
         with e ->
             __.Log.LogErrorFromException(e)
+#if DEBUG
+            __.Log.LogError(e.ToString())
+#endif
             false
 

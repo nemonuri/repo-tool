@@ -1,5 +1,6 @@
 namespace Nemonuri.RepoTools.FStar.BuildTasks
 
+open System.Text.Json;
 open System.Text.Json.Nodes;
 open System.Runtime.ExceptionServices;
 open System.Collections.Generic;
@@ -52,7 +53,9 @@ module FStarConfigJsonModelTheory =
             yield toKv FStarExePropertyName (model.FStarExe |> JsonValue.op_Implicit)
             yield toKv OptionsPropertyName (model.Options |> Array.map JsonValue.op_Implicit |> fun items -> JsonArray items)
             yield toKv IncludeDirectoriesPropertyName (model.IncludeDirectories |> Array.map JsonValue.op_Implicit |> fun items -> JsonArray items )
-            yield! model.Extra |> Option.map (fun v -> v :> KeyValuePair<string, JsonNode> seq) |> Option.defaultValue Seq.empty
+            yield! model.Extra 
+                |> Option.map (fun v -> v |> Seq.map (fun kv -> KeyValuePair<_,_>(kv.Key, kv.Value.DeepClone())))
+                |> Option.defaultValue Seq.empty
         } |> propertiesToJsonObject
     
     let tryGetComment (model: FStarConfigJsonModel) : string option =
@@ -73,14 +76,20 @@ module FStarConfigJsonModelTheory =
             if clonedExt.ContainsKey CommentPropertyName then
                 clonedExt[CommentPropertyName] <- JsonValue.op_Implicit comment
             else
-                clonedExt.Add(CommentPropertyName, JsonValue.op_Implicit comment)
+                clonedExt.Add(CommentPropertyName, JsonValue.op_Implicit comment) |> ignore
             clonedExt
-            
+
         {   FStarExe = model.FStarExe; 
             Options = model.Options; 
             IncludeDirectories = model.IncludeDirectories; 
             Extra = Some newExt }
 
+    let withFormattedComment (generatorName: string) (model: FStarConfigJsonModel) =
+        $"{CommentContentHeader} {generatorName}. Do not edit manually."
+        |> withComment model
+
+    let toJsonString (model: FStarConfigJsonModel) : string =
+        model |> toJsonObject |> _.ToJsonString()
         
 
 
