@@ -2,7 +2,6 @@
 
 open Microsoft.Build.Framework
 open System.IO
-open System.Text
 open System.Text.RegularExpressions
 open FStarConfigJsonTheory
 
@@ -96,17 +95,14 @@ type public GenerateFStarConfigJson() =
 
             let odInfo = checkOutDirectory.Value
 
-            // build json string
-            (*
             let ``, ``= ", "
             let getItemSpec (ti: ITaskItem) = $"\"{ti.ItemSpec}\""
-            let toFullPathAndJsonEscape (v: string) : string = (Path.GetFullPath v).Replace(@"\", @"\\")
-            *)
+
 
             let fcjContent = 
                 { FStarExe = fe;
-                    Options = [||];
-                    IncludeDirectories = [||];
+                    Options = __.Options |> Seq.map getItemSpec |> Array.ofSeq;
+                    IncludeDirectories = __.IncludeDirs |> Seq.map getItemSpec |> Array.ofSeq;
                     Extra = None }
                 |> FStarConfigJsonModelTheory.withFormattedComment __.GeneratorName
                 |> FStarConfigJsonModelTheory.toJsonString
@@ -122,9 +118,8 @@ type public GenerateFStarConfigJson() =
             true
             
         with e ->
-            __.Log.LogErrorFromException(e)
-#if DEBUG
-            __.Log.LogError(e.ToString())
-#endif
+            __.Log.LogErrorFromException e
+            __.Log.LogError "Internal stack trace = "
+            __.Log.LogError e.StackTrace
             false
 

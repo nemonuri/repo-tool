@@ -10,7 +10,7 @@
     <Compile Include="Theories.fs" />
     <Compile Include="FStarConfigJsonTheory.fs" />
     <Compile Include="FStarConfigJsonModel.fs" />
-    <Compile Include="GenerateFStarConfigJson.fs" />
+    <Compile Include="GenerateFStarConfigJson.fs" /><Compile Include="EditGeneratedFStarConfigJson.fs" />
   </ItemGroup>
 
   <ItemGroup>
