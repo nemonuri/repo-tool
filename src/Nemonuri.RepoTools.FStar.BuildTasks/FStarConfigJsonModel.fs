@@ -13,7 +13,6 @@ module FStarConfigJsonModelTheory =
     open FStarConfigJsonTheory;
     type Pr = FStarConfigJsonTheory.ParseToJsonObjectResult
 
-    [<RequireQualifiedAccess>]
     type ParseGeneratedToModelResult =
     | Success of FStarConfigJsonModel
     | NotJsonObject of JsonNode

@@ -8,6 +8,7 @@ open FStarConfigJsonTheory
 type private F = System.IO.File
 type private D = System.IO.Directory
 type private Ir = ProcessTheory.InvokeResult
+module M = MSBuildTheory
 
 type public GenerateFStarConfigJson() =
     inherit Microsoft.Build.Utilities.Task()
@@ -34,7 +35,7 @@ type public GenerateFStarConfigJson() =
     member val GeneratedFilePath: ITaskItem | null = null with get,set
 
     override __.Execute(): bool =
-        let logError message valueExpr value = __.Log.LogError("{0}. {1} = {2}", message, valueExpr, value); false
+        let logError a1 a2 a3 = M.logErrorAndFalse __ a1 a2 a3
         let fe = __.FStarExe
         let fee = nameof __.FStarExe
         let od = __.OutDirectory
@@ -118,8 +119,5 @@ type public GenerateFStarConfigJson() =
             true
             
         with e ->
-            __.Log.LogErrorFromException e
-            __.Log.LogError "Internal stack trace = "
-            __.Log.LogError e.StackTrace
-            false
+            M.logExceptionAndFalse __ e
 
