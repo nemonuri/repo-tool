@@ -1,121 +1,91 @@
-module GenerateFStarConfigJsonTest
+namespace Nemonuri.RepoTools.FStar.BuildTasks.Tests
 
 open Xunit
 open Nemonuri.RepoTools.FStar.BuildTasks
 open Nemonuri.RepoTools.TestRuntime;
+open TestTheory
 
-// Reference: https://github.com/dotnet/fsharp/blob/main/tests/fsharp/tests.fs
-// - F# Xunit 은 별도의 TestOutputHelper 같은 게 없나보네
-let log = printfn
+module GenerateFStarConfigJsonTestTheory =
 
-type Amd = System.Reflection.AssemblyMetadataAttribute
+    let members1 : TheoryData<string, bool> =
+        TheoryData<_,_>(seq {        
+            struct ("directory.fstar", false)
+            struct ("not-exist.fstar", false)
+            struct ("txt.fstar", false)
+            struct ("return1.fstar", false)
+            struct ("return0.fstar", false)
+            struct ("stderr-version", false)
+            struct ("stdout1-version", true)
+            struct ("stdout0-version", true) // ← Canon
+            struct ("stdin", false)
+            struct ("stdin_readline", false)
+            struct ("sleep1s-stdout0-version.fstar", true)
+            struct ("sleep10s-stdout0-version.fstar", false)
+        })
 
-[<Literal>]
-let RealFStarExePath = "RealFStarExePath"
+    let getCanonFStarMockExe = 
+        let starting = "stdout0-version"
+        lazy (    
+            match tryGetMockFStarExePath starting with
+            | None -> failwith $"Cannot find mock F*. Starting = {starting}"
+            | Some mockPath -> mockPath
+        )
 
-[<Literal>]
-let MockFStarExePath = "MockFStarExePath"
+    let members2 : TheoryData<string> =
+        TheoryData<_>( seq {
+            FStarConfigJsonTheory.GeneratorDefaultPrefix
+            ""
+            "Hello"
+        })
 
-[<RequireQualifiedAccess>]
-type private _Dummy = _Dummy
+module M = GenerateFStarConfigJsonTestTheory
 
-let getAssemblyMetadataAttributes =
-    typeof<_Dummy>.Assembly.GetCustomAttributes(typeof<Amd>, false)
-    |> System.Linq.Enumerable.OfType<Amd>
+type GenerateFStarConfigJsonTest(output: ITestOutputHelper) =
 
-let realFStarExePathOrNone =
-    getAssemblyMetadataAttributes
-    |> Seq.tryFind (fun amd -> amd.Key = RealFStarExePath)
-    |> function
-        | None -> None
-        | Some amd -> 
-            match amd.Value with
-            | StringTheory.NotNullOrWhiteSpace s -> Some s
-            | _ -> None
+    let log = logf output
 
-let tryGetMockFStarExePath (starting: string) =
-    getAssemblyMetadataAttributes
-    |> Seq.filter (fun amd -> amd.Key = MockFStarExePath)
-    |> Seq.tryFind (fun amd ->
-        match amd.Value with
-        | StringTheory.NotNullOrWhiteSpace v -> 
-            v.Trim() 
-            |> System.IO.Path.GetFileName
-            |> fun v -> (nonNull v).StartsWith starting
-        | _ -> false
-    )
-    |> Option.map (fun amd -> MSBuildIntrinsicFunctions.NormalizePath (nonNull amd.Value) )
-
-
-[<Fact>]
-let TestRealFStarExePathIfSome() =
-    match realFStarExePathOrNone with
-    | None -> log "%s is None. Skip this test." (nameof realFStarExePathOrNone)
-    | Some realPath -> 
-        GenerateFStarConfigJson(
-            FStarExe = realPath,
-            OutDirectory = System.IO.Path.Combine [|System.AppContext.BaseDirectory; "out-dir"|],
-            BuildEngine = ConsoleWriterMockBuildEngine()
-        ).Execute()
-        |> Assert.True
+    [<Fact>]
+    member _.TestRealFStarExePathIfSome() =
+        match realFStarExePathOrNone with
+        | None -> log "%s is None. Skip this test." (nameof realFStarExePathOrNone)
+        | Some realPath -> 
+            GenerateFStarConfigJson(
+                FStarExe = realPath,
+                OutDirectory = System.IO.Path.Combine [|System.AppContext.BaseDirectory; "out-dir"|],
+                BuildEngine = ConsoleWriterMockBuildEngine()
+            ).Execute()
+            |> Assert.True
 
 
-let Members1 : TheoryData<string, bool> =
-    TheoryData<_,_>(seq {        
-        struct ("directory.fstar", false)
-        struct ("not-exist.fstar", false)
-        struct ("txt.fstar", false)
-        struct ("return1.fstar", false)
-        struct ("return0.fstar", false)
-        struct ("stderr-version", false)
-        struct ("stdout1-version", true)
-        struct ("stdout0-version", true) // ← Canon
-        struct ("stdin", false)
-        struct ("stdin_readline", false)
-        struct ("sleep1s-stdout0-version.fstar", true)
-        struct ("sleep10s-stdout0-version.fstar", false)
-    })
+    static member val Members1 = M.members1
 
-[<Theory>]
-[<MemberData(nameof(Members1))>]
-let TestMockFStarExePath (starting: string) (expected: bool) =
-    match tryGetMockFStarExePath starting with
-    | None -> failwith $"Cannot find mock F*. Starting = {starting}"
-    | Some mockPath ->
-        GenerateFStarConfigJson(
-            FStarExe = mockPath,
-            OutDirectory = System.IO.Path.Combine [|System.AppContext.BaseDirectory; "out-dir"|],
-            BuildEngine = ConsoleWriterMockBuildEngine()
-        ).Execute()
-        |> fun actual -> Assert.Equal(expected, actual)
-
-let getCanonFStarMockExe = 
-    let starting = "stdout0-version"
-    lazy (    
+    [<Theory>]
+    [<MemberData(nameof(GenerateFStarConfigJsonTest.Members1))>]
+    member _.TestMockFStarExePath (starting: string) (expected: bool) =
         match tryGetMockFStarExePath starting with
         | None -> failwith $"Cannot find mock F*. Starting = {starting}"
-        | Some mockPath -> mockPath
-    )
+        | Some mockPath ->
+            GenerateFStarConfigJson(
+                FStarExe = mockPath,
+                OutDirectory = System.IO.Path.Combine [|System.AppContext.BaseDirectory; "out-dir"|],
+                BuildEngine = ConsoleWriterMockBuildEngine()
+            ).Execute()
+            |> fun actual -> Assert.Equal(expected, actual)
 
-let Members2 : TheoryData<string> =
-    TheoryData<_>( seq {
-        FStarConfigJsonTheory.GeneratorDefaultPrefix
-        ""
-        "Hello"
-    })
+    static member val Members2 = M.members2
 
-[<Theory>]
-[<MemberData(nameof(Members2))>]
-let GeneratedFilePath_FileShouldBeExistAndValid (prefix: string) =
-    let outDirectory = System.IO.Path.Combine [|System.AppContext.BaseDirectory; "out-dir"; System.DateTime.Now.Ticks.ToString(); prefix|]
-    let generatedFilePathBox = MockTaskItem ""
-    GenerateFStarConfigJson(
-        FStarExe = getCanonFStarMockExe.Force(),
-        OutDirectory = outDirectory,
-        BuildEngine = ConsoleWriterMockBuildEngine(),
-        Prefix = prefix,
-        GeneratedFilePath = generatedFilePathBox
-    ).Execute()
-    |> Assert.True
-    Assert.True (FStarConfigJsonTheory.isMaybeGeneratedFile generatedFilePathBox.ItemSpec)
+    [<Theory>]
+    [<MemberData(nameof(GenerateFStarConfigJsonTest.Members2))>]
+    member __.GeneratedFilePath_FileShouldBeExistAndValid (prefix: string) =
+        let outDirectory = System.IO.Path.Combine [|System.AppContext.BaseDirectory; "out-dir"; System.DateTime.Now.Ticks.ToString(); prefix|]
+        let generatedFilePathBox = MockTaskItem ""
+        GenerateFStarConfigJson(
+            FStarExe = M.getCanonFStarMockExe.Force(),
+            OutDirectory = outDirectory,
+            BuildEngine = ConsoleWriterMockBuildEngine(),
+            Prefix = prefix,
+            GeneratedFilePath = generatedFilePathBox
+        ).Execute()
+        |> Assert.True
+        Assert.True (FStarConfigJsonTheory.isMaybeGeneratedFile generatedFilePathBox.ItemSpec)
 
