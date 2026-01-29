@@ -37,21 +37,26 @@ module GenerateFStarConfigJsonTestTheory =
             ""
             "Hello"
         })
+    
+    
 
 module M = GenerateFStarConfigJsonTestTheory
+open PathTheory
 
 type GenerateFStarConfigJsonTest(output: ITestOutputHelper) =
 
-    let log = logf output
+    let log fmt = logf output fmt
+
+    let tempPath = temporaryDirectoryRootPath </> nameof GenerateFStarConfigJsonTest
 
     [<Fact>]
-    member _.TestRealFStarExePathIfSome() =
+    member __.TestRealFStarExePathIfSome() =
         match realFStarExePathOrNone with
         | None -> log "%s is None. Skip this test." (nameof realFStarExePathOrNone)
         | Some realPath -> 
             GenerateFStarConfigJson(
                 FStarExe = realPath,
-                OutDirectory = System.IO.Path.Combine [|System.AppContext.BaseDirectory; "out-dir"|],
+                OutDirectory = (tempPath </> nameof __.TestRealFStarExePathIfSome),
                 BuildEngine = ConsoleWriterMockBuildEngine()
             ).Execute()
             |> Assert.True
@@ -61,13 +66,13 @@ type GenerateFStarConfigJsonTest(output: ITestOutputHelper) =
 
     [<Theory>]
     [<MemberData(nameof(GenerateFStarConfigJsonTest.Members1))>]
-    member _.TestMockFStarExePath (starting: string) (expected: bool) =
+    member __.TestMockFStarExePath (starting: string) (expected: bool) =
         match tryGetMockFStarExePath starting with
         | None -> failwith $"Cannot find mock F*. Starting = {starting}"
         | Some mockPath ->
             GenerateFStarConfigJson(
                 FStarExe = mockPath,
-                OutDirectory = System.IO.Path.Combine [|System.AppContext.BaseDirectory; "out-dir"|],
+                OutDirectory = (tempPath </> nameof __.TestMockFStarExePath),
                 BuildEngine = ConsoleWriterMockBuildEngine()
             ).Execute()
             |> fun actual -> Assert.Equal(expected, actual)
@@ -77,7 +82,7 @@ type GenerateFStarConfigJsonTest(output: ITestOutputHelper) =
     [<Theory>]
     [<MemberData(nameof(GenerateFStarConfigJsonTest.Members2))>]
     member __.GeneratedFilePath_FileShouldBeExistAndValid (prefix: string) =
-        let outDirectory = System.IO.Path.Combine [|System.AppContext.BaseDirectory; "out-dir"; System.DateTime.Now.Ticks.ToString(); prefix|]
+        let outDirectory = tempPath </> nameof __.GeneratedFilePath_FileShouldBeExistAndValid
         let generatedFilePathBox = MockTaskItem ""
         GenerateFStarConfigJson(
             FStarExe = M.getCanonFStarMockExe.Force(),

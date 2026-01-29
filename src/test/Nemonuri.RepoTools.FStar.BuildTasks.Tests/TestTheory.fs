@@ -51,3 +51,12 @@ module TestTheory =
         )
         |> Option.map (fun amd -> MSBuildIntrinsicFunctions.NormalizePath amd)
 
+    let testStartTime = System.DateTime.Now
+
+    open PathTheory
+
+    let temporaryDirectoryRootPath = 
+        System.AppContext.BaseDirectory
+        |/> "temp"
+        |/> System.DateTime.Now.ToString "yyyyMMdd_HHmmss_ffff"
+        

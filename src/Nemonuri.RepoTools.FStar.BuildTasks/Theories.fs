@@ -11,6 +11,10 @@ module PathTheory =
         let isInvalidChar c = Array.contains c invalidPathCharsCache
         String.exists isInvalidChar path
 
+    let (</>) a b = Path.Combine [|a;b|]
+
+    let (|/>) a b = a </> b
+
 
 module ProcessTheory =
 
