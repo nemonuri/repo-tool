@@ -21,3 +21,5 @@ module MSBuildTheory =
         logException task e; false
     
     let getItemSpec (item: ITaskItem) : string = item.ItemSpec
+
+    let toTaskItem (itemSpec: string) : ITaskItem = Microsoft.Build.Utilities.TaskItem itemSpec

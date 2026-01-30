@@ -10,6 +10,9 @@ type FStarConfigJsonModel =
 
 module FStarConfigJsonModelTheory =
 
+    let create fstarExe options includeDirectories extra =
+        { FStarExe=fstarExe; Options=options; IncludeDirectories=includeDirectories; Extra=extra }
+
     open FStarConfigJsonTheory;
     type Pr = FStarConfigJsonTheory.ParseToJsonObjectResult
 

@@ -13,7 +13,7 @@
   <ItemGroup>
     <Compile Include="AssemblyInfo.fs" />
     <Compile Include="TestTheory.fs" />
-    <Compile Include="GenerateFStarConfigJsonTest.fs" />
+    <Compile Include="GenerateFStarConfigJsonTest.fs" /><Compile Include="EditGeneratedFStarConfigJsonTest.fs" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="xunit.v3.mtp-v2" />
