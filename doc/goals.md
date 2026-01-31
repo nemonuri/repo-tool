@@ -71,7 +71,11 @@
 
 (TODO)
 
-## 2. `EditGeneratedFStarConfigJson` MSBuild Task
+## 2. `GetOptionsFromFStarExePath` MSBuild Task
+
+## 3. `PartitionOptions` MSBuild Task
+
+## 4. `EditGeneratedFStarConfigJson` MSBuild Task
 
 - Automate editing '.fst.config.json'
   - Restricted to auto-generated. (by 'GenerateFStarConfigJson')
