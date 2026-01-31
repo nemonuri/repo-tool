@@ -13,7 +13,7 @@ type PartitionOptions() =
     member val ResultOptions: ITaskItem[] = [||] with get,set
 
     [<Output>]
-    member val IncludeDirs: ITaskItem[] = [||] with get,set
+    member val ResultIncludeDirectories: ITaskItem[] = [||] with get,set
 
     override __.Execute(): bool =
         try
@@ -23,7 +23,7 @@ type PartitionOptions() =
                 sourceOptions |> Fo.partitionIncludeOptions
             with
                 | Fo.Success(includes, others) -> 
-                    __.IncludeDirs <- includes |> List.map Mb.toTaskItem |> Array.ofList
+                    __.ResultIncludeDirectories <- includes |> List.map Mb.toTaskItem |> Array.ofList
                     __.ResultOptions <- others |> List.map Mb.toTaskItem |> Array.ofList
                     true
                 | _ ->

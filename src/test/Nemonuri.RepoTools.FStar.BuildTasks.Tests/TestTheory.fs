@@ -51,6 +51,8 @@ module TestTheory =
         )
         |> Option.map (fun amd -> MSBuildIntrinsicFunctions.NormalizePath amd)
 
+    let toTaskItem (itemSpec: string) = MockTaskItem itemSpec :> Microsoft.Build.Framework.ITaskItem
+
     let testStartTime = System.DateTime.Now
 
     open PathTheory

@@ -122,8 +122,6 @@ type EditGeneratedFStarConfigJsonTest(fixture: M.Fixture, output: ITestOutputHel
 
     let log fmt = logf output fmt
 
-    let toTaskItem (itemSpec: string) = MockTaskItem itemSpec :> Microsoft.Build.Framework.ITaskItem
-
     static member Member1 = M.member1
 
     [<Theory>]
