@@ -31,13 +31,14 @@ module rec EditGeneratedFStarConfigJsonTestTheory =
     let labels = seq {
         Label.SdkG
         Label.EmptyFStarExe
+        Label.EmptyFStarConfigJsonPath
     }
 
     let labelToFStarExe (label: Label) =
         match label with
         | Label.SdkG -> "fstar.exe"
         | Label.EmptyFStarExe -> ""
-        | Label.EmptyFStarConfigJsonPath -> raise <| EmptyFStarConfigJsonPathException (nameof labelToFStarExe)
+        | Label.EmptyFStarConfigJsonPath -> ""
 
     let labelToModel (label: Label) =
         Jm.create (labelToFStarExe label) [||] [||] None
@@ -65,6 +66,7 @@ module rec EditGeneratedFStarConfigJsonTestTheory =
         do
             generatedFStarConfigJsonPathTable
             |> Map.toSeq
+            |> Seq.filter (fun (label, path) -> System.String.IsNullOrWhiteSpace path |> not)
             |> Seq.iter (fun (label, path) ->
                 path |> Path.GetDirectoryName |> function | Null -> () | NonNull path -> Directory.CreateDirectory path |> ignore
                 labelToModel label |> Jm.toJsonString |> fun contents -> File.WriteAllText(path, contents)
@@ -128,6 +130,7 @@ type EditGeneratedFStarConfigJsonTest(fixture: M.Fixture, output: ITestOutputHel
 
         let actualExecuteSuccess = 
             EditGeneratedFStarConfigJson(
+                BuildEngine = ConsoleWriterMockBuildEngine(),
                 GeneratedFStarConfigJsonPath = jsonPath,
                 Options = (options |> Array.map toTaskItem),
                 IncludeDirectories = (includeDirs |> Array.map toTaskItem)
