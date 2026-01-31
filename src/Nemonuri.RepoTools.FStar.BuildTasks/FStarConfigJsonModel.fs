@@ -35,13 +35,13 @@ module FStarConfigJsonModelTheory =
             let options = jo[OptionsPropertyName].AsArray() |> Seq.map _.AsValue().GetValue<string>()
             let includeDirs = jo[IncludeDirectoriesPropertyName].AsArray() |> Seq.map _.AsValue().GetValue<string>()
             let extra = jo |> Seq.filter isExtraProperty |> propertiesToJsonObject
-            ParseGeneratedToModelResult.Success 
+            Success 
                 {   FStarExe = fstarExe; 
                     Options = options |> Array.ofSeq; 
                     IncludeDirectories = includeDirs |> Array.ofSeq; 
                     Extra = Some extra }
         else
-            ParseGeneratedToModelResult.NotGeneratedFStarConfigJson jo
+            NotGeneratedFStarConfigJson jo
 
     let parseGeneratedTextToModel (jsonText: string) : ParseGeneratedToModelResult =
         match parseToJsonObject jsonText with

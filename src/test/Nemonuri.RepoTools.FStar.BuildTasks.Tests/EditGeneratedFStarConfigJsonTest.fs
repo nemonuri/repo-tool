@@ -7,14 +7,16 @@ open Xunit
 open Nemonuri.RepoTools.FStar.BuildTasks
 open Nemonuri.RepoTools.TestRuntime;
 open System.IO;
+open TestTheory
 
 module rec EditGeneratedFStarConfigJsonTestTheory =
 
-    open TestTheory
     open PathTheory
 
     module J = FStarConfigJsonTheory
     module Jm = FStarConfigJsonModelTheory
+
+    exception EmptyFStarConfigJsonPathException of string
 
     let fixtureRootPath = 
         temporaryDirectoryRootPath
@@ -23,17 +25,19 @@ module rec EditGeneratedFStarConfigJsonTestTheory =
 
     type Label =
     | SdkG = 0
-    | Empty = 1
+    | EmptyFStarExe = 1
+    | EmptyFStarConfigJsonPath = 2
 
     let labels = seq {
         Label.SdkG
-        Label.Empty
+        Label.EmptyFStarExe
     }
 
     let labelToFStarExe (label: Label) =
         match label with
-        | Label.SdkG -> GenerateFStarConfigJsonTestTheory.getCanonFStarMockExe.Force()
-        | Label.Empty -> ""
+        | Label.SdkG -> "fstar.exe"
+        | Label.EmptyFStarExe -> ""
+        | Label.EmptyFStarConfigJsonPath -> raise <| EmptyFStarConfigJsonPathException (nameof labelToFStarExe)
 
     let labelToModel (label: Label) =
         Jm.create (labelToFStarExe label) [||] [||] None
@@ -42,10 +46,13 @@ module rec EditGeneratedFStarConfigJsonTestTheory =
     let labelToPrefix (label: Label) =
         match label with
         | Label.SdkG -> "sdk.g"
-        | Label.Empty -> ""
+        | Label.EmptyFStarExe -> ""
+        | Label.EmptyFStarConfigJsonPath -> raise <| EmptyFStarConfigJsonPathException (nameof labelToPrefix)
     
     let labelToFStarConfigJsonPath (label: Label) = 
-        FStarConfigJsonTheory.getFullPath fixtureRootPath (labelToPrefix label)
+        match label with
+        | Label.EmptyFStarConfigJsonPath -> ""
+        | _ -> FStarConfigJsonTheory.getFullPath fixtureRootPath (labelToPrefix label)
 
 
     type Fixture() =
@@ -59,6 +66,7 @@ module rec EditGeneratedFStarConfigJsonTestTheory =
             generatedFStarConfigJsonPathTable
             |> Map.toSeq
             |> Seq.iter (fun (label, path) ->
+                path |> Path.GetDirectoryName |> function | Null -> () | NonNull path -> Directory.CreateDirectory path |> ignore
                 labelToModel label |> Jm.toJsonString |> fun contents -> File.WriteAllText(path, contents)
             )
 
@@ -67,24 +75,68 @@ module rec EditGeneratedFStarConfigJsonTestTheory =
     [<assembly: AssemblyFixture(typeof<EditGeneratedFStarConfigJsonTestTheory.Fixture>)>]
     do()
 
+    let member1: TheoryData<Label, string array, string array, bool, string> = 
+        TheoryData<_,_,_,_,_>(seq {
+            struct (
+                Label.EmptyFStarExe, [||], [||], true,
+                """
+{
+  "fstar_exe": "",
+  "options": [],
+  "include_dirs": [],
+  "_comment": "This file is auto generated from Nemonuri.RepoTools.FStar. Do not edit manually."
+}
+                """)
+            struct (
+                Label.SdkG, [|"--ext"; "optimize_let_vc"; "--ext"; "fly_deps"|], [|"ulib"; "ulib.checked"|], true, 
+                """
+{
+  "fstar_exe": "fstar.exe",
+  "options": ["--ext", "optimize_let_vc", "--ext", "fly_deps"],
+  "include_dirs": ["ulib", "ulib.checked"],
+  "_comment": "This file is auto generated from Nemonuri.RepoTools.FStar. Do not edit manually."
+}
+                """)
+            struct (
+                Label.EmptyFStarConfigJsonPath, [|"--ext"; "optimize_let_vc"; "--ext"; "fly_deps"|], [|"ulib"; "ulib.checked"|], false, ""
+            )
+        })
+
+
 module M = EditGeneratedFStarConfigJsonTestTheory
-open TestTheory
 open System.Text.Json.Nodes
 
 type EditGeneratedFStarConfigJsonTest(fixture: M.Fixture, output: ITestOutputHelper) =
 
     let log fmt = logf output fmt
 
-    member __.Test(label: M.Label, options: string array, includeDirs: string array, expectedJson: string) =
+    let toTaskItem (itemSpec: string) = MockTaskItem itemSpec :> Microsoft.Build.Framework.ITaskItem
+
+    static member Member1 = M.member1
+
+    [<Theory>]
+    [<MemberData(nameof EditGeneratedFStarConfigJsonTest.Member1)>]
+    member __.Test(
+        label: M.Label, 
+        options: string array, 
+        includeDirs: string array, 
+        expectedExecuteSuccess: bool, 
+        expectedJson: string
+        ) =
         let jsonPath = fixture.GeneratedFStarConfigJsonPathTable[label]
         log "GeneratedFStarConfigJsonPath = %s" jsonPath
 
-        EditGeneratedFStarConfigJson(
-            GeneratedFStarConfigJsonPath = jsonPath,
-            Options = (options |> Array.map MSBuildTheory.toTaskItem),
-            IncludeDirectories = (includeDirs |> Array.map MSBuildTheory.toTaskItem)
-        ).Execute() |> Assert.True
+        let actualExecuteSuccess = 
+            EditGeneratedFStarConfigJson(
+                GeneratedFStarConfigJsonPath = jsonPath,
+                Options = (options |> Array.map toTaskItem),
+                IncludeDirectories = (includeDirs |> Array.map toTaskItem)
+            ).Execute()
+        
+        Assert.Equal(actualExecuteSuccess, expectedExecuteSuccess)
 
+        if not actualExecuteSuccess then () else
+        
         (JsonNode.Parse(File.ReadAllText jsonPath), JsonNode.Parse expectedJson)
         |> JsonNode.DeepEquals
         |> Assert.True
