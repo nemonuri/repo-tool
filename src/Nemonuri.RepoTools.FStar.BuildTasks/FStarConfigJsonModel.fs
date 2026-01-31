@@ -27,7 +27,10 @@ module FStarConfigJsonModelTheory =
         | FStarExePropertyName | OptionsPropertyName | IncludeDirectoriesPropertyName -> false
         | _ -> true
 
-    let propertiesToJsonObject properties = JsonObject(properties, jsonNodeOptions)
+    let propertiesToJsonObject (properties: KeyValuePair<string, JsonNode> seq) = 
+        properties
+        |> Seq.map (fun kv -> KeyValuePair(kv.Key, kv.Value.DeepClone()))
+        |> fun newProperties -> JsonObject(newProperties, jsonNodeOptions)
 
     let parseGeneratedJsonObjectToModel (jo: JsonObject) : ParseGeneratedToModelResult =
         if isMaybeGeneratedJsonObject jo then
@@ -56,7 +59,7 @@ module FStarConfigJsonModelTheory =
             yield toKv OptionsPropertyName (model.Options |> Array.map JsonValue.op_Implicit |> fun items -> JsonArray items)
             yield toKv IncludeDirectoriesPropertyName (model.IncludeDirectories |> Array.map JsonValue.op_Implicit |> fun items -> JsonArray items )
             yield! model.Extra 
-                |> Option.map (fun v -> v |> Seq.map (fun kv -> KeyValuePair<_,_>(kv.Key, kv.Value.DeepClone())))
+                |> Option.map (fun v -> v :> KeyValuePair<string, JsonNode> seq)
                 |> Option.defaultValue Seq.empty
         } |> propertiesToJsonObject
     

@@ -27,18 +27,19 @@ module rec EditGeneratedFStarConfigJsonTestTheory =
     | SdkG = 0
     | EmptyFStarExe = 1
     | EmptyFStarConfigJsonPath = 2
+    | NotExistFStarConfigJsonPath = 3
 
     let labels = seq {
         Label.SdkG
         Label.EmptyFStarExe
         Label.EmptyFStarConfigJsonPath
+        Label.NotExistFStarConfigJsonPath
     }
 
     let labelToFStarExe (label: Label) =
         match label with
-        | Label.SdkG -> "fstar.exe"
-        | Label.EmptyFStarExe -> ""
-        | Label.EmptyFStarConfigJsonPath -> ""
+        | Label.SdkG | Label.NotExistFStarConfigJsonPath -> "fstar.exe"
+        | Label.EmptyFStarExe | Label.EmptyFStarConfigJsonPath -> ""
 
     let labelToModel (label: Label) =
         Jm.create (labelToFStarExe label) [||] [||] None
@@ -49,11 +50,17 @@ module rec EditGeneratedFStarConfigJsonTestTheory =
         | Label.SdkG -> "sdk.g"
         | Label.EmptyFStarExe -> ""
         | Label.EmptyFStarConfigJsonPath -> raise <| EmptyFStarConfigJsonPathException (nameof labelToPrefix)
+        | Label.NotExistFStarConfigJsonPath -> "notExist"
     
     let labelToFStarConfigJsonPath (label: Label) = 
         match label with
         | Label.EmptyFStarConfigJsonPath -> ""
         | _ -> FStarConfigJsonTheory.getFullPath fixtureRootPath (labelToPrefix label)
+
+    let canLabelWriteModelToDisk (label: Label) =
+        match label with
+        | Label.SdkG | Label.EmptyFStarExe -> true
+        | Label.EmptyFStarConfigJsonPath | Label.NotExistFStarConfigJsonPath -> false
 
 
     type Fixture() =
@@ -66,7 +73,7 @@ module rec EditGeneratedFStarConfigJsonTestTheory =
         do
             generatedFStarConfigJsonPathTable
             |> Map.toSeq
-            |> Seq.filter (fun (label, path) -> System.String.IsNullOrWhiteSpace path |> not)
+            |> Seq.filter (fun (label, _) -> canLabelWriteModelToDisk label)
             |> Seq.iter (fun (label, path) ->
                 path |> Path.GetDirectoryName |> function | Null -> () | NonNull path -> Directory.CreateDirectory path |> ignore
                 labelToModel label |> Jm.toJsonString |> fun contents -> File.WriteAllText(path, contents)
@@ -102,6 +109,9 @@ module rec EditGeneratedFStarConfigJsonTestTheory =
             struct (
                 Label.EmptyFStarConfigJsonPath, [|"--ext"; "optimize_let_vc"; "--ext"; "fly_deps"|], [|"ulib"; "ulib.checked"|], false, ""
             )
+            struct (
+                Label.NotExistFStarConfigJsonPath, [|"--ext"; "optimize_let_vc"; "--ext"; "fly_deps"|], [|"ulib"; "ulib.checked"|], false, ""
+            )
         })
 
 
@@ -136,11 +146,15 @@ type EditGeneratedFStarConfigJsonTest(fixture: M.Fixture, output: ITestOutputHel
                 IncludeDirectories = (includeDirs |> Array.map toTaskItem)
             ).Execute()
         
-        Assert.Equal(actualExecuteSuccess, expectedExecuteSuccess)
+        Assert.Equal( expectedExecuteSuccess, actualExecuteSuccess)
 
         if not actualExecuteSuccess then () else
         
-        (JsonNode.Parse(File.ReadAllText jsonPath), JsonNode.Parse expectedJson)
+        let actualJson = File.ReadAllText jsonPath
+        log "actualJson = \n%s" actualJson
+        log "expectedJson = \n%s" expectedJson
+
+        (JsonNode.Parse actualJson, JsonNode.Parse expectedJson)
         |> JsonNode.DeepEquals
         |> Assert.True
 
