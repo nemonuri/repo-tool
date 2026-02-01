@@ -6,6 +6,8 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Theories.fs" />
+    <Compile Include="FStarC.fs" />
+    <Compile Include="ProjectSnapShots.fs" />
     <Compile Include="FStarOptionTheory.fs" />
     <Compile Include="FStarConfigJsonTheory.fs" />
     <Compile Include="FStarConfigJsonModel.fs" />
