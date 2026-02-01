@@ -1,0 +1,7 @@
+{
+    "FSharp.unnecessaryParenthesesAnalyzerExclusions": [
+        ".*\\.g\\.fs",
+        ".*\\.cg\\.fs",
+        "FStarC\\.fs"
+    ]
+}
