@@ -29,5 +29,6 @@
     <PackageVersion Include="MSBuild.ProjectCreation" Version="17.0.1" />
     <PackageVersion Include="ThisAssembly.Constants" Version="2.1.2" />
     <PackageVersion Include="System.Text.Json" Version="10.0.2" />
+    <PackageVersion Include="FSharpPlus" Version="1.9.1" />
   </ItemGroup>
 </Project>

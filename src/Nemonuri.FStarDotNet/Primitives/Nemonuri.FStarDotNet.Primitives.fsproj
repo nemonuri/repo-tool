@@ -5,11 +5,18 @@
   </PropertyGroup>
   <!-- Reference: https://github.com/FStarLang/FStar/blob/v2025.12.15/fsharp/ulibfs.fsproj -->
   <ItemGroup>
+    <Compile Include="EuclidTheory.fs" />
     <Compile Include="Z.fs" />
-    
-    <Compile Include="Prims.fs" /><Compile Include="FStar.Pervasives.Native.fs" /><Compile Include="FStar.All.fs" /><Compile Include="FStar.Char.fs" /><Compile Include="FStar.Dyn.fs" /><Compile Include="FStar.Float.fs" /><Compile Include="FStar.UInt8.fs" />
+    <Compile Include="Prims.fs" />
+    <Compile Include="FStar.Pervasives.Native.fs" />
+    <Compile Include="FStar.All.fs" />
+    <Compile Include="FStar.Char.fs" />
+    <Compile Include="FStar.Dyn.fs" />
+    <Compile Include="FStar.Float.fs" />
+    <Compile Include="FStar.UInt8.fs" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="FSharp.Core" />
+    <PackageReference Include="FSharpPlus" />
   </ItemGroup>
 </Project>
