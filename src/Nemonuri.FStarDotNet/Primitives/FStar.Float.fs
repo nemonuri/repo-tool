@@ -4,5 +4,5 @@ module Nemonuri.FStarDotNet.FStar.Float
 open Nemonuri.FStarDotNet
 open Prims
 
-type float = FSharp.Core.float
-type double = float
+type float = Microsoft.FSharp.Core.float
+type double = Microsoft.FSharp.Core.double

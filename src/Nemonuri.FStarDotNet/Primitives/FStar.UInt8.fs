@@ -9,8 +9,8 @@ type byte = uint8
 type t = uint8
 type t' = t
 
-let n = 8uy
-let v (x:uint8) : Prims.int = Prims.int x
+let n = Prims.of_int 8
+let v (x:t) : Prims.int = Prims.int x
 
 let zero = 0uy
 let one = 1uy
