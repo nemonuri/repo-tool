@@ -11,6 +11,15 @@ let alloc x = Microsoft.FSharp.Core.Operators.ref x
 let mk_ref = alloc
 let raise = Microsoft.FSharp.Core.Operators.raise
 let exit i = Microsoft.FSharp.Core.Operators.exit (Z.to_int i)
-let Failure = Microsoft.FSharp.Core.Operators.Failure
+
+//---|
+
+//--- Reference: https://github.com/FStarLang/FStar/blob/v2025.12.15/src/basic/FStarC.Effect.fsti ---
+
+let try_with (doing: unit -> 'a) (handleError: exn -> 'a) : 'a = try doing() with e-> handleError e
+
+exception Failure of string
+
+let failwith = Microsoft.FSharp.Core.Operators.failwith
 
 //---|
