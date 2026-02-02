@@ -1,4 +1,4 @@
-﻿// Reference: https://github.com/FStarLang/FStar/blob/v2025.12.15/ulib/ml/app/Prims.ml
+﻿
 // Reference: https://github.com/FStarLang/FStar/blob/v2025.12.15/fsharp/base/Prims.fs
 
 #nowarn "86" //The '<=' operator should not normally be redefined. To define overloaded comparison semantics for a particular type, implement the 'System.IComparable' interface in the definition of that type.
@@ -100,7 +100,7 @@ let op_Equality x y = x = y
 let op_disEquality x y = x<>y
 let op_AmpAmp x y = x && y
 let op_BarBar x y  = x || y
-let uu___is_Nil l = l = [] (*consider redefining List.isEmpty as this function*)
+let uu___is_Nil l = List.isEmpty l
 let uu___is_Cons l = not (uu___is_Nil l)
 let strcat x y = x ^ y
 

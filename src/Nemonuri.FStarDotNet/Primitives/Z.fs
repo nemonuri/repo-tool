@@ -2,16 +2,6 @@
 
 module Nemonuri.FStarDotNet.Z
 
-/// Implmentaion of [System.Numerics.BigInteger.Explicit\(BigInteger to IntPtr\)](https://learn.microsoft.com/en-us/dotnet/api/system.numerics.biginteger.op_explicit?view=net-10.0#system-numerics-biginteger-op-explicit(system-numerics-biginteger)-system-intptr)
-/// - [Reference](https://github.com/dotnet/runtime/blob/12d635004345678d5245e77dd9e4e9daeb6a543f/src/libraries/System.Runtime.Numerics/src/System/Numerics/BigInteger.cs#L2040)
-let to_nint (i: bigint) : nativeint = 
-    if System.Environment.Is64BitProcess then
-        let r : int64 = bigint.op_Explicit i
-        Operators.nativeint r
-    else
-        let r : int32 = bigint.op_Explicit i
-        Operators.nativeint r
-
 /// Type of integers of arbitrary length.
 type t = bigint
 
@@ -33,6 +23,16 @@ let of_string (s: string) : t = t.Parse s
 let to_string (i: t) : string = i.ToString()
 
 let of_nativeint (i: nativeint) : t = t (Operators.int64 i)
+
+/// Implmentaion of [System.Numerics.BigInteger.Explicit\(BigInteger to IntPtr\)](https://learn.microsoft.com/en-us/dotnet/api/system.numerics.biginteger.op_explicit?view=net-10.0#system-numerics-biginteger-op-explicit(system-numerics-biginteger)-system-intptr)
+/// - [Reference](https://github.com/dotnet/runtime/blob/12d635004345678d5245e77dd9e4e9daeb6a543f/src/libraries/System.Runtime.Numerics/src/System/Numerics/BigInteger.cs#L2040)
+let to_nativeint (i: t) : nativeint = 
+    if System.Environment.Is64BitProcess then
+        let r : int64 = t.op_Explicit i
+        Operators.nativeint r
+    else
+        let r : int32 = t.op_Explicit i
+        Operators.nativeint r
 
 (**
 ### .NET DivRem operation
