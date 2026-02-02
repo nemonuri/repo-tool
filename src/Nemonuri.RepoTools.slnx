@@ -1,4 +1,7 @@
 <Solution>
+  <Folder Name="/Nemonuri.FStarDotNet/FStarC/Basic/">
+    <Project Path="Nemonuri.FStarDotNet/FStarC/Basic/Nemonuri.FStarDotNet.FStarC.Basic.fsproj" />
+  </Folder>
   <Folder Name="/test/">
     <Project Path="test/Nemonuri.RepoTools.FStar.BuildTasks.Tests/Nemonuri.RepoTools.FStar.BuildTasks.Tests.fsproj" />
   </Folder>
