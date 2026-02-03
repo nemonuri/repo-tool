@@ -23,4 +23,8 @@
     </When>
   </Choose>
 
+  <Target Name="ShowConstants" AfterTargets="AfterBuild">
+    <Warning Text="$(DefineConstants)" />
+  </Target>
+
 </Project>

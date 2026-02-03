@@ -33,5 +33,6 @@
     <PackageVersion Include="FSharp.Compatibility.OCaml" Version="0.1.14" />
     <PackageVersion Include="System.Memory" Version="4.6.3" />
     <PackageVersion Include="PolySharp" Version="1.15.0" />
+    <PackageVersion Include="Shim.System.Text.Rune" Version="6.0.2" />
   </ItemGroup>
 </Project>

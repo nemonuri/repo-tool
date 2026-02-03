@@ -1,5 +1,7 @@
 ﻿namespace Nemonuri.NetStandards.Text;
 
+using System.Text;
+
 public static class EncodingExtensions
 {
 #if !NETSTANDARD2_1_OR_GREATER

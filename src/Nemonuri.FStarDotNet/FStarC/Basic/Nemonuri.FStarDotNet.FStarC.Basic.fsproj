@@ -17,12 +17,11 @@
   <ItemGroup>
     <PackageReference Include="FSharp.Core" />
     <PackageReference Include="FSharp.Compatibility.OCaml" />
+    <PackageReference Include="Shim.System.Text.Rune" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Primitives\Nemonuri.FStarDotNet.Primitives.fsproj" />
+    <ProjectReference Include="..\..\..\Nemonuri.NetStandards\Text\Nemonuri.NetStandards.Text.csproj" />
   </ItemGroup>
 
-  <ItemGroup Condition="$(TargetFramework) == 'netstandard2.0'">
-    <PackageReference Include="System.Memory" />
-  </ItemGroup>
 </Project>
