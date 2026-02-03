@@ -30,5 +30,6 @@
     <PackageVersion Include="ThisAssembly.Constants" Version="2.1.2" />
     <PackageVersion Include="System.Text.Json" Version="10.0.2" />
     <PackageVersion Include="FSharpPlus" Version="1.9.1" />
+    <PackageVersion Include="FSharp.Compatibility.OCaml" Version="0.1.14" />
   </ItemGroup>
 </Project>

@@ -2,10 +2,11 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <LangVersion>10</LangVersion>
   </PropertyGroup>
   <!-- Reference: https://github.com/FStarLang/FStar/blob/v2025.12.15/fsharp/ulibfs.fsproj -->
   <ItemGroup>
-    
+    <Compile Include="CharListTheory.fs" />
     <Compile Include="Z.fs" />
     <Compile Include="Prims.fs" />
     <Compile Include="FStar.Pervasives.Native.fs" />
@@ -13,10 +14,16 @@
     <Compile Include="FStar.Char.fs" />
     <Compile Include="FStar.Dyn.fs" />
     <Compile Include="FStar.Float.fs" />
-    <Compile Include="FStar.UInt8.fs" /><Compile Include="FStar.Int8.fs" /><Compile Include="FStar.Int16.fs" /><Compile Include="FStar.UInt16.fs" /><Compile Include="FStar.Int32.fs" /><Compile Include="FStar.Int64.fs" />
+    <Compile Include="FStar.UInt8.fs" />
+    <Compile Include="FStar.Int8.fs" />
+    <Compile Include="FStar.Int16.fs" />
+    <Compile Include="FStar.UInt16.fs" />
+    <Compile Include="FStar.Int32.fs" />
+    <Compile Include="FStar.Int64.fs" />
+    <Compile Include="FStar.List.fs" />
+    <Compile Include="FStar.String.fs" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="FSharp.Core" />
-    <PackageReference Include="FSharpPlus" />
   </ItemGroup>
 </Project>

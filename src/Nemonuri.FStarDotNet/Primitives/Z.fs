@@ -71,6 +71,12 @@ such that **a = b * q + r** and **0 <= r < |b|**.
 Raises **Division_by_zero** if **b = 0**.
 *)
 
+(**
+### FSharpPlus
+
+- [FSharpPlus.Math.Generic.divRemE](https://github.com/fsprojects/FSharpPlus/blob/v1.9.1/src/FSharpPlus/Math/Generic.fs)
+*)
+
 let ediv_rem (n: t) (d: t) : t * t =
     if n < 0I then
         let q, r = t.DivRem(n, d)
@@ -83,7 +89,5 @@ let ediv_rem (n: t) (d: t) : t * t =
             q+1I, r-d
     else 
         t.DivRem(n, d)
-
-
 
 //---|
