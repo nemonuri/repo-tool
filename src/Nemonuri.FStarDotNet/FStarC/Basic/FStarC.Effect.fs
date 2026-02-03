@@ -1,5 +1,5 @@
 module Nemonuri.FStarDotNet.FStarC.Effect
-open Nemonuri.FStarDotNet
+open Nemonuri.OCamlDotNet.zarith
 
 //--- Reference: https://github.com/FStarLang/FStar/blob/v2025.12.15/src/ml/FStarC_Effect.ml ---
 

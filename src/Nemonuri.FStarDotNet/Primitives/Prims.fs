@@ -5,7 +5,7 @@
 #nowarn "62" //This construct is for ML compatibility. Consider using the '+' operator instead. This may require a type annotation to indicate it acts on strings. This message can be disabled using '--nowarn:62' or '#nowarn "62"'
 
 module Nemonuri.FStarDotNet.Prims
-open Nemonuri.FStarDotNet
+open Nemonuri.OCamlDotNet.zarith
 open System.Numerics
 
 type int       = bigint

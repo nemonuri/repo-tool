@@ -7,6 +7,10 @@
   <Folder Name="/Nemonuri.FStarDotNet/Primitives/">
     <Project Path="Nemonuri.FStarDotNet/Primitives/Nemonuri.FStarDotNet.Primitives.fsproj" />
   </Folder>
+  <Folder Name="/Nemonuri.NetStandards/" />
+  <Folder Name="/Nemonuri.NetStandards/Text/">
+    <Project Path="Nemonuri.NetStandards/Text/Nemonuri.NetStandards.Text.csproj" />
+  </Folder>
   <Folder Name="/test/">
     <Project Path="test/Nemonuri.RepoTools.FStar.BuildTasks.Tests/Nemonuri.RepoTools.FStar.BuildTasks.Tests.fsproj" />
   </Folder>

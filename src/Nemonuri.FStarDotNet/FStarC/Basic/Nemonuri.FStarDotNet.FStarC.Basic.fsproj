@@ -1,14 +1,18 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
+    <TargetFrameworks>netstandard2.0;netstandard2.1</TargetFrameworks>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Compatibility.fs" />
+    <Compile Include="Batteries.fs" />
     <Compile Include="FStarC.Effect.fs" />
     <Compile Include="FStarC.Char.fs" />
     <Compile Include="FStarC.BaseTypes.fs" />
-    <Compile Include="FStarC.Getopt.fs" /><Compile Include="FStarC.VConfig.fs" />
+    <Compile Include="FStarC.Getopt.fs" />
+    <Compile Include="FStarC.VConfig.fs" />
+    <Compile Include="FStarC.List.fs" />
+    <Compile Include="FStarC.String.fs" Condition="false" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="FSharp.Core" />
@@ -16,5 +20,9 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Primitives\Nemonuri.FStarDotNet.Primitives.fsproj" />
+  </ItemGroup>
+
+  <ItemGroup Condition="$(TargetFramework) == 'netstandard2.0'">
+    <PackageReference Include="System.Memory" />
   </ItemGroup>
 </Project>

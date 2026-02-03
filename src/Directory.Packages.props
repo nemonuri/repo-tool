@@ -31,5 +31,7 @@
     <PackageVersion Include="System.Text.Json" Version="10.0.2" />
     <PackageVersion Include="FSharpPlus" Version="1.9.1" />
     <PackageVersion Include="FSharp.Compatibility.OCaml" Version="0.1.14" />
+    <PackageVersion Include="System.Memory" Version="4.6.3" />
+    <PackageVersion Include="PolySharp" Version="1.15.0" />
   </ItemGroup>
 </Project>

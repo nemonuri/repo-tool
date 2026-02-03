@@ -1,6 +1,6 @@
 // Reference: https://ocaml.org/p/zarith/1.10/doc/zarith/Z/index.html
 
-module Nemonuri.FStarDotNet.Z
+module Nemonuri.OCamlDotNet.zarith.Z
 
 /// Type of integers of arbitrary length.
 type t = bigint

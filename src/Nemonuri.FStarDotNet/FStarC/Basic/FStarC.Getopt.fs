@@ -5,8 +5,8 @@
 
 module Nemonuri.FStarDotNet.FStarC.Getopt
 open Nemonuri.FStarDotNet
-open Nemonuri.OCamlDotNet
 open Nemonuri.OCamlDotNet.Stdlib
+open Nemonuri.OCamlDotNet.zarith
 open FStarC.BaseTypes
 
 //val nolong : string

@@ -1,0 +1,26 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>netstandard2.0;netstandard2.1</TargetFrameworks>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <LangVersion>14</LangVersion>
+    <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+  
+  <Choose>
+    <When Condition="$(TargetFramework) == 'netstandard2.0'">
+      <ItemGroup>
+        <PackageReference Include="PolySharp" PrivateAssets="all" />
+        <PackageReference Include="System.Memory" />
+      </ItemGroup>
+      <PropertyGroup>
+        <PolySharpIncludeGeneratedTypes>
+          System.Diagnostics.CodeAnalysis.NotNullWhenAttribute;
+        </PolySharpIncludeGeneratedTypes>
+      </PropertyGroup>
+    </When>
+  </Choose>
+
+</Project>
