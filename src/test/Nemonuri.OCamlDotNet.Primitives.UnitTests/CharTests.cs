@@ -67,4 +67,33 @@ public class CharTests
         ('☆', false, default),
         ('→', false, default)
     ];
+
+    [Theory]
+    [MemberData(nameof(Members3))]
+    public void ToDotNetChar(Char ocamlChar, char toCompareDotNetChar, bool expectingEqual)
+    {
+        // Arrange
+        // Act 
+        char actualChar = ocamlChar.ToDotNetChar();
+        
+        // Assert
+        if (expectingEqual)
+        {
+            Assert.Equal(toCompareDotNetChar, actualChar);
+        }
+        else
+        {
+            Assert.NotEqual(toCompareDotNetChar, actualChar);
+        }
+    }
+    public static TheoryData<Char, char, bool> Members3 =>
+    [ 
+        (new((byte)'a'), 'a', true),
+        (new((byte)'\t'), '\t', true),
+        (new((byte)'ÿ'), 'ÿ', true),
+        (new((byte)0), '\0', true),
+        (new((byte)'b'), 'c', false),
+        (new((byte)'\n'), '\r', false),
+        (new((byte)'c'), (char)(((int)'c') + 0x100), false)
+    ];
 }
