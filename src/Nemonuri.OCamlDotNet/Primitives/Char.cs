@@ -78,7 +78,7 @@ public readonly struct Char : IComparable<Char>, IEquatable<Char>
     /// </remarks>
     public String ToEscaped()
     {
-        static ReadOnlySpan<byte> ByteToDecimalAscii(byte value, Span<byte> dest)
+        static void ByteToDecimalAscii(byte value, Span<Char> dest)
         {
             const int asciiZero = 0x30;
 
@@ -93,8 +93,15 @@ public readonly struct Char : IComparable<Char>, IEquatable<Char>
                 curValue = Math.DivRem(curValue, 10, out int rem);
                 dest[(3-1) - i] = (byte)(asciiZero + rem);
             }
+        }
 
-            return dest;
+        static String CreateDefault(byte value, Span<Char> dest)
+        {
+            Debug.Assert(dest.Length == 4);
+
+            dest[0] = L.AsciiBackslash;
+            ByteToDecimalAscii(value, dest.Slice(1));
+            return new(dest);
         }
 
         return _value switch
@@ -102,13 +109,13 @@ public readonly struct Char : IComparable<Char>, IEquatable<Char>
             L.AsciiBackslash => [L.AsciiBackslash, L.AsciiBackslash],
             L.AsciiDoubleQuote => [L.AsciiBackslash, L.AsciiDoubleQuote],
             L.AsciiSingleQuote => [L.AsciiBackslash, L.AsciiSingleQuote],
-            L.AsciiLineFeed => [L.AsciiBackslash, .."n"u8],
-            L.AsciiCarriageReturn => [L.AsciiBackslash, .."r"u8],
-            L.AsciiHorizontalTabulation => [L.AsciiBackslash, .."t"u8],
-            L.AsciiBackspace => [L.AsciiBackslash, .."b"u8],
-            L.AsciiSpace => [L.AsciiBackslash, .." "u8],
+            L.AsciiLineFeed => [L.AsciiBackslash, (byte)'n'],
+            L.AsciiCarriageReturn => [L.AsciiBackslash, (byte)'r'],
+            L.AsciiHorizontalTabulation => [L.AsciiBackslash, (byte)'t'],
+            L.AsciiBackspace => [L.AsciiBackslash, (byte)'b'],
+            L.AsciiSpace => [L.AsciiBackslash, (byte)' '],
             >= L.AsciiPrintableMinimum and <= L.AsciiPrintableMaximum => [this],
-            _ => [L.AsciiBackslash, ..ByteToDecimalAscii(_value, stackalloc byte[3])]
+            _ => CreateDefault(_value, stackalloc Char[4])
         };
     }
 }
