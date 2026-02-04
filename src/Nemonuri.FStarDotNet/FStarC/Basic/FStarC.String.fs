@@ -3,6 +3,7 @@
 
 module Nemonuri.FStarDotNet.FStarC.String
 open Nemonuri.FStarDotNet
+open Nemonuri.OCamlDotNet
 open Nemonuri.OCamlDotNet.zarith
 open Nemonuri.OCamlDotNet.Stdlib
 

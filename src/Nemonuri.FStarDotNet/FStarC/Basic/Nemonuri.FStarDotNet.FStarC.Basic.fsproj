@@ -12,16 +12,16 @@
     <Compile Include="FStarC.Getopt.fs" />
     <Compile Include="FStarC.VConfig.fs" />
     <Compile Include="FStarC.List.fs" />
-    <Compile Include="FStarC.String.fs" Condition="false" />
+    <Compile Include="FStarC.String.fs" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="FSharp.Core" />
     <PackageReference Include="FSharp.Compatibility.OCaml" />
     <PackageReference Include="Shim.System.Text.Rune" />
+    <PackageReference Include="CommunityToolkit.HighPerformance" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Primitives\Nemonuri.FStarDotNet.Primitives.fsproj" />
     <ProjectReference Include="..\..\..\Nemonuri.NetStandards\Text\Nemonuri.NetStandards.Text.csproj" />
   </ItemGroup>
-
 </Project>
