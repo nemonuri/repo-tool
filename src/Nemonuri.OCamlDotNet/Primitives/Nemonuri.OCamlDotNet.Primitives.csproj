@@ -1,0 +1,35 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>netstandard2.0;netstandard2.1;net8.0</TargetFrameworks>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <LangVersion>14</LangVersion>
+    <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <RootNameSpace>Nemonuri.OCamlDotNet</RootNameSpace>
+  </PropertyGroup>
+
+  <Choose>
+    <When Condition="!$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0'))">
+      <ItemGroup>
+        <PackageReference Include="PolySharp" PrivateAssets="all" />
+      </ItemGroup>
+      <PropertyGroup>
+        <PolySharpIncludeGeneratedTypes>
+          <!-- https://github.com/Sergio0694/PolySharp/tree/main/src/PolySharp.SourceGenerators/EmbeddedResources -->
+          System.Runtime.CompilerServices.CollectionBuilderAttribute;
+        </PolySharpIncludeGeneratedTypes>
+      </PropertyGroup>
+    </When>
+  </Choose>
+
+  <ItemGroup Condition="$(TargetFramework.ToLowerInvariant().StartsWith('netstandard2.'))">
+    <PackageReference Include="System.Collections.Immutable" />
+  </ItemGroup>
+  
+  <ItemGroup>
+    <PackageReference Include="CommunityToolkit.HighPerformance" />
+  </ItemGroup>
+
+</Project>

@@ -63,3 +63,5 @@
   - 따라서, 'Functor'를 잘 이용해야 한다.
     - Monad 기반이냐, 아니면 Applicator 기반이냐!
 
+## FP abstractions
+- https://fsprojects.github.io/FSharpPlus/abstractions.html
