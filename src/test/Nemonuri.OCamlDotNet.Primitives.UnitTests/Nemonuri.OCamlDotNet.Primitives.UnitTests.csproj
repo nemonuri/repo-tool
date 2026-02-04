@@ -21,6 +21,7 @@
 
   <ItemGroup>
     <PackageReference Include="xunit.v3.mtp-v2" />
+    <PackageReference Include="PolySharp" Condition="$(TargetFramework) == 'net472'" />
   </ItemGroup>
 
   <ItemGroup>

@@ -86,6 +86,8 @@ public readonly struct String : IEquatable<String>, IComparable<String>, IReadOn
     /// <exception cref="System.OverflowException" />
     public static String FromDotNetString(string dotnetString)
     {
+        Guard.IsNotNull(dotnetString);
+
         ReadOnlySpan<char> dotnetStringAsSpan = dotnetString.AsSpan();
         Span<Char> ocamlChars = stackalloc Char[dotnetStringAsSpan.Length];
         for (int i = 0; i < ocamlChars.Length; i++)
@@ -97,4 +99,15 @@ public readonly struct String : IEquatable<String>, IComparable<String>, IReadOn
 
     /// <inheritdoc cref="FromDotNetString" />
     public static explicit operator String(string dotnetString) => FromDotNetString(dotnetString);
+
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="encoding"/> is <see langword="null"/>.</exception>
+    /// <exception cref="EncoderFallbackException" />
+    public static String FromDotNetStringAndEncoding(string dotnetString, Encoding encoding)
+    {
+        Guard.IsNotNull(dotnetString);
+        Guard.IsNotNull(encoding);
+
+        var bytes = encoding.GetBytes(dotnetString);
+        return new(bytes.AsSpan());
+    }
 }

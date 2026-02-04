@@ -25,7 +25,6 @@ public class CharTests
         // Assert
         Assert.Equal(expectedBytes, actualBytes);
     }
-
     public static TheoryData<byte, byte[]> Members1 =>
     [
         ((byte)'a', [(byte)'a']), 
@@ -36,5 +35,36 @@ public class CharTests
         ((byte)'\u007f', [..@"\127"u8]),
         ((byte)'\u001f', [..@"\031"u8]),
         ((byte)'ÿ', [..@"\255"u8])
+    ];
+
+    [Theory]
+    [MemberData(nameof(Members2))]
+    public void FromDotNetChar(char dotnetChar, bool expectingSuccess, Char expectedChar)
+    {
+        // Arrange
+        Char actualChar = default;
+        void TestCode()
+        {
+            actualChar = Char.FromDotNetChar(dotnetChar);
+        }
+
+        // Act & Assert
+        if (expectingSuccess)
+        {
+            TestCode();
+            Assert.Equal(expectedChar, actualChar);
+        }
+        else
+        {
+            Assert.Throws<OverflowException>(TestCode);
+        }
+    }
+    public static TheoryData<char, bool, Char> Members2 =>
+    [
+        ('a', true, new((byte)'a')),
+        ('\t', true, new((byte)'\t')),
+        ('©', true, new((byte)'©')),
+        ('☆', false, default),
+        ('→', false, default)
     ];
 }
