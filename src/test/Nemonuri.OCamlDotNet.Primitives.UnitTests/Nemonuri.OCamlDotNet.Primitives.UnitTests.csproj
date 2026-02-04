@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>Nemonuri.OCamlDotNet.Primitives.UnitTests</RootNamespace>
+    <TargetFrameworks>net10.0;net472</TargetFrameworks>
+    <TestingPlatformDotnetTestSupport>true</TestingPlatformDotnetTestSupport>
+    <LangVersion>14</LangVersion>
+    <TestingPlatformCommandLineArguments>$(TestingPlatformCommandLineArguments) --report-xunit-html </TestingPlatformCommandLineArguments>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Content Include="xunit.runner.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Xunit" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="xunit.v3.mtp-v2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Nemonuri.OCamlDotNet\Primitives\Nemonuri.OCamlDotNet.Primitives.csproj" />
+  </ItemGroup>
+
+</Project>
