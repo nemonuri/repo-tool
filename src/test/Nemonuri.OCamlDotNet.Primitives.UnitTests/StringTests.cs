@@ -59,4 +59,23 @@ public class StringTests
         ([.."Hello, World!\n:-)"u8], "Hello, World!\n:-)"),
         ([.."Latin-1 "u8, (Char)'©', (Char)'ÿ', (Char)'¼'], "Latin-1 ©ÿ¼")
     ];
+
+    [Theory]
+    [MemberData(nameof(Members3))]
+    public void Test_Equals(String left, String right, bool expectedResult)
+    {
+        // Arrange
+        // Act
+        bool actualResult = left.Equals(right);
+
+        // Assert
+        Assert.Equal(expectedResult, actualResult);
+    }
+    public static TheoryData<String, String, bool> Members3 =>
+    [
+        (new([.."Hello, World!\n:-)"u8]), new([.."Hello, World!\n:-)"u8]), true),
+        (new([.."Hello, World!\n:-)"u8]), new([.."Hello, World!\n:-("u8]), false),
+        (new([.."Latin-1 "u8, (Char)'©', (Char)'ÿ', (Char)'¼']), new([.."Latin-1 "u8, (Char)'©', (Char)'ÿ', (Char)'¼']), true),
+        (new([.."Latin-1 "u8, (Char)'©', (Char)'ÿ', (Char)'¼']), new([.."Latin-1 ©ÿ¼"u8]), false)
+    ];
 }

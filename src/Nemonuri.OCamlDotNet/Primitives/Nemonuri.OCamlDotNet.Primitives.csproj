@@ -11,7 +11,7 @@
   </PropertyGroup>
 
   <Choose>
-    <When Condition="!$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0'))">
+    <When Condition="!$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net9.0'))">
       <ItemGroup>
         <PackageReference Include="PolySharp" PrivateAssets="all" />
       </ItemGroup>
@@ -19,6 +19,7 @@
         <PolySharpIncludeGeneratedTypes>
           <!-- https://github.com/Sergio0694/PolySharp/tree/main/src/PolySharp.SourceGenerators/EmbeddedResources -->
           System.Runtime.CompilerServices.CollectionBuilderAttribute;
+          System.Runtime.CompilerServices.OverloadResolutionPriorityAttribute;
         </PolySharpIncludeGeneratedTypes>
       </PropertyGroup>
     </When>

@@ -19,6 +19,7 @@ public readonly struct String : IEquatable<String>, IComparable<String>, IReadOn
         _value = chars is null ? [] : ImmutableArray.Create(chars.ToArray());
     }
 
+    [OverloadResolutionPriority(-1)]
     public String(ReadOnlySpan<Char> chars) : this(ImmutableArray.Create(chars))
     {}
 
