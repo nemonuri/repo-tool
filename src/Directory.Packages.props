@@ -36,5 +36,6 @@
     <PackageVersion Include="PolySharp" Version="1.15.0" />
     <PackageVersion Include="Shim.System.Text.Rune" Version="6.0.2" />
     <PackageVersion Include="System.Collections.Immutable" Version="10.0.2" />
+    <PackageVersion Include="Microsoft.Testing.Extensions.CodeCoverage" Version="18.4.1" />
   </ItemGroup>
 </Project>

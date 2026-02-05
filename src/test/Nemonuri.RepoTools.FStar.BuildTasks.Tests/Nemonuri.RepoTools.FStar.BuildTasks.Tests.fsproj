@@ -6,6 +6,7 @@
     <TargetFramework>net8.0</TargetFramework>
     <TestingPlatformDotnetTestSupport>true</TestingPlatformDotnetTestSupport>
     <TestingPlatformCommandLineArguments>$(TestingPlatformCommandLineArguments) --report-xunit-html </TestingPlatformCommandLineArguments>
+    <TestingPlatformCommandLineArguments>$(TestingPlatformCommandLineArguments) --coverage --coverage-output-format cobertura </TestingPlatformCommandLineArguments>
   </PropertyGroup>
   <ItemGroup>
     <Content Include="xunit.runner.json" CopyToOutputDirectory="PreserveNewest" />
@@ -19,6 +20,7 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="xunit.v3.mtp-v2" />
+    <PackageReference Include="Microsoft.Testing.Extensions.CodeCoverage" />
   </ItemGroup>
   <ItemGroup>
     <AssemblyMetadata Include="RealFStarExePath" Value="$(RealFStarExePath)" Condition="Exists('$(RealFStarExePath)')" />
