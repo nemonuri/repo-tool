@@ -65,6 +65,9 @@ public class StringTests
     public void Test_Equals(String left, String right, bool expectedResult)
     {
         // Arrange
+        _out.WriteLine($"left = {left.ToDotNetString()}");
+        _out.WriteLine($"right = {right.ToDotNetString()}");
+
         // Act
         bool actualResult = left.Equals(right);
 
@@ -76,6 +79,33 @@ public class StringTests
         (new([.."Hello, World!\n:-)"u8]), new([.."Hello, World!\n:-)"u8]), true),
         (new([.."Hello, World!\n:-)"u8]), new([.."Hello, World!\n:-("u8]), false),
         (new([.."Latin-1 "u8, (Char)'©', (Char)'ÿ', (Char)'¼']), new([.."Latin-1 "u8, (Char)'©', (Char)'ÿ', (Char)'¼']), true),
-        (new([.."Latin-1 "u8, (Char)'©', (Char)'ÿ', (Char)'¼']), new([.."Latin-1 ©ÿ¼"u8]), false)
+        (new([.."Latin-1 "u8, (Char)'©', (Char)'ÿ', (Char)'¼']), new([.."Latin-1 ©ÿ¼"u8]), false),
+        (default, [], true)
+    ];
+
+    [Theory]
+    [MemberData(nameof(Members4))]
+    public void GetHashCode_CompareToClone_ShouldEqual(String original)
+    {
+        // Arrange
+        String clone = new(original.AsEnumerable());
+        _out.WriteLine($"original = {original.ToDotNetString()}");
+        _out.WriteLine($"clone = {clone.ToDotNetString()}");
+
+        // Act
+        int originalHashCode = original.GetHashCode();
+        int cloneHashCode = clone.GetHashCode();
+        _out.WriteLine($"originalHashCode = {originalHashCode}");
+        _out.WriteLine($"cloneHashCode = {cloneHashCode}");
+
+        // Assert
+        Assert.Equal(originalHashCode, cloneHashCode);
+    }
+    public static TheoryData<String> Members4 =>
+    [
+        new([.."Hello, World!\n:-)"u8]),
+        new([.."Latin-1 "u8, (Char)'©', (Char)'ÿ', (Char)'¼']),
+        new([]),
+        new([.."absadfefph2134nfvfd8"u8])
     ];
 }
