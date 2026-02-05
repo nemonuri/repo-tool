@@ -12,7 +12,7 @@ using L = Nemonuri.OCamlDotNet.LexicalTheory;
 /// </list>
 /// </remarks>
 [StructLayout(LayoutKind.Sequential)]
-public readonly struct Char : IComparable<Char>, IEquatable<Char>
+public readonly partial struct Char : IComparable<Char>, IEquatable<Char>, IComparable
 {
     private readonly byte _value;
 
@@ -35,6 +35,16 @@ public readonly struct Char : IComparable<Char>, IEquatable<Char>
     public static bool operator <= (Char l, Char r) => l.CompareTo(r) <= 0;
 
     public static bool operator >= (Char l, Char r) => l.CompareTo(r) >= 0;
+
+    public int CompareTo(object? obj)
+    {
+        if (obj == null) {return 1;}
+
+        if (obj is Char c) { return CompareTo(c); }
+        
+        throw new ArgumentException("Argument must be Nemonuri.OCamlDotNet.Char");
+    }
+     
 
 
     public bool Equals(Char other) => _value.Equals(other._value);
@@ -119,4 +129,3 @@ public readonly struct Char : IComparable<Char>, IEquatable<Char>
         };
     }
 }
-

@@ -15,6 +15,9 @@
   <Folder Name="/Nemonuri.OCamlDotNet/Primitives/">
     <Project Path="Nemonuri.OCamlDotNet/Primitives/Nemonuri.OCamlDotNet.Primitives.csproj" />
   </Folder>
+  <Folder Name="/Nemonuri.OCamlDotNet/Stdlib/">
+    <Project Path="Nemonuri.OCamlDotNet/Stdlib/Nemonuri.OCamlDotNet.Stdlib.fsproj" />
+  </Folder>
   <Folder Name="/test/">
     <Project Path="test/Nemonuri.OCamlDotNet.Primitives.UnitTests/Nemonuri.OCamlDotNet.Primitives.UnitTests.csproj" />
     <Project Path="test/Nemonuri.RepoTools.FStar.BuildTasks.Tests/Nemonuri.RepoTools.FStar.BuildTasks.Tests.fsproj" />

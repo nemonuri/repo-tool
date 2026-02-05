@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFrameworks>netstandard2.0;netstandard2.1</TargetFrameworks>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="Prelude.fs" />
+    
+    <Compile Include="Char.fs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Primitives\Nemonuri.OCamlDotNet.Primitives.csproj" />
+  </ItemGroup>
+</Project>

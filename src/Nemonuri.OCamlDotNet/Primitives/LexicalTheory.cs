@@ -33,5 +33,17 @@ public static class LexicalTheory
 
     /// <summary>Inclusive</summary>
     public const byte AsciiPrintableMaximum = 0x7e;
+
+    /// <summary>vertical tab (0x0B)</summary>
+    public const byte AsciiVerticalTabulation = 0x0b;
+
+    /// <summary>form feed (0x0C)</summary>
+    public const byte AsciiFormFeed = 0x0c;
+
+    /// <summary>Inclusive</summary>
+    public const byte AsciiGraphicCharacterMinimum = 0x21;
+
+    /// <summary>Inclusive</summary>
+    public const byte AsciiGraphicCharacterMaximum = AsciiPrintableMaximum;
 }
 
