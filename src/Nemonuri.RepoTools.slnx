@@ -18,7 +18,11 @@
   <Folder Name="/Nemonuri.OCamlDotNet/Primitives/">
     <Project Path="Nemonuri.OCamlDotNet/Primitives/Nemonuri.OCamlDotNet.Primitives.csproj" />
   </Folder>
+  <Folder Name="/Nemonuri.OCamlDotNet/Xunit/">
+    <Project Path="Nemonuri.OCamlDotNet/Xunit/Nemonuri.OCamlDotNet.Xunit.csproj" />
+  </Folder>
   <Folder Name="/test/">
+    <Project Path="test/Nemonuri.OCamlDotNet.Core.UnitTests/Nemonuri.OCamlDotNet.Core.UnitTests.fsproj" />
     <Project Path="test/Nemonuri.OCamlDotNet.Primitives.UnitTests/Nemonuri.OCamlDotNet.Primitives.UnitTests.csproj" />
     <Project Path="test/Nemonuri.RepoTools.FStar.BuildTasks.Tests/Nemonuri.RepoTools.FStar.BuildTasks.Tests.fsproj" />
   </Folder>
