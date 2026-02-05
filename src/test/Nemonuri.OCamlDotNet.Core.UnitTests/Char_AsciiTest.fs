@@ -2,6 +2,7 @@ namespace Nemonuri.OCamlDotNet.Core.UnitTests
 
 open Xunit
 open Nemonuri.OCamlDotNet.Core
+open TheoryDataBuilder
 type Te = System.TupleExtensions
 
 module Char_AsciiTestTheory =
@@ -26,9 +27,7 @@ type Char_AsciiTest(out: ITestOutputHelper) =
         Assert.Equal(expected, actual)
 
     static member Members2 : TheoryData<char, char> = 
-        let f = char.FromDotNetChar
-        TheoryData<_,_>([
-            ('a', 'A'); (' ', ' '); ('ÿ', 'ÿ'); ('1', '1'); ('g', 'G'); ('K', 'K')
-            ] |> List.map (mapTuple2 f f >> Te.ToValueTuple)
-        )
+        width2 char.FromDotNetChar char.FromDotNetChar { 
+            ('A', 'a'); (' ', ' ')
+        }
 
