@@ -12,11 +12,11 @@
     <Project Path="Nemonuri.NetStandards/Text/Nemonuri.NetStandards.Text.csproj" />
   </Folder>
   <Folder Name="/Nemonuri.OCamlDotNet/" />
+  <Folder Name="/Nemonuri.OCamlDotNet/Core/">
+    <Project Path="Nemonuri.OCamlDotNet/Core/Nemonuri.OCamlDotNet.Core.fsproj" />
+  </Folder>
   <Folder Name="/Nemonuri.OCamlDotNet/Primitives/">
     <Project Path="Nemonuri.OCamlDotNet/Primitives/Nemonuri.OCamlDotNet.Primitives.csproj" />
-  </Folder>
-  <Folder Name="/Nemonuri.OCamlDotNet/Stdlib/">
-    <Project Path="Nemonuri.OCamlDotNet/Stdlib/Nemonuri.OCamlDotNet.Stdlib.fsproj" />
   </Folder>
   <Folder Name="/test/">
     <Project Path="test/Nemonuri.OCamlDotNet.Primitives.UnitTests/Nemonuri.OCamlDotNet.Primitives.UnitTests.csproj" />
