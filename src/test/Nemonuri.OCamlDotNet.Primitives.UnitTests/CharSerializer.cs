@@ -20,7 +20,26 @@ public class CharSerializer() : IXunitSerializer
 
     public string Serialize(object value)
     {
-        Debug.Assert(value.GetType() == typeof(Char));
         return ((Char)value).ToDotNetChar().ToString();
+    }
+}
+
+public class StringSerializer() : IXunitSerializer
+{
+    public object Deserialize(Type type, string serializedValue)
+    {
+        Debug.Assert(type == typeof(String));
+        return String.FromDotNetString(serializedValue);
+    }
+
+    public bool IsSerializable(Type type, object? value, [NotNullWhen(false)] out string? failureReason)
+    {
+        failureReason = default;
+        return type == typeof(String);
+    }
+
+    public string Serialize(object value)
+    {
+        return ((String)value).ToDotNetString();
     }
 }

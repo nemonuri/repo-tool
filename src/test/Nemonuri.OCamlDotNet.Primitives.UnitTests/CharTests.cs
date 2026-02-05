@@ -39,7 +39,7 @@ public class CharTests
 
     [Theory]
     [MemberData(nameof(Members2))]
-    public void FromDotNetChar(char dotnetChar, bool expectingSuccess, Char expectedChar)
+    public void FromDotNetChar(char dotnetChar, bool expectingException, Char expectedChar)
     {
         // Arrange
         Char actualChar = default;
@@ -49,23 +49,23 @@ public class CharTests
         }
 
         // Act & Assert
-        if (expectingSuccess)
+        if (expectingException)
+        {
+            Assert.Throws<OverflowException>(TestCode);
+        }
+        else
         {
             TestCode();
             Assert.Equal(expectedChar, actualChar);
         }
-        else
-        {
-            Assert.Throws<OverflowException>(TestCode);
-        }
     }
     public static TheoryData<char, bool, Char> Members2 =>
     [
-        ('a', true, new((byte)'a')),
-        ('\t', true, new((byte)'\t')),
-        ('©', true, new((byte)'©')),
-        ('☆', false, default),
-        ('→', false, default)
+        ('a', false, new((byte)'a')),
+        ('\t', false, new((byte)'\t')),
+        ('©', false, new((byte)'©')),
+        ('☆', true, default),
+        ('→', true, default)
     ];
 
     [Theory]
