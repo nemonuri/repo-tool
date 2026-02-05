@@ -1,25 +1,15 @@
 <Solution>
-  <Folder Name="/Nemonuri.FStarDotNet/" />
-  <Folder Name="/Nemonuri.FStarDotNet/FStarC/" />
-  <Folder Name="/Nemonuri.FStarDotNet/FStarC/Basic/">
-    <Project Path="Nemonuri.FStarDotNet/FStarC/Basic/Nemonuri.FStarDotNet.FStarC.Basic.fsproj" />
-  </Folder>
-  <Folder Name="/Nemonuri.FStarDotNet/Primitives/">
+  <Folder Name="/Nemonuri.FStarDotNet/">
     <Project Path="Nemonuri.FStarDotNet/Primitives/Nemonuri.FStarDotNet.Primitives.fsproj" />
   </Folder>
-  <Folder Name="/Nemonuri.NetStandards/" />
-  <Folder Name="/Nemonuri.NetStandards/Text/">
+  <Folder Name="/Nemonuri.NetStandards/">
     <Project Path="Nemonuri.NetStandards/Text/Nemonuri.NetStandards.Text.csproj" />
   </Folder>
-  <Folder Name="/Nemonuri.OCamlDotNet/" />
-  <Folder Name="/Nemonuri.OCamlDotNet/Core/">
+  <Folder Name="/Nemonuri.OCamlDotNet/">
     <Project Path="Nemonuri.OCamlDotNet/Core/Nemonuri.OCamlDotNet.Core.fsproj" />
-  </Folder>
-  <Folder Name="/Nemonuri.OCamlDotNet/Primitives/">
-    <Project Path="Nemonuri.OCamlDotNet/Primitives/Nemonuri.OCamlDotNet.Primitives.csproj" />
-  </Folder>
-  <Folder Name="/Nemonuri.OCamlDotNet/Xunit/">
-    <Project Path="Nemonuri.OCamlDotNet/Xunit/Nemonuri.OCamlDotNet.Xunit.csproj" />
+	<Project Path="Nemonuri.OCamlDotNet/Primitives/Nemonuri.OCamlDotNet.Primitives.csproj" />
+	<Project Path="Nemonuri.OCamlDotNet/Xunit/Nemonuri.OCamlDotNet.Xunit.csproj" />
+	<Project Path="Nemonuri.OCamlDotNet/Zarith/Nemonuri.OCamlDotNet.Zarith.fsproj" />
   </Folder>
   <Folder Name="/test/">
     <Project Path="test/Nemonuri.OCamlDotNet.Core.UnitTests/Nemonuri.OCamlDotNet.Core.UnitTests.fsproj" />
