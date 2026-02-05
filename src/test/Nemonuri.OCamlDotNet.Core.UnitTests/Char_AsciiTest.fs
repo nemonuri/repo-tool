@@ -2,32 +2,31 @@ namespace Nemonuri.OCamlDotNet.Core.UnitTests
 
 open Xunit
 open Nemonuri.OCamlDotNet.Core
-open TheoryDataBuilder
-type Te = System.TupleExtensions
+module Tt = TheoryDataTheory
 
-module Char_AsciiTestTheory =
+module private Char_AsciiTestTheory =
 
-    let mapTuple2 f1 f2 (i1, i2) = f1 i1, f2 i2
+    let d2o = char.FromDotNetChar
 
 open Char_AsciiTestTheory
 
 type Char_AsciiTest(out: ITestOutputHelper) =
 
-    static member Members1 : TheoryData<char, char> = 
-        let f = char.FromDotNetChar
-        TheoryData<_,_>([
-            ('a', 'A'); (' ', ' '); ('ÿ', 'ÿ'); ('1', '1'); ('g', 'G'); ('K', 'K')
-            ] |> List.map (mapTuple2 f f >> Te.ToValueTuple)
-        )
-
+    static member Members1 = Tt.create2 d2o d2o [
+        ('a', 'A'); (' ', ' '); ('ÿ', 'ÿ'); ('1', '1'); ('g', 'G'); ('K', 'K')
+    ]
     [<Theory>]
     [<MemberData(nameof Char_AsciiTest.Members1)>]
     member _.uppercase (c: char) (expected: char) =
         let actual = Char.Ascii.uppercase c
         Assert.Equal(expected, actual)
 
-    static member Members2 : TheoryData<char, char> = 
-        width2 char.FromDotNetChar char.FromDotNetChar { 
-            ('A', 'a'); (' ', ' ')
-        }
+    static member Members2 = Tt.create2 d2o d2o [
+       ('A', 'a'); (' ', ' '); ('ÿ', 'ÿ'); ('1', '1'); ('G', 'g'); ('k', 'k')
+    ]
+    [<Theory>]
+    [<MemberData(nameof Char_AsciiTest.Members2)>]
+    member _.lowercase (c: char) (expected: char) =
+        let actual = Char.Ascii.lowercase c
+        Assert.Equal(expected, actual)
 

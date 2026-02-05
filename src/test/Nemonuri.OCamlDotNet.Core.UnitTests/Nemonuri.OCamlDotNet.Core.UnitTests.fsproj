@@ -11,7 +11,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AssemblyInfo.fs" />
-    <Compile Include="TheoryDataBuilder.fs" />
+    <Compile Include="TheoryDataTheory.fs" />
     <Compile Include="Char_AsciiTest.fs" />
   </ItemGroup>
   <ItemGroup>
