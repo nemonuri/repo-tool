@@ -45,4 +45,16 @@
   </Choose>
   <!-- /Trimming -->
 
+  <Choose>
+    <When Condition="$(TestingPlatformDotnetTestSupport) == 'true'">
+      <PropertyGroup>
+        <TestingPlatformCommandLineArguments>$(TestingPlatformCommandLineArguments) --report-xunit-html </TestingPlatformCommandLineArguments>
+        <TestingPlatformCommandLineArguments>$(TestingPlatformCommandLineArguments) --coverage --coverage-output-format cobertura </TestingPlatformCommandLineArguments>
+      </PropertyGroup>
+      <ItemGroup>
+        <PackageReference Include="Microsoft.Testing.Extensions.CodeCoverage" />
+      </ItemGroup>
+    </When>
+  </Choose>
+
 </Project>
