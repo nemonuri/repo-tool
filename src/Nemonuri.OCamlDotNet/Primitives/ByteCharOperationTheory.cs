@@ -11,16 +11,18 @@ public static class ByteCharOperationTheory
 
         public bool EqualsAll(byte left, byte right) => left == right;
 
-        public byte AddAll(byte left, byte right) => (byte)(left + right);
+        public byte AddAll(byte left, byte right) => unchecked((byte)(left + right));
 
-        public byte SubtractAll(byte left, byte right) => (byte)(left - right);
+        public byte SubtractAll(byte left, byte right) => unchecked((byte)(left - right));
 
-        public byte ModulusAll(byte left, byte right) => (byte)(left % right);
+        public byte ModulusAll(byte left, byte right) => unchecked((byte)(left % right));
 
         public bool TryGetUnsafeDecompositionPremise<TDecomposed>(out UnsafeDecompositionPremise<byte, TDecomposed> premise)
         {
             premise = default; return false;
         }
+
+        public byte GetConstant(byte value) => value;
     }
 
     public static bool LessThanOrEqualAll(Vector<byte> left, Vector<byte> right)
@@ -94,6 +96,40 @@ public static class ByteCharOperationTheory
             {
                 premise = default;
                 return false;
+            }
+        }
+
+        private const int s_constantsLength0 = byte.MaxValue;
+        private readonly static uint s_constantsLength1 = (uint)Vector<byte>.Count;
+        private readonly static byte[] s_constants = CreatePinnedTable();
+
+        private static byte[] CreatePinnedTable()
+        {
+            var length = s_constantsLength0 * s_constantsLength1;
+#if NET8_0_OR_GREATER
+            return GC.AllocateArray<byte>((int)length, pinned: true);
+#else
+            var table = new byte[length];
+            GCHandle handle = GCHandle.Alloc(table, GCHandleType.Pinned);
+            return table;
+#endif
+        }
+
+        public unsafe UnsafePinnedVectorPointer<byte> GetConstant(byte value)
+        {
+            fixed (byte* pRow = &s_constants[value * s_constantsLength1])
+            {
+                if (value != 0)
+                {
+                    // Check the table row is initialized.
+                    if (!(*pRow == value))
+                    {
+                        // If not, initialize.
+                        Unsafe.InitBlock(pRow, value, s_constantsLength1);
+                    }
+                }
+
+                return new (pRow);
             }
         }
     }

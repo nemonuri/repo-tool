@@ -20,4 +20,6 @@ public interface IByteCharOperationPremise<TSelf, TOperand>
     TOperand ModulusAll(TOperand left, TOperand right);
 
     bool TryGetUnsafeDecompositionPremise<TDecomposed>(out UnsafeDecompositionPremise<TOperand, TDecomposed> premise);
+
+    TOperand GetConstant(byte value);
 }
