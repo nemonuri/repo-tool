@@ -8,10 +8,14 @@ public interface IByteCharOperationPremise<TSelf, TOperand>
     /// </summary>
     bool LessThanOrEqualAll(TOperand left, TOperand right);
 
+    bool LessThanOrEqualAny(TOperand left, TOperand right);
+
     /// <summary>
     /// left == right
     /// </summary>
     bool EqualsAll(TOperand left, TOperand right);
+
+    bool EqualsAny(TOperand left, TOperand right);
 
     TOperand AddAll(TOperand left, TOperand right);
 

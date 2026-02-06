@@ -1,6 +1,5 @@
 namespace Nemonuri.OCamlDotNet;
 
-using System.Diagnostics.CodeAnalysis;
 using B = ByteCharTheory;
 
 public static class ByteCharOperationPremiseExtensions
@@ -9,7 +8,7 @@ public static class ByteCharOperationPremiseExtensions
         where P : unmanaged, IByteCharOperationPremise<P, O>
         where O : notnull
     {
-        public static bool IsInInclusiveRange(O chars, O min, O max)
+        public static bool IsInInclusiveRangeAll(O chars, O min, O max)
         {
             P th = new();
             return
@@ -17,46 +16,52 @@ public static class ByteCharOperationPremiseExtensions
                 th.LessThanOrEqualAll(chars, max);
         }
 
-        public static bool IsInInclusiveConstantRange(O chars, byte min, byte max)
+        public static bool IsInInclusiveConstantRangeAll(O chars, byte min, byte max)
         {
             P th = new();
-            return IsInInclusiveRange<P, O>(chars, th.GetConstant(min), th.GetConstant(max));
+            return IsInInclusiveRangeAll<P, O>(chars, th.GetConstant(min), th.GetConstant(max));
         }
 
-        public static bool IsEqualToConstant(O chars, byte constant)
+        public static bool IsEqualToConstantAll(O chars, byte constant)
         {
             P th = new();
             return th.EqualsAll(chars, th.GetConstant(constant));
         }
 
-        public static bool IsValidAll(O chars) => IsInInclusiveConstantRange<P, O>(chars, B.AsciiMinimum, B.AsciiMaximum);
+        public static bool IsEqualToConstantAny(O left, byte right)
+        {
+            P th = new();
+            return th.EqualsAny(left, th.GetConstant(right));
+        } 
 
-        public static bool IsUpperAll(O chars) => IsInInclusiveConstantRange<P, O>(chars, B.AsciiUpperA, B.AsciiUpperZ);
+        public static bool IsValidAll(O chars) => IsInInclusiveConstantRangeAll<P, O>(chars, B.AsciiMinimum, B.AsciiMaximum);
 
-        public static bool IsLowerAll(O chars) => IsInInclusiveConstantRange<P, O>(chars, B.AsciiLowerA, B.AsciiLowerZ);
+        public static bool IsUpperAll(O chars) => IsInInclusiveConstantRangeAll<P, O>(chars, B.AsciiUpperA, B.AsciiUpperZ);
+
+        public static bool IsLowerAll(O chars) => IsInInclusiveConstantRangeAll<P, O>(chars, B.AsciiLowerA, B.AsciiLowerZ);
 
         public static bool IsLetterAll(O chars) => IsLowerAll<P, O>(chars) || IsUpperAll<P, O>(chars);
 
-        public static bool IsDecimalDigitAll(O chars) => IsInInclusiveConstantRange<P, O>(chars, B.Digit0, B.Digit9);
+        public static bool IsDecimalDigitAll(O chars) => IsInInclusiveConstantRangeAll<P, O>(chars, B.Digit0, B.Digit9);
 
         public static bool IsAlphanumericAll(O chars) => IsLetterAll<P, O>(chars) || IsDecimalDigitAll<P, O>(chars);
 
         public static bool IsWhiteAll(O chars) => 
             IsBlankAll<P, O>(chars) ||
-            IsEqualToConstant<P, O>(chars, B.AsciiLineFeed) ||
-            IsEqualToConstant<P, O>(chars, B.AsciiVerticalTabulation) ||
-            IsEqualToConstant<P, O>(chars, B.AsciiFormFeed) ||
-            IsEqualToConstant<P, O>(chars, B.AsciiCarriageReturn) ;
+            IsEqualToConstantAll<P, O>(chars, B.AsciiLineFeed) ||
+            IsEqualToConstantAll<P, O>(chars, B.AsciiVerticalTabulation) ||
+            IsEqualToConstantAll<P, O>(chars, B.AsciiFormFeed) ||
+            IsEqualToConstantAll<P, O>(chars, B.AsciiCarriageReturn) ;
 
-        public static bool IsBlankAll(O chars) => IsInInclusiveConstantRange<P, O>(chars, B.AsciiHorizontalTabulation, B.AsciiSpace);
+        public static bool IsBlankAll(O chars) => IsInInclusiveConstantRangeAll<P, O>(chars, B.AsciiHorizontalTabulation, B.AsciiSpace);
 
-        public static bool IsGraphicAll(O chars) => IsInInclusiveConstantRange<P, O>(chars, B.AsciiGraphicCharacterMinimum, B.AsciiGraphicCharacterMaximum);
+        public static bool IsGraphicAll(O chars) => IsInInclusiveConstantRangeAll<P, O>(chars, B.AsciiGraphicCharacterMinimum, B.AsciiGraphicCharacterMaximum);
 
-        public static bool IsPrintAll(O chars) => IsGraphicAll<P, O>(chars) || IsEqualToConstant<P, O>(chars, B.AsciiSpace);
+        public static bool IsPrintAll(O chars) => IsGraphicAll<P, O>(chars) || IsEqualToConstantAll<P, O>(chars, B.AsciiSpace);
         
         public static bool IsControlAll(O chars) => 
-            IsInInclusiveConstantRange<P, O>(chars, B.AsciiNull, 0x1f) ||
-            IsEqualToConstant<P, O>(chars, B.AsciiDelete);
+            IsInInclusiveConstantRangeAll<P, O>(chars, B.AsciiNull, 0x1f) ||
+            IsEqualToConstantAll<P, O>(chars, B.AsciiDelete);
         
         public static O SubtractConstantAll(O left, byte right)
         {
@@ -82,9 +87,9 @@ public static class ByteCharOperationPremiseExtensions
         public static O IntegerToDecimalDigitAll(O ints) => 
             AddConstantAll<P,O>(ModulusConstantAll<P,O>(ints, 10), B.Digit0);
         
-        public static bool IsInLowerAToFAll(O chars) => IsInInclusiveConstantRange<P,O>(chars, B.AsciiLowerA, B.AsciiLowerF);
+        public static bool IsInLowerAToFAll(O chars) => IsInInclusiveConstantRangeAll<P,O>(chars, B.AsciiLowerA, B.AsciiLowerF);
 
-        public static bool IsInUpperAToFAll(O chars) => IsInInclusiveConstantRange<P,O>(chars, B.AsciiUpperA, B.AsciiUpperF);
+        public static bool IsInUpperAToFAll(O chars) => IsInInclusiveConstantRangeAll<P,O>(chars, B.AsciiUpperA, B.AsciiUpperF);
 
         public static bool IsHexadecimalDigitAll(O chars) =>
             IsDecimalDigitAll<P,O>(chars) || IsInLowerAToFAll<P,O>(chars) || IsInUpperAToFAll<P,O>(chars);

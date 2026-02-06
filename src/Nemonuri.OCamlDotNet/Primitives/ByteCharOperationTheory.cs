@@ -9,7 +9,11 @@ public static class ByteCharOperationTheory
     {
         public bool LessThanOrEqualAll(byte left, byte right) => left <= right;
 
+        public bool LessThanOrEqualAny(byte left, byte right) => LessThanOrEqualAll(left, right);
+
         public bool EqualsAll(byte left, byte right) => left == right;
+
+        public bool EqualsAny(byte left, byte right) => EqualsAll(left, right);
 
         public byte AddAll(byte left, byte right) => unchecked((byte)(left + right));
 
@@ -30,9 +34,19 @@ public static class ByteCharOperationTheory
         return Vector.LessThanOrEqualAll(left, right);
     }
 
+    public static bool LessThanOrEqualAny(Vector<byte> left, Vector<byte> right)
+    {
+        return Vector.LessThanOrEqualAny(left, right);
+    }
+
     public static bool EqualsAll(Vector<byte> left, Vector<byte> right)
     {
         return Vector.EqualsAll(left, right);
+    }
+
+    public static bool EqualsAny(Vector<byte> left, Vector<byte> right)
+    {
+        return Vector.EqualsAny(left, right);
     }
 
     public static Vector<byte> AddAll(Vector<byte> left, Vector<byte> right)
@@ -57,8 +71,14 @@ public static class ByteCharOperationTheory
         public bool LessThanOrEqualAll(UnsafePinnedVectorPointer<byte> left, UnsafePinnedVectorPointer<byte> right) =>
             ByteCharOperationTheory.LessThanOrEqualAll(left.LoadVector(), right.LoadVector());
 
+        public bool LessThanOrEqualAny(UnsafePinnedVectorPointer<byte> left, UnsafePinnedVectorPointer<byte> right) =>
+            ByteCharOperationTheory.LessThanOrEqualAny(left.LoadVector(), right.LoadVector());
+
         public bool EqualsAll(UnsafePinnedVectorPointer<byte> left, UnsafePinnedVectorPointer<byte> right) =>
             ByteCharOperationTheory.EqualsAll(left.LoadVector(), right.LoadVector());
+
+        public bool EqualsAny(UnsafePinnedVectorPointer<byte> left, UnsafePinnedVectorPointer<byte> right) =>
+            ByteCharOperationTheory.EqualsAny(left.LoadVector(), right.LoadVector());
 
         public UnsafePinnedVectorPointer<byte> AddAll(UnsafePinnedVectorPointer<byte> left, UnsafePinnedVectorPointer<byte> right)
         {
