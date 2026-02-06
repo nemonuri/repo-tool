@@ -8,6 +8,21 @@ public static class ByteCharOperationPremiseExtensions
         where P : unmanaged, IByteCharOperationPremise<P, O>
         where O : notnull
     {
+/**
+```
+∀x.( ((∀n1.P1(x,n1)) && (∀n2.P2(x,n2))) ⇒ (∀n.(P1(x,n) && P2(x,n))) )
+      ------------ ↑ Actual -------------    -------- ↑ Desired -------
+
+    ⇕   ┌ Remove free var 'x'
+
+( (∀n1.P1(n1)) && (∀n2.P2(n2)) ) ⇒ ( ∀n.(P1(n) && P2(n)) )
+
+    ⇕   ┌ To Prenex form
+
+( ∀n1.∀n2.(P1(n1) && P2(n2)) ) ⇒ ( ∀n.(P1(n) && P2(n)) )
+
+```
+*/
         public static bool IsInInclusiveRangeAll(O chars, O min, O max)
         {
             P th = new();
@@ -20,6 +35,20 @@ public static class ByteCharOperationPremiseExtensions
         {
             P th = new();
             return IsInInclusiveRangeAll<P, O>(chars, th.GetConstant(min), th.GetConstant(max));
+        }
+
+/**
+```
+~∀x.((min ≤ x) && (x ≤ max))    ⇔
+∃x.~((min ≤ x) && (x ≤ max))    ⇔
+∃x.(~(min ≤ x) || ~(x ≤ max))
+```
+*/
+        public static bool IsNotInInclusiveRangeAny(O chars, O min, O max)
+        {
+            P th = new();
+            return 
+                th.LessThanOrEqualAny(min, chars) &&
         }
 
         public static bool IsEqualToConstantAll(O chars, byte constant)
@@ -40,7 +69,14 @@ public static class ByteCharOperationPremiseExtensions
 
         public static bool IsLowerAll(O chars) => IsInInclusiveConstantRangeAll<P, O>(chars, B.AsciiLowerA, B.AsciiLowerZ);
 
-        public static bool IsLetterAll(O chars) => IsLowerAll<P, O>(chars) || IsUpperAll<P, O>(chars);
+/**
+```
+~∀x.( ((∀n1.P1(x,n1)) || (∀n2.P2(x,n2))) ⇔ (∀n.(P1(x,n) || P2(x,n))) )
+       ----------- ↑ Wrong ---------------     -------- ↑ Goal ----------
+
+```
+*/
+        public static bool IsLetterAll(O chars) => !IsLowerAll<P, O>(chars) && !IsUpperAll<P, O>(chars);
 
         public static bool IsDecimalDigitAll(O chars) => IsInInclusiveConstantRangeAll<P, O>(chars, B.Digit0, B.Digit9);
 
