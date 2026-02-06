@@ -1,6 +1,7 @@
 namespace Nemonuri.OCamlDotNet;
 
 using System.Numerics;
+using System.Runtime.CompilerServices;
 
 public static class ByteCharOperationTheory
 {
@@ -22,47 +23,72 @@ public static class ByteCharOperationTheory
         }
     }
 
-    public readonly struct ByteVectorPremise : IByteCharOperationPremise<ByteVectorPremise, Vector<byte>>
+    public static bool LessThanOrEqualAll(Vector<byte> left, Vector<byte> right)
     {
-        public bool LessThanOrEqualAll(Vector<byte> left, Vector<byte> right)
+        return Vector.LessThanOrEqualAll(left, right);
+    }
+
+    public static bool EqualsAll(Vector<byte> left, Vector<byte> right)
+    {
+        return Vector.EqualsAll(left, right);
+    }
+
+    public static Vector<byte> AddAll(Vector<byte> left, Vector<byte> right)
+    {
+        return Vector.Add(left, right);
+    }
+
+    public static Vector<byte> SubtractAll(Vector<byte> left, Vector<byte> right)
+    {
+        return Vector.Subtract(left, right);
+    }
+
+    public static Vector<byte> ModulusAll(Vector<byte> left, Vector<byte> right)
+    {
+        var quotient = Vector.Divide(left, right);
+        var remainder = Vector.Subtract(left, Vector.Multiply(quotient, right));
+        return remainder;
+    }
+
+    public readonly struct ByteVectorPremise : IByteCharOperationPremise<ByteVectorPremise, UnsafePinnedVectorPointer<byte>>
+    {
+        public bool LessThanOrEqualAll(UnsafePinnedVectorPointer<byte> left, UnsafePinnedVectorPointer<byte> right) =>
+            ByteCharOperationTheory.LessThanOrEqualAll(left.LoadVector(), right.LoadVector());
+
+        public bool EqualsAll(UnsafePinnedVectorPointer<byte> left, UnsafePinnedVectorPointer<byte> right) =>
+            ByteCharOperationTheory.EqualsAll(left.LoadVector(), right.LoadVector());
+
+        public UnsafePinnedVectorPointer<byte> AddAll(UnsafePinnedVectorPointer<byte> left, UnsafePinnedVectorPointer<byte> right)
         {
-            return Vector.LessThanOrEqualAll(left, right);
+            var toStore = ByteCharOperationTheory.AddAll(left.LoadVector(), right.LoadVector());
+            left.StoreVector(toStore);
+            return left;
         }
 
-        public bool EqualsAll(Vector<byte> left, Vector<byte> right)
+        public UnsafePinnedVectorPointer<byte> SubtractAll(UnsafePinnedVectorPointer<byte> left, UnsafePinnedVectorPointer<byte> right)
         {
-            return Vector.EqualsAll(left, right);
+            var toStore = ByteCharOperationTheory.SubtractAll(left.LoadVector(), right.LoadVector());
+            left.StoreVector(toStore);
+            return left;
         }
 
-        public Vector<byte> AddAll(Vector<byte> left, Vector<byte> right)
+        public UnsafePinnedVectorPointer<byte> ModulusAll(UnsafePinnedVectorPointer<byte> left, UnsafePinnedVectorPointer<byte> right)
         {
-            return Vector.Add(left, right);
+            var toStore = ByteCharOperationTheory.ModulusAll(left.LoadVector(), right.LoadVector());
+            left.StoreVector(toStore);
+            return left;
         }
 
-        public Vector<byte> SubtractAll(Vector<byte> left, Vector<byte> right)
-        {
-            return Vector.Subtract(left, right);
-        }
-
-        public Vector<byte> ModulusAll(Vector<byte> left, Vector<byte> right)
-        {
-            var quotient = Vector.Divide(left, right);
-            var remainder = Vector.Subtract(left, Vector.Multiply(quotient, right));
-            return remainder;
-        }
-
-        public unsafe bool TryGetUnsafeDecompositionPremise<TDecomposed>(out UnsafeDecompositionPremise<Vector<byte>, TDecomposed> premise)
+        public unsafe bool TryGetUnsafeDecompositionPremise<TDecomposed>(out UnsafeDecompositionPremise<UnsafePinnedVectorPointer<byte>, TDecomposed> premise)
         {
             if (typeof(TDecomposed) == typeof(byte))
             {
-                static int GetLengthImpl(ref Vector<byte> bytes) => Vector<byte>.Count;
-                static ref byte GetItemRef(ref Vector<byte> bytes, int index) => bytes.
+                static int GetLengthImpl(ref UnsafePinnedVectorPointer<byte> p) => Vector<byte>.Count;
+                static ref TDecomposed GetItemRef(ref UnsafePinnedVectorPointer<byte> p, int index) => 
+                    ref Unsafe.As<byte, TDecomposed>(ref Unsafe.AddByteOffset(ref Unsafe.AsRef<byte>(p.Pointer), index));
 
-                premise = new
-                (
-                    getLength: &GetLengthImpl,
-                    getItemRef: 
-                )
+                premise = new (getLength: &GetLengthImpl, getItemRef: &GetItemRef);
+                return true;
             }
             else
             {
