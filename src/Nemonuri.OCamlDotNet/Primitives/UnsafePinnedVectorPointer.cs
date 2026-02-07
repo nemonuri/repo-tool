@@ -1,11 +1,13 @@
 namespace Nemonuri.OCamlDotNet;
 
 using System.Numerics;
+using static Extensions.UnsafePinnedSpanPointerExtensions;
 
 /// <summary>
 /// Assume pointer is pinned.
 /// </summary>
-public unsafe readonly struct UnsafePinnedVectorPointer<T> where T : unmanaged
+public unsafe readonly struct UnsafePinnedVectorPointer<T> : IUnsafePinnedSpanPointer<T>
+    where T : unmanaged
 {
 /**
 ## System.Numerics.Vector supporting type table
@@ -22,30 +24,27 @@ public unsafe readonly struct UnsafePinnedVectorPointer<T> where T : unmanaged
     private static T[] TempStorage => s_tempStorage ??= /*!IsSupported ? [] :*/ new T[Vector<T>.Count];
 #endif
     
-    private readonly T* _pointer;
+    private readonly T* _pinnedPointer;
 
-    public UnsafePinnedVectorPointer(T* pointer)
+    public UnsafePinnedVectorPointer(T* pinnedPointer)
     {
-        _pointer = pointer;
+        _pinnedPointer = pinnedPointer;
     }
 
-    public bool IsAnyMemberNull => _pointer == null;
+    public bool IsAnyMemberNull => _pinnedPointer == null;
 
-    public T* Pointer => _pointer;
+    public T* PinnedPointer => _pinnedPointer;
 
     public int SpanLength => Vector<T>.Count;
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private readonly Span<T> LoadSpan() => new (Pointer, SpanLength);
 
     public Vector<T> LoadVector()
     {
 #if NET8_0_OR_GREATER
-        return Vector.Load(_pointer);
+        return Vector.Load(_pinnedPointer);
 #elif NETSTANDARD2_1_OR_GREATER
         return new Vector<T>(LoadSpan());
 #else
-        Span<T> loadedSpan = LoadSpan();
+        Span<T> loadedSpan = this.LoadSpan();
         loadedSpan.CopyTo(TempStorage);
         return new Vector<T>(TempStorage);
 #endif
@@ -54,16 +53,11 @@ public unsafe readonly struct UnsafePinnedVectorPointer<T> where T : unmanaged
     public void StoreVector(Vector<T> source)
     {
 #if NET8_0_OR_GREATER
-        Vector.Store(source, _pointer);
+        Vector.Store(source, _pinnedPointer);
 #else
         source.CopyTo(TempStorage);
-        var dest = LoadSpan();
+        var dest = this.LoadSpan();
         TempStorage.CopyTo(dest);
 #endif
     }
-}
-
-public unsafe readonly struct UnsafePinnedSpanPointer<T> where T : unmanaged
-{
-    
 }
