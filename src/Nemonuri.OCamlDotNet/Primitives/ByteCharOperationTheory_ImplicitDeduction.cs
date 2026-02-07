@@ -11,7 +11,11 @@ public static partial class ByteCharOperationTheory
       Dreived from premises.
     */
 
-    public static bool IsLetter(byte byteChar) => Bp.IsLowerAll(byteChar) || Bp.IsUpperAll(byteChar);
+    public static bool IsLower(byte byteChar) => Bp.IsLowerAll(byteChar);
+
+    public static bool IsUpper(byte byteChar) => Bp.IsUpperAll(byteChar);
+
+    public static bool IsLetter(byte byteChar) => IsLower(byteChar) || IsUpper(byteChar);
 
     public static bool IsAlphanumeric(byte byteChar) => Bp.IsLetterAll(byteChar) || Bp.IsDecimalDigitAll(byteChar);
 
@@ -43,11 +47,23 @@ public static partial class ByteCharOperationTheory
     public static bool IsHexadecimalDigit(byte byteChar) => IsDecimalDigit(byteChar) || IsInLowerAToF(byteChar) || IsInUpperAToF(byteChar);
 
 
+    public static byte UncheckedDecimalDigitToInteger(byte byteChar) => Bp.SubtractConstant(byteChar, B.AsciiDigit0);
+
+    public static void UncheckedUpdateDecimalDigitToInteger(ref byte byteChar)
+        { byteChar = UncheckedDecimalDigitToInteger(byteChar); }
+
+    public static byte UncheckedIntegerToDecimalDigit(byte integer) => Bp.AddConstant(integer, B.AsciiDigit0);
+
+    public static byte IntegerToDecimalDigit(byte integer) => UncheckedIntegerToDecimalDigit(Bp.ModulusConstant(integer, 10));
+    
+    public static void UpdateIntegerToDecimalDigit(ref byte integer)
+        { integer = IntegerToDecimalDigit(integer); }
+
     public static bool TryHexadecimalDigitToInteger(byte byteChar, out byte byteInteger)
     {
         if (IsDecimalDigit(byteChar))
         {
-            byteInteger = Bp.UnsafeDecimalDigitToInteger(byteChar); return true;
+            byteInteger = UncheckedDecimalDigitToInteger(byteChar); return true;
         }
         else if (IsInLowerAToF(byteChar))
         {
@@ -83,7 +99,7 @@ public static partial class ByteCharOperationTheory
         int rem = Math.Abs(integer % 16);
         if (rem < 10)
         {
-            return Bp.IntegerToDecimalDigit_AssumeLessThan10((byte)rem);
+            return UncheckedIntegerToDecimalDigit((byte)rem);
         }
         else
         {
@@ -91,9 +107,18 @@ public static partial class ByteCharOperationTheory
         }
     }
 
-    private static void UpdateIntegerToHexadecimalDigit_BaseCharRequired(ref byte integer, byte baseChar)
+    private static void UpdateIntegerToHexadecimalDigit_HexBaseCharRequired(ref byte integer, byte hexBaseChar)
     {
-        integer = IntegerToHexadecimalDigit_BaseCharRequired(integer, baseChar);
+        integer = IntegerToHexadecimalDigit_BaseCharRequired(integer, hexBaseChar);
     }
+
+    public static byte ToUpperCase(byte byteChar) =>
+        IsLower(byteChar) ? Bp.SubtractConstant(byteChar, B.UpperToLowerDistance) : byteChar;
+
+    public static void UpdateToUpperCase(ref byte byteChar) { byteChar = ToUpperCase(byteChar); }
     
+    public static byte ToLowerCase(byte byteChar) =>
+        IsUpper(byteChar) ? Bp.AddConstant(byteChar, B.UpperToLowerDistance) : byteChar;
+    
+    public static void UpdateToLowerCase(ref byte byteChar) { byteChar = ToLowerCase(byteChar); }
 }

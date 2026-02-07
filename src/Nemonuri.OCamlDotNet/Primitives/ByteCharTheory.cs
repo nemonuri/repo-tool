@@ -77,8 +77,10 @@ public static class ByteCharTheory
     public const byte AsciiLowerZ = (byte)'z';
 
     /// <summary>'0'</summary>
-    public const byte Digit0 = (byte)'0';
+    public const byte AsciiDigit0 = (byte)'0';
 
     /// <summary>'9'</summary>
-    public const byte Digit9 = (byte)'9';
+    public const byte AsciiDigit9 = (byte)'9';
+
+    public const byte UpperToLowerDistance = AsciiLowerA - AsciiUpperA;
 }
