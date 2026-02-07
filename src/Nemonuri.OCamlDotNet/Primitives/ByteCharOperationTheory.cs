@@ -3,17 +3,17 @@ namespace Nemonuri.OCamlDotNet;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 
-public static class ByteCharOperationTheory
+public static partial class ByteCharOperationTheory
 {
     public readonly struct BytePremise : IByteCharOperationPremise<BytePremise, byte>
     {
         public bool LessThanOrEqualAll(byte left, byte right) => left <= right;
 
-        public bool LessThanOrEqualAny(byte left, byte right) => LessThanOrEqualAll(left, right);
+        //public bool LessThanOrEqualAny(byte left, byte right) => LessThanOrEqualAll(left, right);
 
         public bool EqualsAll(byte left, byte right) => left == right;
 
-        public bool EqualsAny(byte left, byte right) => EqualsAll(left, right);
+        //public bool EqualsAny(byte left, byte right) => EqualsAll(left, right);
 
         public byte AddAll(byte left, byte right) => unchecked((byte)(left + right));
 
@@ -21,9 +21,10 @@ public static class ByteCharOperationTheory
 
         public byte ModulusAll(byte left, byte right) => unchecked((byte)(left % right));
 
-        public bool TryGetUnsafeDecompositionPremise<TDecomposed>(out UnsafeDecompositionPremise<byte, TDecomposed> premise)
+        public bool TryUnsafeDecomposeToByteSpan(byte composed, out Span<byte> unsafeBytes)
         {
-            premise = default; return false;
+            unsafeBytes = default;
+            return false;
         }
 
         public byte GetConstant(byte value) => value;
@@ -34,20 +35,25 @@ public static class ByteCharOperationTheory
         return Vector.LessThanOrEqualAll(left, right);
     }
 
+/*
     public static bool LessThanOrEqualAny(Vector<byte> left, Vector<byte> right)
     {
         return Vector.LessThanOrEqualAny(left, right);
     }
+*/
+
 
     public static bool EqualsAll(Vector<byte> left, Vector<byte> right)
     {
         return Vector.EqualsAll(left, right);
     }
 
+/*
     public static bool EqualsAny(Vector<byte> left, Vector<byte> right)
     {
         return Vector.EqualsAny(left, right);
     }
+*/
 
     public static Vector<byte> AddAll(Vector<byte> left, Vector<byte> right)
     {
@@ -71,14 +77,14 @@ public static class ByteCharOperationTheory
         public bool LessThanOrEqualAll(UnsafePinnedVectorPointer<byte> left, UnsafePinnedVectorPointer<byte> right) =>
             ByteCharOperationTheory.LessThanOrEqualAll(left.LoadVector(), right.LoadVector());
 
-        public bool LessThanOrEqualAny(UnsafePinnedVectorPointer<byte> left, UnsafePinnedVectorPointer<byte> right) =>
-            ByteCharOperationTheory.LessThanOrEqualAny(left.LoadVector(), right.LoadVector());
+        //public bool LessThanOrEqualAny(UnsafePinnedVectorPointer<byte> left, UnsafePinnedVectorPointer<byte> right) =>
+        //    ByteCharOperationTheory.LessThanOrEqualAny(left.LoadVector(), right.LoadVector());
 
         public bool EqualsAll(UnsafePinnedVectorPointer<byte> left, UnsafePinnedVectorPointer<byte> right) =>
             ByteCharOperationTheory.EqualsAll(left.LoadVector(), right.LoadVector());
 
-        public bool EqualsAny(UnsafePinnedVectorPointer<byte> left, UnsafePinnedVectorPointer<byte> right) =>
-            ByteCharOperationTheory.EqualsAny(left.LoadVector(), right.LoadVector());
+        //public bool EqualsAny(UnsafePinnedVectorPointer<byte> left, UnsafePinnedVectorPointer<byte> right) =>
+        //    ByteCharOperationTheory.EqualsAny(left.LoadVector(), right.LoadVector());
 
         public UnsafePinnedVectorPointer<byte> AddAll(UnsafePinnedVectorPointer<byte> left, UnsafePinnedVectorPointer<byte> right)
         {
@@ -101,6 +107,7 @@ public static class ByteCharOperationTheory
             return left;
         }
 
+/*
         public unsafe bool TryGetUnsafeDecompositionPremise<TDecomposed>(out UnsafeDecompositionPremise<UnsafePinnedVectorPointer<byte>, TDecomposed> premise)
         {
             if (typeof(TDecomposed) == typeof(byte))
@@ -117,6 +124,13 @@ public static class ByteCharOperationTheory
                 premise = default;
                 return false;
             }
+        }
+*/
+
+        public unsafe bool TryUnsafeDecomposeToByteSpan(UnsafePinnedVectorPointer<byte> composed, out Span<byte> unsafeBytes)
+        {
+            unsafeBytes = new Span<byte>(composed.Pointer, composed.SpanLength);
+            return true;
         }
 
         private const int s_constantsLength0 = byte.MaxValue;

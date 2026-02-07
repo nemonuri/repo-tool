@@ -1,8 +1,10 @@
 namespace Nemonuri.OCamlDotNet;
 
 using B = ByteCharTheory;
+using Bo = ByteCharOperationTheory;
+using Bp = ByteCharOperationTheory.BytePremise;
 
-public static class ByteCharOperationPremiseExtensions
+public static unsafe partial class ByteCharOperationTheory
 {
     extension<P, O>(P) /* TPremise, TOperand */
         where P : unmanaged, IByteCharOperationPremise<P, O>
@@ -40,19 +42,6 @@ public static class ByteCharOperationPremiseExtensions
             return IsInInclusiveRangeAll<P, O>(chars, th.GetConstant(min), th.GetConstant(max));
         }
 
-/**
-```
-~∀x.((min ≤ x) && (x ≤ max))    ⇔
-∃x.~((min ≤ x) && (x ≤ max))    ⇔
-∃x.(~(min ≤ x) || ~(x ≤ max))
-```
-*/
-        public static bool IsNotInInclusiveRangeAny(O chars, O min, O max)
-        {
-            P th = new();
-            return 
-                th.LessThanOrEqualAny(min, chars) &&
-        }
 
         public static bool IsEqualToConstantAll(O chars, byte constant)
         {
@@ -60,11 +49,26 @@ public static class ByteCharOperationPremiseExtensions
             return th.EqualsAll(chars, th.GetConstant(constant));
         }
 
-        public static bool IsEqualToConstantAny(O left, byte right)
+        public static unsafe bool UnsafeAll(O chars, delegate*<byte, bool> predicate)
         {
             P th = new();
-            return th.EqualsAny(left, th.GetConstant(right));
-        } 
+            if (th.TryUnsafeDecomposeToByteSpan(chars, out var unsafeBytes))
+            {
+                foreach (byte b in unsafeBytes)
+                    { if (predicate(b)) {return false;} }
+
+                return true;
+            }
+            else if (chars is byte sgt)
+            {
+                return predicate(sgt);
+            }
+            else
+            {
+                // Assume: 'chars' is empty set.
+                return true;
+            }
+        }
 
         public static bool IsValidAll(O chars) => IsInInclusiveConstantRangeAll<P, O>(chars, B.AsciiMinimum, B.AsciiMaximum);
 
@@ -72,39 +76,21 @@ public static class ByteCharOperationPremiseExtensions
 
         public static bool IsLowerAll(O chars) => IsInInclusiveConstantRangeAll<P, O>(chars, B.AsciiLowerA, B.AsciiLowerZ);
 
-/**
-```
-∀x.( ((∀n1.P1(x,n1)) || (∀n2.P2(x,n2))) ⇒ (∀n.(P1(x,n) || P2(x,n))) )
-      ----------- ↑ Actual ---------------    -------- ↑ Desired --------
-
-| Because of
-
-∀n.(P1(n) ∨ P2(n))
-
-    ⇑
-
-∀n1.P1(n1) ∨ ∀n2.P2(n2)
-```
-
-난 '⇑' 가 아니라 ⇕ 가 필요한데...이게 안 되는구나?
-- Microsoft 도 '[Vector.Abs](https://github.com/dotnet/maintenance-packages/blob/main/src/System.Numerics.Vectors/src/System/Numerics/Vector.tt)' 같은 메서드는, 그냥 하나하나 branching 으로 구현하고 있구나...;;
-*/
-        public static bool IsLetterAll(O chars) => IsLowerAll<P, O>(chars) || IsUpperAll<P, O>(chars);
-
         public static bool IsDecimalDigitAll(O chars) => IsInInclusiveConstantRangeAll<P, O>(chars, B.Digit0, B.Digit9);
-
-        public static bool IsAlphanumericAll(O chars) => IsLetterAll<P, O>(chars) || IsDecimalDigitAll<P, O>(chars);
-
-        public static bool IsWhiteAll(O chars) => 
-            IsBlankAll<P, O>(chars) ||
-            IsEqualToConstantAll<P, O>(chars, B.AsciiLineFeed) ||
-            IsEqualToConstantAll<P, O>(chars, B.AsciiVerticalTabulation) ||
-            IsEqualToConstantAll<P, O>(chars, B.AsciiFormFeed) ||
-            IsEqualToConstantAll<P, O>(chars, B.AsciiCarriageReturn) ;
 
         public static bool IsBlankAll(O chars) => IsInInclusiveConstantRangeAll<P, O>(chars, B.AsciiHorizontalTabulation, B.AsciiSpace);
 
         public static bool IsGraphicAll(O chars) => IsInInclusiveConstantRangeAll<P, O>(chars, B.AsciiGraphicCharacterMinimum, B.AsciiGraphicCharacterMaximum);
+
+
+
+        public static bool IsLetterAll(O chars) => chars is byte b ? Bo.IsLetter(b) : UnsafeAll<P,O>(chars, &Bo.IsLetter);
+
+        public static bool IsAlphanumericAll(O chars) => chars is byte b ? Bo.IsAlphanumeric(b) : UnsafeAll<P,O>(chars, &Bo.IsAlphanumeric);
+
+        public static bool IsWhiteAll(O chars) => chars is byte b ? Bo.IsWhite(b) : UnsafeAll<P,O>(chars, &Bo.IsWhite);
+
+
 
         public static bool IsPrintAll(O chars) => IsGraphicAll<P, O>(chars) || IsEqualToConstantAll<P, O>(chars, B.AsciiSpace);
         

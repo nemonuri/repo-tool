@@ -8,14 +8,10 @@ public interface IByteCharOperationPremise<TSelf, TOperand>
     /// </summary>
     bool LessThanOrEqualAll(TOperand left, TOperand right);
 
-    bool LessThanOrEqualAny(TOperand left, TOperand right);
-
     /// <summary>
     /// left == right
     /// </summary>
     bool EqualsAll(TOperand left, TOperand right);
-
-    bool EqualsAny(TOperand left, TOperand right);
 
     TOperand AddAll(TOperand left, TOperand right);
 
@@ -23,7 +19,9 @@ public interface IByteCharOperationPremise<TSelf, TOperand>
 
     TOperand ModulusAll(TOperand left, TOperand right);
 
-    bool TryGetUnsafeDecompositionPremise<TDecomposed>(out UnsafeDecompositionPremise<TOperand, TDecomposed> premise);
+    //bool TryGetUnsafeDecompositionPremise<TDecomposed>(out UnsafeDecompositionPremise<TOperand, TDecomposed> premise);
+
+    bool TryUnsafeDecomposeToByteSpan(TOperand composed, out Span<byte> unsafeBytes);
 
     TOperand GetConstant(byte value);
 }
