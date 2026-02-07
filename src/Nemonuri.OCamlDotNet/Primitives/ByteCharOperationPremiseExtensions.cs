@@ -10,18 +10,21 @@ public static class ByteCharOperationPremiseExtensions
     {
 /**
 ```
-∀x.( ((∀n1.P1(x,n1)) && (∀n2.P2(x,n2))) ⇒ (∀n.(P1(x,n) && P2(x,n))) )
+∀x.( ((∀n1.P1(x,n1)) && (∀n2.P2(x,n2))) ⇔ (∀n.(P1(x,n) && P2(x,n))) )
       ------------ ↑ Actual -------------    -------- ↑ Desired -------
 
     ⇕   ┌ Remove free var 'x'
 
-( (∀n1.P1(n1)) && (∀n2.P2(n2)) ) ⇒ ( ∀n.(P1(n) && P2(n)) )
+( (∀n1.P1(n1)) && (∀n2.P2(n2)) ) ⇔ ( ∀n.(P1(n) && P2(n)) )
 
     ⇕   ┌ To Prenex form
 
-( ∀n1.∀n2.(P1(n1) && P2(n2)) ) ⇒ ( ∀n.(P1(n) && P2(n)) )
+( ∀n1.∀n2.(P1(n1) && P2(n2)) ) ⇔ ( ∀n.(P1(n) && P2(n)) )
 
 ```
+
+- [Rules of passage](https://en.wikipedia.org/wiki/Rules_of_passage) 라고, 이미 증명되어 있었구나...
+  - '⇒' 가 아니라, '⇔' 이구나!
 */
         public static bool IsInInclusiveRangeAll(O chars, O min, O max)
         {
@@ -71,12 +74,22 @@ public static class ByteCharOperationPremiseExtensions
 
 /**
 ```
-~∀x.( ((∀n1.P1(x,n1)) || (∀n2.P2(x,n2))) ⇔ (∀n.(P1(x,n) || P2(x,n))) )
-       ----------- ↑ Wrong ---------------     -------- ↑ Goal ----------
+∀x.( ((∀n1.P1(x,n1)) || (∀n2.P2(x,n2))) ⇒ (∀n.(P1(x,n) || P2(x,n))) )
+      ----------- ↑ Actual ---------------    -------- ↑ Desired --------
 
+| Because of
+
+∀n.(P1(n) ∨ P2(n))
+
+    ⇑
+
+∀n1.P1(n1) ∨ ∀n2.P2(n2)
 ```
+
+난 '⇑' 가 아니라 ⇕ 가 필요한데...이게 안 되는구나?
+- Microsoft 도 '[Vector.Abs](https://github.com/dotnet/maintenance-packages/blob/main/src/System.Numerics.Vectors/src/System/Numerics/Vector.tt)' 같은 메서드는, 그냥 하나하나 branching 으로 구현하고 있구나...;;
 */
-        public static bool IsLetterAll(O chars) => !IsLowerAll<P, O>(chars) && !IsUpperAll<P, O>(chars);
+        public static bool IsLetterAll(O chars) => IsLowerAll<P, O>(chars) || IsUpperAll<P, O>(chars);
 
         public static bool IsDecimalDigitAll(O chars) => IsInInclusiveConstantRangeAll<P, O>(chars, B.Digit0, B.Digit9);
 
