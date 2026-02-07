@@ -1,6 +1,7 @@
 namespace Nemonuri.OCamlDotNet;
 
 using System.Numerics;
+using System.Runtime.CompilerServices;
 
 /// <summary>
 /// Assume pointer is pinned.
@@ -35,12 +36,19 @@ public unsafe readonly struct UnsafePinnedVectorPointer<T> where T : unmanaged
 
     public int SpanLength => Vector<T>.Count;
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private readonly Span<T> LoadSpan() => new (Pointer, SpanLength);
+
     public Vector<T> LoadVector()
     {
 #if NET8_0_OR_GREATER
         return Vector.Load(_pointer);
+#elif NETSTANDARD2_1_OR_GREATER
+        return new Vector<T>(LoadSpan());
 #else
-        return new Vector<T>(new Span<T>(Pointer, SpanLength));
+        Span<T> loadedSpan = LoadSpan();
+        loadedSpan.CopyTo(TempStorage);
+        return new Vector<T>(TempStorage);
 #endif
     }
 
@@ -50,7 +58,7 @@ public unsafe readonly struct UnsafePinnedVectorPointer<T> where T : unmanaged
         Vector.Store(source, _pointer);
 #else
         source.CopyTo(TempStorage);
-        var dest = new Span<T>(Pointer, SpanLength);
+        var dest = LoadSpan();
         TempStorage.CopyTo(dest);
 #endif
     }
