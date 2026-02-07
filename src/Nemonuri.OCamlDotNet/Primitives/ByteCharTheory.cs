@@ -1,86 +1,170 @@
 namespace Nemonuri.OCamlDotNet;
 
-public static class ByteCharTheory
+using System.Numerics;
+using System.Runtime.CompilerServices;
+
+public static partial class ByteCharTheory
 {
-    // Reference: https://en.wikipedia.org/wiki/ASCII#Character_set
+    public readonly struct BytePremise : IByteCharPremise<BytePremise, byte>
+    {
+        public bool LessThanOrEqualAll(byte left, byte right) => left <= right;
 
-    /// <summary>'\'(0x5c)</summary>
-    public const byte AsciiBackslash = (byte)'\\';
+        //public bool LessThanOrEqualAny(byte left, byte right) => LessThanOrEqualAll(left, right);
 
-    /// <summary>'"'(0x22)</summary>
-    public const byte AsciiDoubleQuote = (byte)'\"';
+        public bool EqualsAll(byte left, byte right) => left == right;
 
-    /// <summary>"'"(0x27)</summary>
-    public const byte AsciiSingleQuote = (byte)'\'';
+        //public bool EqualsAny(byte left, byte right) => EqualsAll(left, right);
 
-    /// <summary>'\n'(0x0a)</summary>
-    public const byte AsciiLineFeed = (byte)'\n';
+        public byte Add(byte left, byte right) => unchecked((byte)(left + right));
 
-    /// <summary>'\r'(0x0d)</summary>
-    public const byte AsciiCarriageReturn = (byte)'\r';
+        public byte Subtract(byte left, byte right) => unchecked((byte)(left - right));
 
-    /// <summary>'\t'(0x09)</summary>
-    public const byte AsciiHorizontalTabulation = (byte)'\t';
+        public byte Modulus(byte left, byte right) => unchecked((byte)(left % right));
 
-    /// <summary>'\b'(0x08)</summary>
-    public const byte AsciiBackspace = (byte)'\b';
+        public bool TryUnsafeDecomposeToByteSpan(byte composed, out Span<byte> unsafeBytes)
+        {
+            unsafeBytes = default;
+            return false;
+        }
 
-    /// <summary>' '(0x20)</summary>
-    public const byte AsciiSpace = (byte)' ';
+        public byte GetTemporaryConstant(byte value) => value;
+    }
 
-    /// <summary>0x20. Inclusive</summary>
-    public const byte AsciiPrintableMinimum = AsciiSpace;
+    public static bool LessThanOrEqualAll(Vector<byte> left, Vector<byte> right)
+    {
+        return Vector.LessThanOrEqualAll(left, right);
+    }
 
-    /// <summary>0x7e. Inclusive</summary>
-    public const byte AsciiPrintableMaximum = (byte)'~';
+/*
+    public static bool LessThanOrEqualAny(Vector<byte> left, Vector<byte> right)
+    {
+        return Vector.LessThanOrEqualAny(left, right);
+    }
+*/
 
-    /// <summary>vertical tab (0x0b)</summary>
-    public const byte AsciiVerticalTabulation = 0x0b;
 
-    /// <summary>form feed (0x0c)</summary>
-    public const byte AsciiFormFeed = 0x0c;
+    public static bool EqualsAll(Vector<byte> left, Vector<byte> right)
+    {
+        return Vector.EqualsAll(left, right);
+    }
 
-    /// <summary>0x21. Inclusive</summary>
-    public const byte AsciiGraphicCharacterMinimum = 0x21;
+/*
+    public static bool EqualsAny(Vector<byte> left, Vector<byte> right)
+    {
+        return Vector.EqualsAny(left, right);
+    }
+*/
 
-    /// <summary>0x7e. Inclusive</summary>
-    public const byte AsciiGraphicCharacterMaximum = AsciiPrintableMaximum;
+    public static Vector<byte> AddAll(Vector<byte> left, Vector<byte> right)
+    {
+        return Vector.Add(left, right);
+    }
 
-    /// <summary>'\0'(0x00)</summary>
-    public const byte AsciiNull = (byte)'\0';
+    public static Vector<byte> SubtractAll(Vector<byte> left, Vector<byte> right)
+    {
+        return Vector.Subtract(left, right);
+    }
 
-    /// <summary>Delete character. (0x7f)</summary>
-    public const byte AsciiDelete = 0x7f;
+    public static Vector<byte> ModulusAll(Vector<byte> left, Vector<byte> right)
+    {
+        var quotient = Vector.Divide(left, right);
+        var remainder = Vector.Subtract(left, Vector.Multiply(quotient, right));
+        return remainder;
+    }
 
-    /// <summary>0x00. Inclusive</summary>
-    public const byte AsciiMinimum = AsciiNull;
+    public readonly struct ByteVectorPremise : IByteCharPremise<ByteVectorPremise, UnsafePinnedVectorPointer<byte>>
+    {
+        public bool LessThanOrEqualAll(UnsafePinnedVectorPointer<byte> left, UnsafePinnedVectorPointer<byte> right) =>
+            ByteCharTheory.LessThanOrEqualAll(left.LoadVector(), right.LoadVector());
 
-    /// <summary>0x7f. Inclusive</summary>
-    public const byte AsciiMaximum = AsciiDelete;
+        //public bool LessThanOrEqualAny(UnsafePinnedVectorPointer<byte> left, UnsafePinnedVectorPointer<byte> right) =>
+        //    ByteCharOperationTheory.LessThanOrEqualAny(left.LoadVector(), right.LoadVector());
 
-    /// <summary>'A'</summary>
-    public const byte AsciiUpperA = (byte)'A';
+        public bool EqualsAll(UnsafePinnedVectorPointer<byte> left, UnsafePinnedVectorPointer<byte> right) =>
+            ByteCharTheory.EqualsAll(left.LoadVector(), right.LoadVector());
 
-    /// <summary>'a'</summary>
-    public const byte AsciiLowerA = (byte)'a';
+        //public bool EqualsAny(UnsafePinnedVectorPointer<byte> left, UnsafePinnedVectorPointer<byte> right) =>
+        //    ByteCharOperationTheory.EqualsAny(left.LoadVector(), right.LoadVector());
 
-    /// <summary>'F'</summary>
-    public const byte AsciiUpperF = (byte)'F';
+        public UnsafePinnedVectorPointer<byte> Add(UnsafePinnedVectorPointer<byte> left, UnsafePinnedVectorPointer<byte> right)
+        {
+            var toStore = ByteCharTheory.AddAll(left.LoadVector(), right.LoadVector());
+            left.StoreVector(toStore);
+            return left;
+        }
 
-    /// <summary>'f'</summary>
-    public const byte AsciiLowerF = (byte)'f';
+        public UnsafePinnedVectorPointer<byte> Subtract(UnsafePinnedVectorPointer<byte> left, UnsafePinnedVectorPointer<byte> right)
+        {
+            var toStore = ByteCharTheory.SubtractAll(left.LoadVector(), right.LoadVector());
+            left.StoreVector(toStore);
+            return left;
+        }
 
-    /// <summary>'Z'</summary>
-    public const byte AsciiUpperZ = (byte)'Z';
+        public UnsafePinnedVectorPointer<byte> Modulus(UnsafePinnedVectorPointer<byte> left, UnsafePinnedVectorPointer<byte> right)
+        {
+            var toStore = ByteCharTheory.ModulusAll(left.LoadVector(), right.LoadVector());
+            left.StoreVector(toStore);
+            return left;
+        }
 
-    /// <summary>'z'</summary>
-    public const byte AsciiLowerZ = (byte)'z';
+/*
+        public unsafe bool TryGetUnsafeDecompositionPremise<TDecomposed>(out UnsafeDecompositionPremise<UnsafePinnedVectorPointer<byte>, TDecomposed> premise)
+        {
+            if (typeof(TDecomposed) == typeof(byte))
+            {
+                static int GetLengthImpl(ref UnsafePinnedVectorPointer<byte> p) => Vector<byte>.Count;
+                static ref TDecomposed GetItemRef(ref UnsafePinnedVectorPointer<byte> p, int index) => 
+                    ref Unsafe.As<byte, TDecomposed>(ref Unsafe.AddByteOffset(ref Unsafe.AsRef<byte>(p.Pointer), index));
 
-    /// <summary>'0'</summary>
-    public const byte AsciiDigit0 = (byte)'0';
+                premise = new (getLength: &GetLengthImpl, getItemRef: &GetItemRef);
+                return true;
+            }
+            else
+            {
+                premise = default;
+                return false;
+            }
+        }
+*/
 
-    /// <summary>'9'</summary>
-    public const byte AsciiDigit9 = (byte)'9';
+        public unsafe bool TryUnsafeDecomposeToByteSpan(UnsafePinnedVectorPointer<byte> composed, out Span<byte> unsafeBytes)
+        {
+            unsafeBytes = new Span<byte>(composed.Pointer, composed.SpanLength);
+            return true;
+        }
 
-    public const byte UpperToLowerDistance = AsciiLowerA - AsciiUpperA;
+        private const int s_constantsLength0 = byte.MaxValue;
+        private readonly static uint s_constantsLength1 = (uint)Vector<byte>.Count;
+        private readonly static byte[] s_constants = CreatePinnedTable();
+
+        private static byte[] CreatePinnedTable()
+        {
+            var length = s_constantsLength0 * s_constantsLength1;
+#if NET8_0_OR_GREATER
+            return GC.AllocateArray<byte>((int)length, pinned: true);
+#else
+            var table = new byte[length];
+            GCHandle handle = GCHandle.Alloc(table, GCHandleType.Pinned);
+            return table;
+#endif
+        }
+
+        public unsafe UnsafePinnedVectorPointer<byte> GetTemporaryConstant(byte value)
+        {
+            fixed (byte* pRow = &s_constants[value * s_constantsLength1])
+            {
+                if (value != 0)
+                {
+                    // Check the table row is initialized.
+                    if (!(*pRow == value))
+                    {
+                        // If not, initialize.
+                        Unsafe.InitBlock(pRow, value, s_constantsLength1);
+                    }
+                }
+
+                return new (pRow);
+            }
+        }
+    }
 }

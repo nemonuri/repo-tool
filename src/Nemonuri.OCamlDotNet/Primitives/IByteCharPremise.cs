@@ -1,7 +1,7 @@
 namespace Nemonuri.OCamlDotNet;
 
-public interface IByteCharOperationPremise<TSelf, TOperand>
-    where TSelf : unmanaged, IByteCharOperationPremise<TSelf, TOperand>
+public interface IByteCharPremise<TSelf, TOperand>
+    where TSelf : unmanaged, IByteCharPremise<TSelf, TOperand>
 #if NET9_0_OR_GREATER
     where TOperand : allows ref struct
 #endif
@@ -22,9 +22,7 @@ public interface IByteCharOperationPremise<TSelf, TOperand>
 
     TOperand Modulus(TOperand left, TOperand right);
 
-    //bool TryGetUnsafeDecompositionPremise<TDecomposed>(out UnsafeDecompositionPremise<TOperand, TDecomposed> premise);
-
     bool TryUnsafeDecomposeToByteSpan(TOperand composed, out Span<byte> unsafeBytes);
 
-    TOperand GetConstant(byte value);
+    TOperand GetTemporaryConstant(byte value);
 }

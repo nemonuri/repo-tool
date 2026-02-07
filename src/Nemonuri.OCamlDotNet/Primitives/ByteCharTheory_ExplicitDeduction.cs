@@ -1,11 +1,11 @@
 namespace Nemonuri.OCamlDotNet;
 
 
-using B = ByteCharTheory;
-using Id = ByteCharOperationTheory; // Implicit Deduction
+using B = ByteCharConstants;
+using Id = ByteCharTheory; // Implicit Deduction
 using System.Runtime.CompilerServices;
 
-public static unsafe partial class ByteCharOperationTheory
+public static unsafe partial class ByteCharTheory
 {
     private static ref byte AsByteRef<TOperand>(ref TOperand sourceRef) 
         where TOperand : notnull 
@@ -17,7 +17,7 @@ public static unsafe partial class ByteCharOperationTheory
         
 
     extension<TPremise, TOperand>(TPremise) /* TPremise, TOperand */
-        where TPremise : unmanaged, IByteCharOperationPremise<TPremise, TOperand>
+        where TPremise : unmanaged, IByteCharPremise<TPremise, TOperand>
         where TOperand : notnull
 #if NET9_0_OR_GREATER
         // , allows ref struct
@@ -41,6 +41,8 @@ public static unsafe partial class ByteCharOperationTheory
 - [Rules of passage](https://en.wikipedia.org/wiki/Rules_of_passage) 라고, 이미 증명되어 있었구나...
   - '⇒' 가 아니라, '⇔' 이구나!
 */
+
+/*
         public static bool IsInInclusiveRangeAll(TOperand chars, TOperand min, TOperand max)
         {
             TPremise th = new();
@@ -48,18 +50,22 @@ public static unsafe partial class ByteCharOperationTheory
                 th.LessThanOrEqualAll(min, chars) &&
                 th.LessThanOrEqualAll(chars, max);
         }
+*/
 
         public static bool IsInInclusiveConstantRangeAll(TOperand chars, byte min, byte max)
         {
             TPremise th = new();
-            return IsInInclusiveRangeAll<TPremise, TOperand>(chars, th.GetConstant(min), th.GetConstant(max));
+            return
+                th.LessThanOrEqualAll(th.GetTemporaryConstant(min), chars) &&
+                th.LessThanOrEqualAll(chars, th.GetTemporaryConstant(max));
+            //return IsInInclusiveRangeAll<TPremise, TOperand>(chars, th.GetTemporaryConstant(min), th.GetTemporaryConstant(max));
         }
 
 
         public static bool IsEqualToConstantAll(TOperand chars, byte constant)
         {
             TPremise th = new();
-            return th.EqualsAll(chars, th.GetConstant(constant));
+            return th.EqualsAll(chars, th.GetTemporaryConstant(constant));
         }
 
         public static bool UnsafeAll(TOperand chars, delegate*<byte, bool> predicate)
@@ -148,19 +154,19 @@ public static unsafe partial class ByteCharOperationTheory
         public static TOperand SubtractConstant(TOperand left, byte right)
         {
             TPremise th = new();
-            return th.Subtract(left, th.GetConstant(right));
+            return th.Subtract(left, th.GetTemporaryConstant(right));
         }
 
         public static TOperand AddConstant(TOperand left, byte right)
         {
             TPremise th = new();
-            return th.Add(left, th.GetConstant(right));
+            return th.Add(left, th.GetTemporaryConstant(right));
         }
 
         public static TOperand ModulusConstant(TOperand left, byte right)
         {
             TPremise th = new();
-            return th.Modulus(left, th.GetConstant(right));
+            return th.Modulus(left, th.GetTemporaryConstant(right));
         }
 
 

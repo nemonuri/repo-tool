@@ -1,11 +1,11 @@
 namespace Nemonuri.OCamlDotNet;
 
 using System.Diagnostics;
-using B = ByteCharTheory;
-using Bp = ByteCharOperationTheory.BytePremise;
+using B = ByteCharConstants;
+using Bp = ByteCharTheory.BytePremise;
 
 
-public static partial class ByteCharOperationTheory
+public static partial class ByteCharTheory
 {
     /**
       Dreived from premises.
@@ -113,12 +113,12 @@ public static partial class ByteCharOperationTheory
     }
 
     public static byte ToUpperCase(byte byteChar) =>
-        IsLower(byteChar) ? Bp.SubtractConstant(byteChar, B.UpperToLowerDistance) : byteChar;
+        IsLower(byteChar) ? Bp.SubtractConstant(byteChar, B.AsciiUpperToLowerDistance) : byteChar;
 
     public static void UpdateToUpperCase(ref byte byteChar) { byteChar = ToUpperCase(byteChar); }
     
     public static byte ToLowerCase(byte byteChar) =>
-        IsUpper(byteChar) ? Bp.AddConstant(byteChar, B.UpperToLowerDistance) : byteChar;
+        IsUpper(byteChar) ? Bp.AddConstant(byteChar, B.AsciiUpperToLowerDistance) : byteChar;
     
     public static void UpdateToLowerCase(ref byte byteChar) { byteChar = ToLowerCase(byteChar); }
 }
