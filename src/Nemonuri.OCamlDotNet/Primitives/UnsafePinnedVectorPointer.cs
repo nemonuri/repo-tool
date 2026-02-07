@@ -1,7 +1,6 @@
 namespace Nemonuri.OCamlDotNet;
 
 using System.Numerics;
-using System.Runtime.CompilerServices;
 
 /// <summary>
 /// Assume pointer is pinned.
@@ -62,4 +61,9 @@ public unsafe readonly struct UnsafePinnedVectorPointer<T> where T : unmanaged
         TempStorage.CopyTo(dest);
 #endif
     }
+}
+
+public unsafe readonly struct UnsafePinnedSpanPointer<T> where T : unmanaged
+{
+    
 }

@@ -167,4 +167,6 @@ public static partial class ByteCharTheory
             }
         }
     }
+
+    
 }
