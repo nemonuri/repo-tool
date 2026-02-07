@@ -2,6 +2,9 @@ namespace Nemonuri.OCamlDotNet;
 
 public interface IByteCharOperationPremise<TSelf, TOperand>
     where TSelf : unmanaged, IByteCharOperationPremise<TSelf, TOperand>
+#if NET9_0_OR_GREATER
+    where TOperand : allows ref struct
+#endif
 {
     /// <summary>
     /// left <= right

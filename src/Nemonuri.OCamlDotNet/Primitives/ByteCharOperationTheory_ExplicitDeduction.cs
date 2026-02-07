@@ -7,7 +7,12 @@ using System.Runtime.CompilerServices;
 
 public static unsafe partial class ByteCharOperationTheory
 {
-    private static ref byte AsByteRef<TOperand>(ref TOperand sourceRef) where TOperand : notnull => 
+    private static ref byte AsByteRef<TOperand>(ref TOperand sourceRef) 
+        where TOperand : notnull 
+#if NET9_0_OR_GREATER
+        // , allows ref struct
+#endif
+        => 
         ref Unsafe.As<TOperand, byte>(ref sourceRef);
         
 
@@ -15,7 +20,7 @@ public static unsafe partial class ByteCharOperationTheory
         where TPremise : unmanaged, IByteCharOperationPremise<TPremise, TOperand>
         where TOperand : notnull
 #if NET9_0_OR_GREATER
-        , allows ref struct
+        // , allows ref struct
 #endif
     {
 /**
