@@ -1,14 +1,20 @@
 namespace Nemonuri.OCamlDotNet;
 
+using System.Diagnostics.CodeAnalysis;
 using B = ByteCharTheory;
 using Id = ByteCharOperationTheory; // Implicit Deduction
 using Bp = ByteCharOperationTheory.BytePremise;
+using System.Runtime.CompilerServices;
+using CommunityToolkit.HighPerformance;
 
 public static unsafe partial class ByteCharOperationTheory
 {
     extension<P, O>(P) /* TPremise, TOperand */
         where P : unmanaged, IByteCharOperationPremise<P, O>
         where O : notnull
+#if NET9_0_OR_GREATER
+        , allows ref struct
+#endif
     {
 /**
 ```
@@ -70,6 +76,50 @@ public static unsafe partial class ByteCharOperationTheory
             }
         }
 
+        public static void UnsafeUpdateWithAux<TAux>(ref O chars, TAux aux, delegate*<ref byte, TAux, void> updater)
+        {
+            P th = new();
+            if (th.TryUnsafeDecomposeToByteSpan(chars, out Span<byte> unsafeBytes))
+            {
+                foreach (ref byte b in unsafeBytes) { updater(ref b, aux); }
+            }
+            else if (chars is byte)
+            {
+                updater(ref Unsafe.As<O, byte>(ref chars), aux);
+            }
+            else
+            {
+                // Assume: 'chars' is empty set.
+                return;
+            }
+        }
+
+        public static int UnsafeUpdateWhileSuccess(ref O chars, delegate*<ref byte, bool> updater)
+        {
+            P th = new();
+            if (th.TryUnsafeDecomposeToByteSpan(chars, out Span<byte> unsafeBytes))
+            {
+                int i = 0;
+                for (; i < unsafeBytes.Length; i++)
+                {
+                    if (!updater(ref unsafeBytes[i]))
+                    {
+                        break;
+                    }
+                }
+                return i;
+            }
+            else if (chars is byte)
+            {
+                return updater(ref Unsafe.As<O, byte>(ref chars)) ? 1 : 0;
+            }
+            else
+            {
+                // Assume: 'chars' is empty set.
+                return 0;
+            }
+        }
+
         public static O SubtractConstant(O left, byte right)
         {
             P th = new();
@@ -119,7 +169,9 @@ public static unsafe partial class ByteCharOperationTheory
         /// <returns>Bytes as unsigned integers.</returns>
         public static O UnsafeDecimalDigitToInteger(O chars) => SubtractConstant<P, O>(chars, B.Digit0);
 
-        public static O IntegerToDecimalDigit(O ints) => AddConstant<P,O>(ModulusConstant<P,O>(ints, 10), B.Digit0);
+        private static O IntegerToDecimalDigit_AssumeLessThan10(O rem) => AddConstant<P,O>(rem, B.Digit0);
+
+        public static O IntegerToDecimalDigit(O ints) => IntegerToDecimalDigit_AssumeLessThan10<P,O>(ModulusConstant<P,O>(ints, 10));
         
         public static bool IsInLowerAToFAll(O chars) => IsInInclusiveConstantRangeAll<P,O>(chars, B.AsciiLowerA, B.AsciiLowerF);
 
@@ -127,30 +179,64 @@ public static unsafe partial class ByteCharOperationTheory
 
         public static bool IsHexadecimalDigitAll(O chars) => chars is byte b ? Id.IsHexadecimalDigit(b) : UnsafeAll<P,O>(chars, &Id.IsHexadecimalDigit);
 
-        
 
-        /// <returns>Bytes as unsigned integers.</returns>
-        /*
-        public static bool TryHexadecimalDigitToIntegerAll(O chars, [NotNullWhen(true)] out O? result)
+
+        /// <returns>Success span length.</returns>
+        public static int UnsafeHexadecimalDigitToInteger(ref O chars) =>
+            (chars is byte) ? 
+                (Id.UpdateToIntegerIfHexadecimalDigit(ref Unsafe.As<O, byte>(ref chars)) ? 1 : 0) :
+                UnsafeUpdateWhileSuccess<P,O>(ref chars, &Id.UpdateToIntegerIfHexadecimalDigit);
+
+        private static void UnsafeIntegerToHexadecimalDigit_BaseCharRequired(ref O chars, byte baseChar)
         {
-            if (IsDecimalDigitAll<P,O>(chars))
-            {
-                result = UnsafeDecimalDigitToIntegerAll<P,O>(chars); return true;
+            if (chars is byte)
+            { 
+                Id.UpdateIntegerToHexadecimalDigit_BaseCharRequired(ref Unsafe.As<O, byte>(ref chars), baseChar); 
             }
-            else if (IsInLowerAToFAll<P,O>(chars))
-            {
-                result = SubtractConstantAll<P,O>(chars, B.AsciiLowerA); return true;
+            else
+            { 
+                UnsafeUpdateWithAux<P,O,byte>(ref chars, baseChar, &Id.UpdateIntegerToHexadecimalDigit_BaseCharRequired); 
             }
-            else if (IsInUpperAToFAll<P,O>(chars))
+        }
+
+        public static O IntegerToLowerHexadecimalDigit()
+        {
+            
+        }
+            
+/*
+        {
+            if (chars is byte)
             {
-                result = SubtractConstantAll<P,O>(chars, B.AsciiUpperA); return true;
+                if (Id.ConvertToIntegerIfHexadecimalDigit(ref Unsafe.As<O, byte>(ref chars)))
+                {
+                    return 1;
+                }
+                else
+                {
+                    return 0;
+                }
+            }
+            else if (new P().TryUnsafeDecomposeToByteSpan(chars, out Span<byte> bytes))
+            {
+                int i = 0;
+                for (; i < bytes.Length; i++)
+                {
+                    if (!Id.ConvertToIntegerIfHexadecimalDigit(ref bytes[i]))
+                    {
+                        break;
+                    }
+                }
+                return i;
             }
             else
             {
-                res
+                return 0;
             }
         }
-        */
+    */
+
+        
 
             
     }
