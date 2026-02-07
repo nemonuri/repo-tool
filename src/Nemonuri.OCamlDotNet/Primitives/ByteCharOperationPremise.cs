@@ -13,11 +13,11 @@ public interface IByteCharOperationPremise<TSelf, TOperand>
     /// </summary>
     bool EqualsAll(TOperand left, TOperand right);
 
-    TOperand AddAll(TOperand left, TOperand right);
+    TOperand Add(TOperand left, TOperand right);
 
-    TOperand SubtractAll(TOperand left, TOperand right);
+    TOperand Subtract(TOperand left, TOperand right);
 
-    TOperand ModulusAll(TOperand left, TOperand right);
+    TOperand Modulus(TOperand left, TOperand right);
 
     //bool TryGetUnsafeDecompositionPremise<TDecomposed>(out UnsafeDecompositionPremise<TOperand, TDecomposed> premise);
 

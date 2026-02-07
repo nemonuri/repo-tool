@@ -1,7 +1,7 @@
 namespace Nemonuri.OCamlDotNet;
 
 using B = ByteCharTheory;
-using Bo = ByteCharOperationTheory;
+using Id = ByteCharOperationTheory; // Implicit Deduction
 using Bp = ByteCharOperationTheory.BytePremise;
 
 public static unsafe partial class ByteCharOperationTheory
@@ -49,7 +49,7 @@ public static unsafe partial class ByteCharOperationTheory
             return th.EqualsAll(chars, th.GetConstant(constant));
         }
 
-        public static unsafe bool UnsafeAll(O chars, delegate*<byte, bool> predicate)
+        public static bool UnsafeAll(O chars, delegate*<byte, bool> predicate)
         {
             P th = new();
             if (th.TryUnsafeDecomposeToByteSpan(chars, out var unsafeBytes))
@@ -70,6 +70,26 @@ public static unsafe partial class ByteCharOperationTheory
             }
         }
 
+        public static O SubtractConstant(O left, byte right)
+        {
+            P th = new();
+            return th.Subtract(left, th.GetConstant(right));
+        }
+
+        public static O AddConstant(O left, byte right)
+        {
+            P th = new();
+            return th.Add(left, th.GetConstant(right));
+        }
+
+        public static O ModulusConstant(O left, byte right)
+        {
+            P th = new();
+            return th.Modulus(left, th.GetConstant(right));
+        }
+
+
+
         public static bool IsValidAll(O chars) => IsInInclusiveConstantRangeAll<P, O>(chars, B.AsciiMinimum, B.AsciiMaximum);
 
         public static bool IsUpperAll(O chars) => IsInInclusiveConstantRangeAll<P, O>(chars, B.AsciiUpperA, B.AsciiUpperZ);
@@ -84,50 +104,30 @@ public static unsafe partial class ByteCharOperationTheory
 
 
 
-        public static bool IsLetterAll(O chars) => chars is byte b ? Bo.IsLetter(b) : UnsafeAll<P,O>(chars, &Bo.IsLetter);
+        public static bool IsLetterAll(O chars) => chars is byte b ? Id.IsLetter(b) : UnsafeAll<P,O>(chars, &Id.IsLetter);
 
-        public static bool IsAlphanumericAll(O chars) => chars is byte b ? Bo.IsAlphanumeric(b) : UnsafeAll<P,O>(chars, &Bo.IsAlphanumeric);
+        public static bool IsAlphanumericAll(O chars) => chars is byte b ? Id.IsAlphanumeric(b) : UnsafeAll<P,O>(chars, &Id.IsAlphanumeric);
 
-        public static bool IsWhiteAll(O chars) => chars is byte b ? Bo.IsWhite(b) : UnsafeAll<P,O>(chars, &Bo.IsWhite);
+        public static bool IsWhiteAll(O chars) => chars is byte b ? Id.IsWhite(b) : UnsafeAll<P,O>(chars, &Id.IsWhite);
 
-
-
-        public static bool IsPrintAll(O chars) => IsGraphicAll<P, O>(chars) || IsEqualToConstantAll<P, O>(chars, B.AsciiSpace);
+        public static bool IsPrintAll(O chars) => chars is byte b ? Id.IsPrint(b) : UnsafeAll<P,O>(chars, &Id.IsPrint);
         
-        public static bool IsControlAll(O chars) => 
-            IsInInclusiveConstantRangeAll<P, O>(chars, B.AsciiNull, 0x1f) ||
-            IsEqualToConstantAll<P, O>(chars, B.AsciiDelete);
+        public static bool IsControlAll(O chars) => chars is byte b ? Id.IsControl(b) : UnsafeAll<P,O>(chars, &Id.IsControl);
         
-        public static O SubtractConstantAll(O left, byte right)
-        {
-            P th = new();
-            return th.SubtractAll(left, th.GetConstant(right));
-        }
+
 
         /// <returns>Bytes as unsigned integers.</returns>
-        public static O UnsafeDecimalDigitToIntegerAll(O chars) => SubtractConstantAll<P, O>(chars, B.Digit0);
+        public static O UnsafeDecimalDigitToInteger(O chars) => SubtractConstant<P, O>(chars, B.Digit0);
 
-        public static O AddConstantAll(O left, byte right)
-        {
-            P th = new();
-            return th.AddAll(left, th.GetConstant(right));
-        }
-
-        public static O ModulusConstantAll(O left, byte right)
-        {
-            P th = new();
-            return th.ModulusAll(left, th.GetConstant(right));
-        }
-
-        public static O IntegerToDecimalDigitAll(O ints) => 
-            AddConstantAll<P,O>(ModulusConstantAll<P,O>(ints, 10), B.Digit0);
+        public static O IntegerToDecimalDigit(O ints) => AddConstant<P,O>(ModulusConstant<P,O>(ints, 10), B.Digit0);
         
         public static bool IsInLowerAToFAll(O chars) => IsInInclusiveConstantRangeAll<P,O>(chars, B.AsciiLowerA, B.AsciiLowerF);
 
         public static bool IsInUpperAToFAll(O chars) => IsInInclusiveConstantRangeAll<P,O>(chars, B.AsciiUpperA, B.AsciiUpperF);
 
-        public static bool IsHexadecimalDigitAll(O chars) =>
-            IsDecimalDigitAll<P,O>(chars) || IsInLowerAToFAll<P,O>(chars) || IsInUpperAToFAll<P,O>(chars);
+        public static bool IsHexadecimalDigitAll(O chars) => chars is byte b ? Id.IsHexadecimalDigit(b) : UnsafeAll<P,O>(chars, &Id.IsHexadecimalDigit);
+
+        
 
         /// <returns>Bytes as unsigned integers.</returns>
         /*

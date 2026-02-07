@@ -15,11 +15,11 @@ public static partial class ByteCharOperationTheory
 
         //public bool EqualsAny(byte left, byte right) => EqualsAll(left, right);
 
-        public byte AddAll(byte left, byte right) => unchecked((byte)(left + right));
+        public byte Add(byte left, byte right) => unchecked((byte)(left + right));
 
-        public byte SubtractAll(byte left, byte right) => unchecked((byte)(left - right));
+        public byte Subtract(byte left, byte right) => unchecked((byte)(left - right));
 
-        public byte ModulusAll(byte left, byte right) => unchecked((byte)(left % right));
+        public byte Modulus(byte left, byte right) => unchecked((byte)(left % right));
 
         public bool TryUnsafeDecomposeToByteSpan(byte composed, out Span<byte> unsafeBytes)
         {
@@ -86,21 +86,21 @@ public static partial class ByteCharOperationTheory
         //public bool EqualsAny(UnsafePinnedVectorPointer<byte> left, UnsafePinnedVectorPointer<byte> right) =>
         //    ByteCharOperationTheory.EqualsAny(left.LoadVector(), right.LoadVector());
 
-        public UnsafePinnedVectorPointer<byte> AddAll(UnsafePinnedVectorPointer<byte> left, UnsafePinnedVectorPointer<byte> right)
+        public UnsafePinnedVectorPointer<byte> Add(UnsafePinnedVectorPointer<byte> left, UnsafePinnedVectorPointer<byte> right)
         {
             var toStore = ByteCharOperationTheory.AddAll(left.LoadVector(), right.LoadVector());
             left.StoreVector(toStore);
             return left;
         }
 
-        public UnsafePinnedVectorPointer<byte> SubtractAll(UnsafePinnedVectorPointer<byte> left, UnsafePinnedVectorPointer<byte> right)
+        public UnsafePinnedVectorPointer<byte> Subtract(UnsafePinnedVectorPointer<byte> left, UnsafePinnedVectorPointer<byte> right)
         {
             var toStore = ByteCharOperationTheory.SubtractAll(left.LoadVector(), right.LoadVector());
             left.StoreVector(toStore);
             return left;
         }
 
-        public UnsafePinnedVectorPointer<byte> ModulusAll(UnsafePinnedVectorPointer<byte> left, UnsafePinnedVectorPointer<byte> right)
+        public UnsafePinnedVectorPointer<byte> Modulus(UnsafePinnedVectorPointer<byte> left, UnsafePinnedVectorPointer<byte> right)
         {
             var toStore = ByteCharOperationTheory.ModulusAll(left.LoadVector(), right.LoadVector());
             left.StoreVector(toStore);
