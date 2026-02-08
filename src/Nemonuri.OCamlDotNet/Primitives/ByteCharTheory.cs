@@ -2,6 +2,9 @@ using System.Numerics;
 using CommunityToolkit.HighPerformance;
 using Vp = Nemonuri.OCamlDotNet.ByteCharTheory.ByteVectorPremise;
 using Bp = Nemonuri.OCamlDotNet.ByteCharTheory.BytePremise;
+using Vs = Nemonuri.OCamlDotNet.ByteCharTheory.ByteVectorSizePremise;
+using Uis = Nemonuri.OCamlDotNet.ByteCharTheory.UIntPtrSizePremise;
+using Sls = Nemonuri.OCamlDotNet.ByteCharTheory.StackLimitSizePremise;
 
 namespace Nemonuri.OCamlDotNet;
 
@@ -22,88 +25,150 @@ public static partial class ByteCharTheory
         }
     }
 
-    private static int VectorByteCount 
-    { 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => Vector<byte>.Count; 
+    internal readonly struct ByteVectorSizePremise : IFixedSizePremise<ByteVectorSizePremise>
+    {
+        public readonly int FixedSize => Vector<byte>.Count;
+    }
+
+    internal readonly struct UIntPtrSizePremise : IFixedSizePremise<UIntPtrSizePremise>
+    {
+        public readonly int FixedSize => UIntPtr.Size;
+    }
+
+    internal readonly struct StackLimitSizePremise : IFixedSizePremise<StackLimitSizePremise>
+    {
+        private const int StackLimitSize = 256; // 이 정도면 적당한가?
+
+        public readonly int FixedSize => StackLimitSize;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static (int VectorLength, int RemainedByteLength) SpanAndVectorDivRem(Span<byte> left)
+    private static Vector<byte> LoadVector(Span<byte> chunk)
     {
-#if NET8_0_OR_GREATER
-        return Math.DivRem(left.Length, VectorByteCount);
-#else
-        int q = Math.DivRem(left.Length, VectorByteCount, out int r);
-        return (q, r);        
-#endif
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static int VectorIndexToSpanIndex(int vectorIndex) => vectorIndex * VectorByteCount;
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static Vector<byte> SpanAndVectorIndexToVector(Span<byte> left, int vectorIndex)
-    {
-        int spanIndex = VectorIndexToSpanIndex(vectorIndex);
-
 #if NETSTANDARD2_1_OR_GREATER || NET8_0_OR_GREATER
-        return new Vector<byte>(left.Slice(spanIndex));
+        return new Vector<byte>(chunk);
 #else
-        var rentedBuffer = ArrayPool<byte>.Shared.Rent(VectorByteCount);
-        var splicedLeft = left.Slice(spanIndex, VectorByteCount);
-        splicedLeft.CopyTo(rentedBuffer);
-        Vector<byte> result = new(rentedBuffer);
-        ArrayPool<byte>.Shared.Return(rentedBuffer);
-        return result;        
+        return Nemonuri.NetStandards.Numerics.VectorTheory.Create(chunk);
 #endif
     }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static bool IsProperToUseVector(Span<byte> target) => Vector.IsHardwareAccelerated && target.Length >= Vs.GetFixedSize();
 
     internal static bool LessThanOrEqualAll(Span<byte> left, Span<byte> right)
     {
-        (int vectorLength, int byteLength) = SpanAndVectorDivRem(left);
-        Span<byte> remainedLeft = left[^byteLength..];
-        Vp vth = new();
-        Bp bth = new();
-
+#if NET8_0_OR_GREATER
         if (TryGetConstant(right, out var rConstant))
         {
-            Vector<byte> rightVector = new(rConstant);
-            
-            for (int vi = 0; vi < vectorLength; vi++)
+            var sr = Sls.SplitSpan(left);
+            Span<byte> dest = stackalloc byte[Sls.GetFixedSize()];
+            foreach (Span<byte> chunk in sr.Chunks)
             {
-                Vector<byte> leftVector = SpanAndVectorIndexToVector(left, vi);
-                if (!vth.LessThanOrEqualAll(leftVector, rightVector)) {return false;}
+                TensorPrimitives.Min(chunk, rConstant, dest);
+                if (!chunk.SequenceEqual(dest)) {return false;}
             }
-
-            for (int bi = 0; bi < remainedLeft.Length; bi++)
+            if (sr.Remainder is { Length: > 0 } rmd)
             {
-                if (!bth.LessThanOrEqualAll(remainedLeft[bi], rConstant)) {return false;}
+                dest = dest[..rmd.Length];
+                TensorPrimitives.Min(rmd, rConstant, dest);
+                if (!rmd.SequenceEqual(dest)) {return false;}
             }
-
             return true;
         }
         else
         {
             Guard.HasSizeEqualTo(left, right);
 
-            for (int vi = 0; vi < vectorLength; vi++)
-            {
-                Vector<byte> leftVector = SpanAndVectorIndexToVector(left, vi);
-                Vector<byte> rightVector = SpanAndVectorIndexToVector(right, vi);
-                if (!vth.LessThanOrEqualAll(leftVector, rightVector)) {return false;}
-            }
+            var srL = Sls.SplitSpan(left);
+            var srR = Sls.SplitSpan(right);
+            Span<byte> dest = stackalloc byte[Sls.GetFixedSize()];
 
-            Span<byte> remainedRight = right[^byteLength..];
-            for (int bi = 0; bi < remainedLeft.Length; bi++)
+            var chunksL = srL.Chunks;
+            var chunksR = srR.Chunks;
+            for (int i = 0; i < chunksL.Length; i++)
             {
-                if (!bth.LessThanOrEqualAll(remainedLeft[bi], remainedRight[bi])) {return false;}
+                var chunkL = chunksL[i];
+                TensorPrimitives.Min(chunkL, chunksR[i], dest);
+                if (!chunkL.SequenceEqual(dest)) {return false;}
             }
-
+            if (srL.Remainder is { Length: > 0 } rmdL)
+            {
+                var rmdR = srR.Remainder;
+                dest = dest[..rmdL.Length];
+                TensorPrimitives.Min(rmdL, rmdR, dest);
+                if (!rmdL.SequenceEqual(dest)) {return false;}
+            }
             return true;
         }
+#else
+        if (TryGetConstant(right, out var rConstant))
+        {
+            static bool SoftwareFallback(Span<byte> spanL, byte constR)
+            {
+                Bp bth = new();
+                for (int i = 0; i < spanL.Length; i++)
+                {
+                    if (!bth.LessThanOrEqualAll(spanL[i], constR)) { return false; }
+                }
+                return true;
+            }
+
+            if (IsProperToUseVector(left))
+            {
+                Vp vth = new();
+                var sr = Vs.SplitSpan(left);
+                Vector<byte> vbR = new(rConstant);
+                foreach (Span<byte> chunk in sr.Chunks)
+                {
+                    Vector<byte> vbL = LoadVector(chunk);
+                    if (!vth.LessThanOrEqualAll(vbL, vbR)) { return false; };
+                }
+                return SoftwareFallback(sr.Remainder, rConstant);
+            }
+            else
+            {
+                return SoftwareFallback(left, rConstant);
+            }
+        }
+        else
+        {
+            static bool SoftwareFallback(Span<byte> spanL, Span<byte> spanR)
+            {
+                Bp bth = new();
+                for (int i = 0; i < spanL.Length; i++)
+                {
+                    if (!bth.LessThanOrEqualAll(spanL[i], spanR[i])) { return false; }
+                }
+                return true;
+            }
+
+            Guard.HasSizeEqualTo(left, right);
+
+            if (IsProperToUseVector(left))
+            {
+                Vp vth = new();
+                var srL = Vs.SplitSpan(left);
+                var srR = Vs.SplitSpan(right);
+                var chunksL = srL.Chunks;
+                var chunksR = srR.Chunks;
+
+                for (int i = 0; i < chunksL.Length; i++)
+                {
+                    var vecL = LoadVector(chunksL[i]);
+                    var vecR = LoadVector(chunksR[i]);
+                    if (!vth.LessThanOrEqualAll(vecL, vecR)) {return false;}
+                }
+                return SoftwareFallback(srL.Remainder, srR.Remainder);
+            }
+            else
+            {
+                return SoftwareFallback(left, right);
+            }
+        }
+#endif
     }
 
+#if false
     internal static bool EqualsAll(Span<byte> left, Span<byte> right)
     {
         if (TryGetConstant(right, out var rConstant))
@@ -120,7 +185,7 @@ public static partial class ByteCharTheory
             
             for (int vi = 0; vi < vectorLength; vi++)
             {
-                Vector<byte> leftVector = SpanAndVectorIndexToVector(left, vi);
+                Vector<byte> leftVector = LoadVector(left, vi);
                 if (!vth.EqualsAll(leftVector, rightVector)) {return false;}
             }
 
@@ -187,6 +252,7 @@ public static partial class ByteCharTheory
 #endif
         return left;
     }
+#endif
 
     internal static bool TryUnsafeDecomposeToByteSpan(Span<byte> composed, out Span<byte> unsafeBytes)
     {

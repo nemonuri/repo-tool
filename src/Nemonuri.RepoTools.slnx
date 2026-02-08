@@ -3,7 +3,9 @@
     <Project Path="Nemonuri.FStarDotNet/Primitives/Nemonuri.FStarDotNet.Primitives.fsproj" />
   </Folder>
   <Folder Name="/Nemonuri.NetStandards/">
+    <Project Path="Nemonuri.NetStandards/Core/Nemonuri.NetStandards.Core.csproj" />
     <Project Path="Nemonuri.NetStandards/Text/Nemonuri.NetStandards.Text.csproj" />
+    <Project Path="Nemonuri.NetStandards/Numerics/Nemonuri.NetStandards.Numerics.csproj" />
   </Folder>
   <Folder Name="/Nemonuri.OCamlDotNet/">
     <Project Path="Nemonuri.OCamlDotNet/Core/Nemonuri.OCamlDotNet.Core.fsproj" />

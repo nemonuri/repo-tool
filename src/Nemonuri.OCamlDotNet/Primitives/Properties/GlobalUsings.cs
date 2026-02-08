@@ -8,3 +8,7 @@ global using CommunityToolkit.Diagnostics;
 #if NET8_0_OR_GREATER
 global using System.Numerics.Tensors;
 #endif
+
+#if NETSTANDARD2_0 || NETSTANDARD2_1
+global using Math = Nemonuri.NetStandards.Math;
+#endif
