@@ -25,13 +25,21 @@
     </When>
   </Choose>
 
+  <ItemGroup>
+    <PackageReference Include="CommunityToolkit.Diagnostics" />
+    <PackageReference Include="CommunityToolkit.HighPerformance" />
+  </ItemGroup>
+
+  <ItemGroup Condition="$(TargetFramework) == 'netstandard2.0'">
+    <PackageReference Include="Microsoft.Bcl.Memory" />
+  </ItemGroup>
+
   <ItemGroup Condition="$(TargetFramework.ToLowerInvariant().StartsWith('netstandard2.'))">
     <PackageReference Include="System.Collections.Immutable" />
   </ItemGroup>
   
-  <ItemGroup>
-    <PackageReference Include="CommunityToolkit.Diagnostics" />
-    <PackageReference Include="CommunityToolkit.HighPerformance" />
+  <ItemGroup Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0'))">
+    <PackageReference Include="System.Numerics.Tensors" />
   </ItemGroup>
 
 </Project>

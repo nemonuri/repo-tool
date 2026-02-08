@@ -1,7 +1,6 @@
 namespace Nemonuri.OCamlDotNet;
 
 using System.Numerics;
-using System.Runtime.CompilerServices;
 
 public static partial class ByteCharTheory
 {
