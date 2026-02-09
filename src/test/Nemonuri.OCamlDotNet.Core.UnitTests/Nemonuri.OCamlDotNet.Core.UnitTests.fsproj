@@ -10,7 +10,7 @@
     <Content Include="xunit.runner.json" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AssemblyInfo.fs" />
+    
     <Compile Include="TheoryDataTheory.fs" />
     <Compile Include="Char_AsciiTest.fs" />
   </ItemGroup>
@@ -20,6 +20,5 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Nemonuri.OCamlDotNet\Core\Nemonuri.OCamlDotNet.Core.fsproj" />
-    <ProjectReference Include="..\..\Nemonuri.OCamlDotNet\Xunit\Nemonuri.OCamlDotNet.Xunit.csproj" />
   </ItemGroup>
 </Project>

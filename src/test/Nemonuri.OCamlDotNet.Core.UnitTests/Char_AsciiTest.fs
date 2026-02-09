@@ -1,12 +1,12 @@
 namespace Nemonuri.OCamlDotNet.Core.UnitTests
 
 open Xunit
-open Nemonuri.OCamlDotNet.Core
+open Nemonuri.OCamlDotNet
 module Tt = TheoryDataTheory
 
 module private Char_AsciiTestTheory =
 
-    let d2o = char.FromDotNetChar
+    let d2o (c: Core.char) = Core.Operators.byte c
 
 open Char_AsciiTestTheory
 
