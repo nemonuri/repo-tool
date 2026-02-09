@@ -4,33 +4,6 @@ using System.Numerics;
 
 public static partial class ByteCharTheory
 {
-    internal static bool LessThanOrEqualAll(Vector<byte> left, Vector<byte> right)
-    {
-        return Vector.LessThanOrEqualAll(left, right);
-    }
-
-    internal static bool EqualsAll(Vector<byte> left, Vector<byte> right)
-    {
-        return Vector.EqualsAll(left, right);
-    }
-
-    internal static Vector<byte> Add(Vector<byte> left, Vector<byte> right)
-    {
-        return Vector.Add(left, right);
-    }
-
-    internal static Vector<byte> Subtract(Vector<byte> left, Vector<byte> right)
-    {
-        return Vector.Subtract(left, right);
-    }
-
-    internal static Vector<byte> Modulus(Vector<byte> left, Vector<byte> right)
-    {
-        var quotient = Vector.Divide(left, right);
-        var remainder = Vector.Subtract(left, Vector.Multiply(quotient, right));
-        return remainder;
-    }
-
     public readonly struct ByteVectorPremise : IByteCharPremise<ByteVectorPremise, Vector<byte>>
     {
         public bool LessThanOrEqualAll(Vector<byte> left, Vector<byte> right) => Vector.LessThanOrEqualAll(left, right);

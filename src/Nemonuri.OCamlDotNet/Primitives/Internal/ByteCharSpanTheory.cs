@@ -58,6 +58,11 @@ internal static partial class ByteCharSpanTheory
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static bool IsProperToUseVector(Span<byte> target) => Vector.IsHardwareAccelerated && target.Length >= Vs.GetFixedSize();
 
+#if !NET8_0_OR_GREATER
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static Vector<byte> GetVectorConstant(byte value) => (new Vp()).GetTemporaryConstant(value);
+#endif
+
     internal static bool LessThanOrEqualAll(Span<byte> left, Span<byte> right)
     {
 #if NET8_0_OR_GREATER
@@ -120,7 +125,7 @@ internal static partial class ByteCharSpanTheory
             {
                 Vp vth = new();
                 var sr = Vs.SplitSpan(left);
-                Vector<byte> vbR = new(rConstant);
+                Vector<byte> vbR = GetVectorConstant(rConstant);
                 foreach (Span<byte> chunk in sr.Chunks)
                 {
                     Vector<byte> vbL = LoadVector(chunk);

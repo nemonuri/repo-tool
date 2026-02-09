@@ -41,17 +41,6 @@ public static unsafe partial class ByteCharTheory
 - [Rules of passage](https://en.wikipedia.org/wiki/Rules_of_passage) 라고, 이미 증명되어 있었구나...
   - '⇒' 가 아니라, '⇔' 이구나!
 */
-
-/*
-        public static bool IsInInclusiveRangeAll(TOperand chars, TOperand min, TOperand max)
-        {
-            TPremise th = new();
-            return
-                th.LessThanOrEqualAll(min, chars) &&
-                th.LessThanOrEqualAll(chars, max);
-        }
-*/
-
         public static bool IsInInclusiveConstantRangeAll(TOperand chars, byte min, byte max)
         {
             TPremise th = new();

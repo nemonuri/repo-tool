@@ -17,19 +17,27 @@ public static partial class ByteCharTheory
 
     public static bool IsLetter(byte byteChar) => IsLower(byteChar) || IsUpper(byteChar);
 
-    public static bool IsAlphanumeric(byte byteChar) => Bp.IsLetterAll(byteChar) || Bp.IsDecimalDigitAll(byteChar);
+    public static bool IsDecimalDigit(byte byteChar) => Bp.IsDecimalDigitAll(byteChar);
+
+    public static bool IsAlphanumeric(byte byteChar) => IsLetter(byteChar) || IsDecimalDigit(byteChar);
+
+    public static bool IsBlank(byte byteChar) => Bp.IsBlankAll(byteChar);
+
+    public static bool IsEqualTo(byte left, byte right) => Bp.IsEqualToConstantAll(left, right);
+
+    public static bool IsInInclusiveRange(byte byteChar, byte min, byte max) => Bp.IsInInclusiveConstantRangeAll(byteChar, min, max);
 
     public static bool IsWhite(byte byteChar) => 
-      Bp.IsBlankAll(byteChar) ||
-      Bp.IsEqualToConstantAll(byteChar, B.AsciiLineFeed) ||
-      Bp.IsEqualToConstantAll(byteChar, B.AsciiVerticalTabulation) ||
-      Bp.IsEqualToConstantAll(byteChar, B.AsciiFormFeed) ||
-      Bp.IsEqualToConstantAll(byteChar, B.AsciiCarriageReturn) ;
+      IsBlank(byteChar) ||
+      IsEqualTo(byteChar, B.AsciiLineFeed) ||
+      IsEqualTo(byteChar, B.AsciiVerticalTabulation) ||
+      IsEqualTo(byteChar, B.AsciiFormFeed) ||
+      IsEqualTo(byteChar, B.AsciiCarriageReturn) ;
       
-    public static bool IsPrint(byte byteChar) => Bp.IsGraphicAll(byteChar) || Bp.IsEqualToConstantAll(byteChar, B.AsciiSpace);
+    public static bool IsPrint(byte byteChar) => Bp.IsGraphicAll(byteChar) || IsEqualTo(byteChar, B.AsciiSpace);
 
     public static bool IsControl(byte byteChar) => 
-      Bp.IsInInclusiveConstantRangeAll(byteChar, B.AsciiNull, 0x1f) || Bp.IsEqualToConstantAll(byteChar, B.AsciiDelete);
+      IsInInclusiveRange(byteChar, B.AsciiNull, 0x1f) || IsEqualTo(byteChar, B.AsciiDelete);
     
   /**
     'Or'이 없는 것은, 실제 구현을 Implicit 하게 할 필요가 없다.
@@ -37,7 +45,6 @@ public static partial class ByteCharTheory
     - 최적화와 반대로, 'Test converage' 는 일찍 고려할수록 좋다.
   */
 
-    public static bool IsDecimalDigit(byte byteChar) => Bp.IsDecimalDigitAll(byteChar);
 
     public static bool IsInLowerAToF(byte byteChar) => Bp.IsInLowerAToFAll(byteChar);
 
@@ -46,15 +53,20 @@ public static partial class ByteCharTheory
 
     public static bool IsHexadecimalDigit(byte byteChar) => IsDecimalDigit(byteChar) || IsInLowerAToF(byteChar) || IsInUpperAToF(byteChar);
 
+    public static byte UncheckedSubtract(byte left, byte right) => Bp.SubtractConstant(left, right);
 
-    public static byte UncheckedDecimalDigitToInteger(byte byteChar) => Bp.SubtractConstant(byteChar, B.AsciiDigit0);
+    public static byte UncheckedDecimalDigitToInteger(byte byteChar) => UncheckedSubtract(byteChar, B.AsciiDigit0);
 
     public static void UncheckedUpdateDecimalDigitToInteger(ref byte byteChar)
         { byteChar = UncheckedDecimalDigitToInteger(byteChar); }
 
-    public static byte UncheckedIntegerToDecimalDigit(byte integer) => Bp.AddConstant(integer, B.AsciiDigit0);
+    public static byte UncheckedAdd(byte left, byte right) => Bp.AddConstant(left, right);
 
-    public static byte IntegerToDecimalDigit(byte integer) => UncheckedIntegerToDecimalDigit(Bp.ModulusConstant(integer, 10));
+    public static byte UncheckedIntegerToDecimalDigit(byte integer) => UncheckedAdd(integer, B.AsciiDigit0);
+
+    public static byte Modulus(byte left, byte right) => Bp.ModulusConstant(left, right);
+
+    public static byte IntegerToDecimalDigit(byte integer) => UncheckedIntegerToDecimalDigit(Modulus(integer, 10));
     
     public static void UpdateIntegerToDecimalDigit(ref byte integer)
         { integer = IntegerToDecimalDigit(integer); }
@@ -67,11 +79,11 @@ public static partial class ByteCharTheory
         }
         else if (IsInLowerAToF(byteChar))
         {
-            byteInteger = Bp.SubtractConstant(byteChar, B.AsciiLowerA); return true;
+            byteInteger = UncheckedSubtract(byteChar, B.AsciiLowerA); return true;
         }
         else if (IsInUpperAToF(byteChar))
         {
-          byteInteger = Bp.SubtractConstant(byteChar, B.AsciiUpperA); return true;
+          byteInteger = UncheckedSubtract(byteChar, B.AsciiUpperA); return true;
         }
         else
         {
@@ -113,12 +125,12 @@ public static partial class ByteCharTheory
     }
 
     public static byte ToUpperCase(byte byteChar) =>
-        IsLower(byteChar) ? Bp.SubtractConstant(byteChar, B.AsciiUpperToLowerDistance) : byteChar;
+        IsLower(byteChar) ? UncheckedSubtract(byteChar, B.AsciiUpperToLowerDistance) : byteChar;
 
     public static void UpdateToUpperCase(ref byte byteChar) { byteChar = ToUpperCase(byteChar); }
     
     public static byte ToLowerCase(byte byteChar) =>
-        IsUpper(byteChar) ? Bp.AddConstant(byteChar, B.AsciiUpperToLowerDistance) : byteChar;
+        IsUpper(byteChar) ? UncheckedAdd(byteChar, B.AsciiUpperToLowerDistance) : byteChar;
     
     public static void UpdateToLowerCase(ref byte byteChar) { byteChar = ToLowerCase(byteChar); }
 }

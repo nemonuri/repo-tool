@@ -5,7 +5,7 @@ namespace Nemonuri.OCamlDotNet.Internal;
 
 static partial class ByteCharSpanTheory
 {
-#if NETSTANDARD && NETSTANDARD2_0_OR_GREATER
+#if !NET8_0_OR_GREATER
     internal static unsafe void UnsafeByteSpanUpdate
     (
         Span<byte> left, 
@@ -27,7 +27,7 @@ static partial class ByteCharSpanTheory
             if (IsProperToUseVector(left))
             {
                 var sr = Vs.SplitSpan(left);
-                Vector<byte> vbR = new(rConstant);
+                Vector<byte> vbR = GetVectorConstant(rConstant);
                 foreach (Span<byte> chunk in sr.Chunks)
                 {
                     Vector<byte> vbL = LoadVector(chunk);
