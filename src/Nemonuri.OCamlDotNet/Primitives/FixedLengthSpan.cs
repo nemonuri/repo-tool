@@ -28,6 +28,4 @@ public readonly ref struct FixedLengthSpan<TSize, T>
         Guard.IsEqualTo(values.Length, GetFixedSize<TSize>());
         return UncheckedCreate(values);
     }
-
-    
 }

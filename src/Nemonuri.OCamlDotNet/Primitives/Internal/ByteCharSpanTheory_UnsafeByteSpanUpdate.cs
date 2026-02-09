@@ -1,9 +1,9 @@
 using System.Numerics;
-using Vs = Nemonuri.OCamlDotNet.ByteCharTheory.ByteVectorSizePremise;
+using Vs = Nemonuri.OCamlDotNet.Internal.ByteCharSpanTheory.ByteVectorSizePremise;
 
-namespace Nemonuri.OCamlDotNet;
+namespace Nemonuri.OCamlDotNet.Internal;
 
-public static partial class ByteCharTheory
+static partial class ByteCharSpanTheory
 {
 #if NETSTANDARD && NETSTANDARD2_0_OR_GREATER
     internal static unsafe void UnsafeByteSpanUpdate

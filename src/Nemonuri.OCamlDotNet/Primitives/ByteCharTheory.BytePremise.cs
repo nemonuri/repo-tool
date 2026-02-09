@@ -6,11 +6,7 @@ public static partial class ByteCharTheory
     {
         public bool LessThanOrEqualAll(byte left, byte right) => left <= right;
 
-        //public bool LessThanOrEqualAny(byte left, byte right) => LessThanOrEqualAll(left, right);
-
         public bool EqualsAll(byte left, byte right) => left == right;
-
-        //public bool EqualsAny(byte left, byte right) => EqualsAll(left, right);
 
         public byte Add(byte left, byte right) => unchecked((byte)(left + right));
 
