@@ -45,10 +45,19 @@ public static partial class ByteCharTheory
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static Vector<byte> LoadVector(Span<byte> chunk)
     {
-#if NETSTANDARD2_1_OR_GREATER || NET8_0_OR_GREATER
-        return new Vector<byte>(chunk);
+#if NET8_0_OR_GREATER
+        return Vector.LoadUnsafe(in MemoryMarshal.GetReference(chunk));
 #else
-        return Nemonuri.NetStandards.Numerics.VectorTheory.Create(chunk);
+        return Nemonuri.NetStandards.Numerics.VectorTheory.LoadUnsafe(in MemoryMarshal.GetReference(chunk));
+#endif
+    }
+
+    private static void StoreVector(Span<byte> chunk, Vector<byte> vector)
+    {
+#if NET8_0_OR_GREATER
+        vector.StoreUnsafe(ref MemoryMarshal.GetReference(chunk));
+#else
+        Nemonuri.NetStandards.Numerics.VectorTheory.StoreUnsafe(vector, ref MemoryMarshal.GetReference(chunk));
 #endif
     }
 
@@ -103,7 +112,7 @@ public static partial class ByteCharTheory
 #else
         if (TryGetConstant(right, out var rConstant))
         {
-            static bool SoftwareFallback(Span<byte> spanL, byte constR)
+            static bool ByteFallback(Span<byte> spanL, byte constR)
             {
                 Bp bth = new();
                 for (int i = 0; i < spanL.Length; i++)
@@ -123,16 +132,16 @@ public static partial class ByteCharTheory
                     Vector<byte> vbL = LoadVector(chunk);
                     if (!vth.LessThanOrEqualAll(vbL, vbR)) { return false; };
                 }
-                return SoftwareFallback(sr.Remainder, rConstant);
+                return ByteFallback(sr.Remainder, rConstant);
             }
             else
             {
-                return SoftwareFallback(left, rConstant);
+                return ByteFallback(left, rConstant);
             }
         }
         else
         {
-            static bool SoftwareFallback(Span<byte> spanL, Span<byte> spanR)
+            static bool ByteFallback(Span<byte> spanL, Span<byte> spanR)
             {
                 Bp bth = new();
                 for (int i = 0; i < spanL.Length; i++)
@@ -158,17 +167,16 @@ public static partial class ByteCharTheory
                     var vecR = LoadVector(chunksR[i]);
                     if (!vth.LessThanOrEqualAll(vecL, vecR)) {return false;}
                 }
-                return SoftwareFallback(srL.Remainder, srR.Remainder);
+                return ByteFallback(srL.Remainder, srR.Remainder);
             }
             else
             {
-                return SoftwareFallback(left, right);
+                return ByteFallback(left, right);
             }
         }
 #endif
     }
 
-#if false
     internal static bool EqualsAll(Span<byte> left, Span<byte> right)
     {
         if (TryGetConstant(right, out var rConstant))
@@ -176,22 +184,17 @@ public static partial class ByteCharTheory
 #if NET8_0_OR_GREATER
             return left.IndexOfAnyExcept(rConstant) == -1;
 #else
-            (int vectorLength, int byteLength) = SpanAndVectorDivRem(left);
-            Span<byte> remainedLeft = left[^byteLength..];
-            Vp vth = new();
-            Bp bth = new();
-
-            Vector<byte> rightVector = new(rConstant);
-            
-            for (int vi = 0; vi < vectorLength; vi++)
+            Span<byte> chunkR = stackalloc byte[Sls.GetFixedSize()];
+            chunkR.Fill(rConstant);
+            var rs = Sls.SplitSpan(left);
+            foreach (Span<byte> chunkL in rs.Chunks)
             {
-                Vector<byte> leftVector = LoadVector(left, vi);
-                if (!vth.EqualsAll(leftVector, rightVector)) {return false;}
+                if (!chunkL.SequenceEqual(chunkR)) { return false; }
             }
-
-            for (int bi = 0; bi < remainedLeft.Length; bi++)
+            if (rs.Remainder is { Length: > 0 } rmdL)
             {
-                if (!bth.EqualsAll(remainedLeft[bi], rConstant)) {return false;}
+                chunkR = chunkR[..rmdL.Length];
+                if (!rmdL.SequenceEqual(chunkR)) { return false; }
             }
 
             return true;
@@ -216,7 +219,13 @@ public static partial class ByteCharTheory
             TensorPrimitives.Add(left, right, left);
         }
 #else
-            // Guard.HasSizeEqualTo(left, right);
+        unsafe
+        {
+            static byte ByteOp(byte l, byte r) => new Bp().Add(l,r);
+            static Vector<byte> VectorOp(Vector<byte> l, Vector<byte> r) => new Vp().Add(l,r);
+
+            UnsafeByteSpanUpdate(left, right, &ByteOp, &VectorOp);            
+        }
 #endif
         return left;
     }
@@ -233,6 +242,13 @@ public static partial class ByteCharTheory
             TensorPrimitives.Subtract(left, right, left);
         }
 #else
+        unsafe
+        {
+            static byte ByteOp(byte l, byte r) => new Bp().Subtract(l,r);
+            static Vector<byte> VectorOp(Vector<byte> l, Vector<byte> r) => new Vp().Subtract(l,r);
+
+            UnsafeByteSpanUpdate(left, right, &ByteOp, &VectorOp);            
+        }
 #endif
         return left;
     }
@@ -249,10 +265,16 @@ public static partial class ByteCharTheory
             TensorPrimitives.Remainder(left, right, left);
         }
 #else
+        unsafe
+        {
+            static byte ByteOp(byte l, byte r) => new Bp().Modulus(l,r);
+            static Vector<byte> VectorOp(Vector<byte> l, Vector<byte> r) => new Vp().Modulus(l,r);
+
+            UnsafeByteSpanUpdate(left, right, &ByteOp, &VectorOp);            
+        }
 #endif
         return left;
     }
-#endif
 
     internal static bool TryUnsafeDecomposeToByteSpan(Span<byte> composed, out Span<byte> unsafeBytes)
     {

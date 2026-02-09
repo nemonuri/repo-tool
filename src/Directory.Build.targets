@@ -57,4 +57,11 @@
     </When>
   </Choose>
 
+  <PropertyGroup Condition="$(PublishReadyToRun) == 'true'">
+    <!-- 와, win-x64 에서, linux-musl-arm 으로 R2R 컴파일이 되네? 하지만 ILSpy가 정작 지원을 안 하는군.. -->
+    <RuntimeIdentifier Condition="$(RuntimeIdentifier) == ''">linux-musl-x64</RuntimeIdentifier> 
+    <PublishReadyToRunEmitSymbols>true</PublishReadyToRunEmitSymbols>
+    <PublishReadyToRunCrossgen2ExtraArgs>$(PublishReadyToRunCrossgen2ExtraArgs)--compilebubblegenerics;--fulllog;--verbose;--map</PublishReadyToRunCrossgen2ExtraArgs>
+  </PropertyGroup>
+
 </Project>

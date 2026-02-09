@@ -1,6 +1,6 @@
 ﻿namespace Nemonuri.NetStandards;
 
-public static class Math
+public static class MathTheory
 {
     /// <summary>
     /// <see cref="System.Math.DivRem(int, int)" />

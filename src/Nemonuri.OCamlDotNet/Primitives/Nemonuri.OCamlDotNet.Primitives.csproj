@@ -32,12 +32,12 @@
 
   <ItemGroup Condition="$(TargetFramework) == 'netstandard2.0'">
     <PackageReference Include="Microsoft.Bcl.Memory" />
-    <ProjectReference Include="..\..\Nemonuri.NetStandards\Numerics\Nemonuri.NetStandards.Numerics.csproj" />
   </ItemGroup>
 
   <ItemGroup Condition="$(TargetFramework.ToLowerInvariant().StartsWith('netstandard2.'))">
     <PackageReference Include="System.Collections.Immutable" />
     <ProjectReference Include="..\..\Nemonuri.NetStandards\Core\Nemonuri.NetStandards.Core.csproj" />
+    <ProjectReference Include="..\..\Nemonuri.NetStandards\Numerics\Nemonuri.NetStandards.Numerics.csproj" />
   </ItemGroup>
   
   <ItemGroup Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0'))">

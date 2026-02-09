@@ -42,7 +42,7 @@ public unsafe readonly struct UnsafePinnedVectorPointer<T> : IUnsafePinnedSpanPo
 #if NET8_0_OR_GREATER
         return Vector.Load(_pinnedPointer);
 #elif NETSTANDARD2_1_OR_GREATER
-        return new Vector<T>(LoadSpan());
+        return new Vector<T>(this.LoadSpan());
 #else
         Span<T> loadedSpan = this.LoadSpan();
         loadedSpan.CopyTo(TempStorage);

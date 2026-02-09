@@ -11,4 +11,9 @@
     <PackageReference Include="System.Memory" />
   </ItemGroup>
 
+  <ItemGroup Condition="$(TargetFramework) == 'netstandard2.1'">
+    <!-- netstandard2.1 에는, Span 은 있어도 Unsafe 는 없구나. -->
+    <PackageReference Include="System.Runtime.CompilerServices.Unsafe" />
+  </ItemGroup>
+
 </Project>

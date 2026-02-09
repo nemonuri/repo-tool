@@ -49,7 +49,13 @@ public static class FixedSizeTheory
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static (int ChunkCount, int RemainedLength) UncheckedDivRemSequenceLength(int sequenceLength)
         {
-            return Math.DivRem(sequenceLength, GetFixedSize<TPremise>());
+            return 
+#if NET8_0_OR_GREATER
+                Math
+#else
+                Nemonuri.NetStandards.MathTheory
+#endif
+                    .DivRem(sequenceLength, GetFixedSize<TPremise>());
         }
 
         /// <param name="sequenceLength">The dividend.</param>
