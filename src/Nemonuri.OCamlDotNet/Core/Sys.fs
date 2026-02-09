@@ -6,9 +6,7 @@ open System.IO
 type private Ia = System.Collections.Immutable.ImmutableArray
 //let private utf8Encoding = System.Text.UTF8Encoding(false, true)
 
-let private defaultEncoding = System.Text.Encoding.Default
-
-let private dotnetToOCaml (dotnetString: Microsoft.FSharp.Core.string) : string = Ia.ToImmutableArray(System.Span<char>(defaultEncoding.GetBytes(dotnetString)))
+let private dotnetToOCaml (dotnetString: Microsoft.FSharp.Core.string) : string = Nemonuri.ByteChars.ByteStringTheory.DotNetStringToByteStringByEncoding(dotnetString)
 
 /// The command line arguments given to the process. 
 /// The first element is the command name used to invoke the program. 
@@ -27,5 +25,5 @@ The array size is limited to a total of 4 billion elements, and to a maximum ind
 (__0X7FFFFFC7 for byte arrays__ and arrays of single-byte structures).
 *)
 /// Maximum length of strings and byte sequences.
-let max_string_length = 0x7FFFFFC7
+let [<Literal>] max_string_length = Nemonuri.ByteChars.ByteStringConstants.MaxLength
 

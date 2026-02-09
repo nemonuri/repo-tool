@@ -137,4 +137,11 @@ public static partial class ByteCharTheory
         IsUpper(byteChar) ? UncheckedAdd(byteChar, B.AsciiUpperToLowerDistance) : byteChar;
     
     public static void UpdateToLowerCase(ref byte byteChar) { byteChar = ToLowerCase(byteChar); }
+
+    public static byte DotNetCharToByteChar(char dotNetChar) => unchecked((byte)dotNetChar);
+
+    /// <exception cref="System.OverflowException" />
+    public static byte CheckedDotNetCharToByteChar(char dotNetChar) => checked((byte)dotNetChar);
+
+    public static char ByteCharToDotNetChar(byte byteChar) => (char)byteChar;
 }

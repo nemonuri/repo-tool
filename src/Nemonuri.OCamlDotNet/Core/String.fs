@@ -39,5 +39,6 @@ let init (n: int) (f: int -> char) : string =
 /// The empty string.
 let empty : string = Sth.Empty
 
-
+/// length s is the length (number of bytes/characters) of s.
+let length (s: string) : int = s.Length
 

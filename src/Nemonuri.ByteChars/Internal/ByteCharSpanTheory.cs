@@ -14,7 +14,7 @@ internal readonly struct ByteVectorSizePremise : IFixedSizePremise<ByteVectorSiz
 
 internal readonly struct StackLimitSizePremise : IFixedSizePremise<StackLimitSizePremise>
 {
-    public readonly int FixedSize => ByteStringTheory.ByteCharStackLimitSize;
+    public readonly int FixedSize => ByteStringConstants.ByteCharStackLimitSize;
 }
 
 internal static partial class ByteCharSpanTheory
