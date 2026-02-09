@@ -1,10 +1,10 @@
 using System.Numerics;
-using Vp = Nemonuri.OCamlDotNet.ByteCharTheory.ByteVectorPremise;
-using Bp = Nemonuri.OCamlDotNet.ByteCharTheory.BytePremise;
-using Vs = Nemonuri.OCamlDotNet.Internal.ByteCharSpanTheory.ByteVectorSizePremise;
-using Sls = Nemonuri.OCamlDotNet.Internal.ByteCharSpanTheory.StackLimitSizePremise;
+using Vp = Nemonuri.ByteChars.ByteCharTheory.ByteVectorPremise;
+using Bp = Nemonuri.ByteChars.ByteCharTheory.BytePremise;
+using Vs = Nemonuri.ByteChars.Internal.ByteCharSpanTheory.ByteVectorSizePremise;
+using Sls = Nemonuri.ByteChars.Internal.ByteCharSpanTheory.StackLimitSizePremise;
 
-namespace Nemonuri.OCamlDotNet.Internal;
+namespace Nemonuri.ByteChars.Internal;
 
 internal static partial class ByteCharSpanTheory
 {

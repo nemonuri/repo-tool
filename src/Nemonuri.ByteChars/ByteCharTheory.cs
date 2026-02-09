@@ -1,4 +1,4 @@
-namespace Nemonuri.OCamlDotNet;
+namespace Nemonuri.ByteChars;
 
 using System.Diagnostics;
 using B = ByteCharConstants;

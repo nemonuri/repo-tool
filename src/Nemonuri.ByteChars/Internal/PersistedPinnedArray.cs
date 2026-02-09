@@ -1,4 +1,4 @@
-namespace Nemonuri.OCamlDotNet.Internal;
+namespace Nemonuri.ByteChars.Internal;
 
 internal class PersistedPinnedArray<T>
 {

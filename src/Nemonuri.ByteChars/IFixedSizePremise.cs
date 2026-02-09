@@ -1,4 +1,4 @@
-namespace Nemonuri.OCamlDotNet;
+namespace Nemonuri.ByteChars;
 
 public interface IFixedSizePremise<TPremise>
     where TPremise : unmanaged, IFixedSizePremise<TPremise>

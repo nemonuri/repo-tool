@@ -1,4 +1,4 @@
-namespace Nemonuri.OCamlDotNet;
+namespace Nemonuri.ByteChars;
 
 public interface IByteCharPremise<TSelf, TOperand>
     where TSelf : unmanaged, IByteCharPremise<TSelf, TOperand>

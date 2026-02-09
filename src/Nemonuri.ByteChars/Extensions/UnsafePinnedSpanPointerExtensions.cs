@@ -1,4 +1,4 @@
-namespace Nemonuri.OCamlDotNet.Extensions;
+namespace Nemonuri.ByteChars.Extensions;
 
 public static class UnsafePinnedSpanPointerExtensions
 {

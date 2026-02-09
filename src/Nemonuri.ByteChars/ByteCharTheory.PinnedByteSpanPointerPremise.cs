@@ -1,8 +1,8 @@
 using CommunityToolkit.HighPerformance;
-using Nemonuri.OCamlDotNet.Extensions;
-using Nemonuri.OCamlDotNet.Internal;
+using Nemonuri.ByteChars.Extensions;
+using Nemonuri.ByteChars.Internal;
 
-namespace Nemonuri.OCamlDotNet;
+namespace Nemonuri.ByteChars;
 
 public static partial class ByteCharTheory
 {

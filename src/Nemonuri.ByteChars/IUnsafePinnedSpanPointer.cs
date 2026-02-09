@@ -1,4 +1,4 @@
-namespace Nemonuri.OCamlDotNet;
+namespace Nemonuri.ByteChars;
 
 public unsafe interface IUnsafePinnedSpanPointer<T> where T : unmanaged
 {

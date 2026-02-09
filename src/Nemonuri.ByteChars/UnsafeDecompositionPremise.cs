@@ -1,4 +1,4 @@
-namespace Nemonuri.OCamlDotNet;
+namespace Nemonuri.ByteChars;
 
 public unsafe readonly struct UnsafeDecompositionPremise<TComposed, TDecomposed>
 {

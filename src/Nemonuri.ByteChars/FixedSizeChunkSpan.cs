@@ -1,6 +1,6 @@
-using Fst = Nemonuri.OCamlDotNet.FixedSizeTheory;
+using Fst = Nemonuri.ByteChars.FixedSizeTheory;
 
-namespace Nemonuri.OCamlDotNet;
+namespace Nemonuri.ByteChars;
 
 
 public readonly ref struct FixedSizeChunkSpan<TSize, T>

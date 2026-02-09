@@ -18,6 +18,7 @@
     <Project Path="test/Nemonuri.OCamlDotNet.Primitives.UnitTests/Nemonuri.OCamlDotNet.Primitives.UnitTests.csproj" />
     <Project Path="test/Nemonuri.RepoTools.FStar.BuildTasks.Tests/Nemonuri.RepoTools.FStar.BuildTasks.Tests.fsproj" />
   </Folder>
+  <Project Path="Nemonuri.ByteChars/Nemonuri.ByteChars.csproj" />
   <Project Path="Nemonuri.RepoTools.FStar.BuildTasks/Nemonuri.RepoTools.FStar.BuildTasks.fsproj" />
   <Project Path="Nemonuri.RepoTools.TestRuntime/Nemonuri.RepoTools.TestRuntime.csproj" />
 </Solution>

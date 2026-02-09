@@ -1,4 +1,4 @@
-namespace Nemonuri.OCamlDotNet;
+namespace Nemonuri.ByteChars;
 
 public unsafe readonly struct UnsafePinnedSpanPointer<T> : IUnsafePinnedSpanPointer<T>
     where T : unmanaged

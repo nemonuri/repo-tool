@@ -1,7 +1,7 @@
 using System.Numerics;
-using Vs = Nemonuri.OCamlDotNet.Internal.ByteCharSpanTheory.ByteVectorSizePremise;
+using Vs = Nemonuri.ByteChars.Internal.ByteCharSpanTheory.ByteVectorSizePremise;
 
-namespace Nemonuri.OCamlDotNet.Internal;
+namespace Nemonuri.ByteChars.Internal;
 
 static partial class ByteCharSpanTheory
 {
