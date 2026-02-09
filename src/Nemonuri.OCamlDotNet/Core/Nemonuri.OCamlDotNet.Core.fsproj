@@ -4,12 +4,15 @@
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
   <ItemGroup>
+    
     <Compile Include="Prelude.fs" />
+    
     <Compile Include="Char.fs" />
     <Compile Include="Sys.fs" />
     <Compile Include="String.fs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Primitives\Nemonuri.OCamlDotNet.Primitives.csproj" />
+    <ProjectReference Include="..\..\Nemonuri.ByteChars\Nemonuri.ByteChars.csproj" />
   </ItemGroup>
 </Project>

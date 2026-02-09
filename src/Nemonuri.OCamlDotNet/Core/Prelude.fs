@@ -1,12 +1,12 @@
-namespace Nemonuri.OCamlDotNet.Core
+namespace Nemonuri.OCamlDotNet
 
 [<AutoOpen>]
 module Prelude =
 
-    type char = Nemonuri.OCamlDotNet.Char
-    type int = Core.int
-    type string = Nemonuri.OCamlDotNet.String
-    type bool = Core.bool
+    type char = Microsoft.FSharp.Core.byte
+    type int = Microsoft.FSharp.Core.int
+    type string = System.Collections.Immutable.ImmutableArray<char>
+    type bool = Microsoft.FSharp.Core.bool
 
 module internal Forward =
 

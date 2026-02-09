@@ -1,6 +1,6 @@
 using System.Numerics;
 using static Nemonuri.ByteChars.Extensions.GuardExtensions;
-using Vs = Nemonuri.ByteChars.Internal.ByteCharSpanTheory.ByteVectorSizePremise;
+using Vs = Nemonuri.ByteChars.Internal.ByteVectorSizePremise;
 
 namespace Nemonuri.ByteChars.Internal;
 

@@ -1,13 +1,14 @@
 /// - Reference: https://ocaml.org/manual/5.4/api/Sys.html
-module Nemonuri.OCamlDotNet.Core.Sys
-open Nemonuri.OCamlDotNet.Core
+module Nemonuri.OCamlDotNet.Sys
+open Nemonuri.OCamlDotNet
 open System.IO
 
+type private Ia = System.Collections.Immutable.ImmutableArray
 //let private utf8Encoding = System.Text.UTF8Encoding(false, true)
 
 let private defaultEncoding = System.Text.Encoding.Default
 
-let private dotnetToOCaml (dotnetString: FSharp.Core.string) = string.FromDotNetStringAndEncoding(dotnetString, defaultEncoding)
+let private dotnetToOCaml (dotnetString: Microsoft.FSharp.Core.string) : string = Ia.ToImmutableArray(System.Span<char>(defaultEncoding.GetBytes(dotnetString)))
 
 /// The command line arguments given to the process. 
 /// The first element is the command name used to invoke the program. 

@@ -2,10 +2,20 @@ using System.Numerics;
 using static Nemonuri.ByteChars.Extensions.GuardExtensions;
 using Vp = Nemonuri.ByteChars.ByteCharTheory.ByteVectorPremise;
 using Bp = Nemonuri.ByteChars.ByteCharTheory.BytePremise;
-using Vs = Nemonuri.ByteChars.Internal.ByteCharSpanTheory.ByteVectorSizePremise;
-using Sls = Nemonuri.ByteChars.Internal.ByteCharSpanTheory.StackLimitSizePremise;
+using Vs = Nemonuri.ByteChars.Internal.ByteVectorSizePremise;
+using Sls = Nemonuri.ByteChars.Internal.StackLimitSizePremise;
 
 namespace Nemonuri.ByteChars.Internal;
+
+internal readonly struct ByteVectorSizePremise : IFixedSizePremise<ByteVectorSizePremise>
+{
+    public readonly int FixedSize => Vector<byte>.Count;
+}
+
+internal readonly struct StackLimitSizePremise : IFixedSizePremise<StackLimitSizePremise>
+{
+    public readonly int FixedSize => ByteStringTheory.ByteCharStackLimitSize;
+}
 
 internal static partial class ByteCharSpanTheory
 {
@@ -22,18 +32,6 @@ internal static partial class ByteCharSpanTheory
             constant = default;
             return false;
         }
-    }
-
-    internal readonly struct ByteVectorSizePremise : IFixedSizePremise<ByteVectorSizePremise>
-    {
-        public readonly int FixedSize => Vector<byte>.Count;
-    }
-
-    internal readonly struct StackLimitSizePremise : IFixedSizePremise<StackLimitSizePremise>
-    {
-        private const int StackLimitSize = 512; // .NET 은 Vector512 를 지원한다.
-
-        public readonly int FixedSize => StackLimitSize;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

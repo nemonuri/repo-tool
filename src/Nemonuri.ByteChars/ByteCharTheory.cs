@@ -11,6 +11,8 @@ public static partial class ByteCharTheory
       Dreived from premises.
     */
 
+    public static bool IsValid(byte byteChar) => Bp.IsValidAll(byteChar);
+
     public static bool IsLower(byte byteChar) => Bp.IsLowerAll(byteChar);
 
     public static bool IsUpper(byte byteChar) => Bp.IsUpperAll(byteChar);
@@ -33,8 +35,10 @@ public static partial class ByteCharTheory
       IsEqualTo(byteChar, B.AsciiVerticalTabulation) ||
       IsEqualTo(byteChar, B.AsciiFormFeed) ||
       IsEqualTo(byteChar, B.AsciiCarriageReturn) ;
-      
-    public static bool IsPrint(byte byteChar) => Bp.IsGraphicAll(byteChar) || IsEqualTo(byteChar, B.AsciiSpace);
+
+    public static bool IsGraphic(byte byteChar) => Bp.IsGraphicAll(byteChar);
+
+    public static bool IsPrint(byte byteChar) => IsGraphic(byteChar) || IsEqualTo(byteChar, B.AsciiSpace);
 
     public static bool IsControl(byte byteChar) => 
       IsInInclusiveRange(byteChar, B.AsciiNull, 0x1f) || IsEqualTo(byteChar, B.AsciiDelete);
