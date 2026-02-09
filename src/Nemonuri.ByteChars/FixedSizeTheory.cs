@@ -1,6 +1,6 @@
 namespace Nemonuri.ByteChars;
 
-public static class FixedSizeTheory
+public static partial class FixedSizeTheory
 {
     extension<TPremise>(TPremise) /* TPremise */
         where TPremise : unmanaged, IFixedSizePremise<TPremise>
@@ -85,33 +85,6 @@ public static class FixedSizeTheory
             int spanIndex = UncheckedChunkIndexToSequenceIndex<TPremise>(chunkIndex);
             return SliceSpanToChunkUnaligned<TPremise, T>(span, spanIndex);
         }
-
-#if false
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        /// <returns>
-        ///     <see langword="true"/> if <paramref name="result"/> is chunk.
-        ///     <see langword="false"/> if <paramref name="result"/> is remainder or empty.
-        /// </returns>
-        public static bool TrySliceSpanToChunk<T>(Span<T> span, int chunkIndex, out Span<T> result)
-        {
-            int spanIndex = UncheckedChunkIndexToSequenceIndex<TPremise>(chunkIndex);
-            if (!(0 <= spanIndex && spanIndex < span.Length)) // && spanIndex + GetFixedSize<TPremise>()
-            {
-                // 'spanIndex' is out of range. 'result' is empty.
-                result = default; return false;
-            }
-            else if (!(spanIndex + GetFixedSize<TPremise>() <= span.Length))
-            {
-                // Not enough to make chunk. 'result' is remainder.
-                result = span.Slice(spanIndex); return false;
-            }
-            else
-            {
-                result = SliceSpanToChunkUnaligned<TPremise, T>(span, chunkIndex);
-                return true;
-            }
-        }
-#endif
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         /// <exception cref="System.ArgumentOutOfRangeException" />

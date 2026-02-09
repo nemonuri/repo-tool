@@ -2,21 +2,20 @@ using Fst = Nemonuri.ByteChars.FixedSizeTheory;
 
 namespace Nemonuri.ByteChars;
 
-
-public readonly ref struct FixedSizeChunkSpan<TSize, T>
+public readonly ref struct FixedSizeReadOnlyChunkSpan<TSize, T>
      where TSize : unmanaged, IFixedSizePremise<TSize>
 {
-    internal FixedSizeChunkSpan(Span<T> rawValues, int chunkCount)
+    internal FixedSizeReadOnlyChunkSpan(ReadOnlySpan<T> rawValues, int chunkCount)
     {
         RawValues = rawValues;
         Length = chunkCount;
     }
 
-    public readonly Span<T> RawValues {get;}
+    public readonly ReadOnlySpan<T> RawValues {get;}
 
     public readonly int Length {get;}
 
-    public Span<T> this[int chunkIndex] 
+    public ReadOnlySpan<T> this[int chunkIndex] 
     { 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get => Fst.SliceSpanToChunk<TSize, T>(RawValues, chunkIndex); 
@@ -30,10 +29,10 @@ public readonly ref struct FixedSizeChunkSpan<TSize, T>
 
     public ref struct Enumerator
     {
-        private readonly FixedSizeChunkSpan<TSize, T> _source;
+        private readonly FixedSizeReadOnlyChunkSpan<TSize, T> _source;
         private int _index;
 
-        internal Enumerator(FixedSizeChunkSpan<TSize, T> source)
+        internal Enumerator(FixedSizeReadOnlyChunkSpan<TSize, T> source)
         {
             _source = source;
             _index = -1;
@@ -45,7 +44,7 @@ public readonly ref struct FixedSizeChunkSpan<TSize, T>
             return _index < _source.Length;
         }
 
-        public readonly Span<T> Current
+        public readonly ReadOnlySpan<T> Current
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get => _source[_index];

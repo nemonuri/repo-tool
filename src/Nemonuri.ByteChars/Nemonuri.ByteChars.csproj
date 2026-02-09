@@ -17,8 +17,7 @@
       <PropertyGroup>
         <PolySharpIncludeGeneratedTypes>
           <!-- https://github.com/Sergio0694/PolySharp/tree/main/src/PolySharp.SourceGenerators/EmbeddedResources -->
-          System.Runtime.CompilerServices.CollectionBuilderAttribute;
-          System.Runtime.CompilerServices.OverloadResolutionPriorityAttribute;
+          System.Runtime.CompilerServices.CallerArgumentExpressionAttribute;
         </PolySharpIncludeGeneratedTypes>
       </PropertyGroup>
     </When>

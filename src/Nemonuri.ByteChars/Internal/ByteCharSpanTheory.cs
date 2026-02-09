@@ -1,4 +1,5 @@
 using System.Numerics;
+using static Nemonuri.ByteChars.Extensions.GuardExtensions;
 using Vp = Nemonuri.ByteChars.ByteCharTheory.ByteVectorPremise;
 using Bp = Nemonuri.ByteChars.ByteCharTheory.BytePremise;
 using Vs = Nemonuri.ByteChars.Internal.ByteCharSpanTheory.ByteVectorSizePremise;
@@ -9,7 +10,7 @@ namespace Nemonuri.ByteChars.Internal;
 internal static partial class ByteCharSpanTheory
 {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static bool TryGetConstant(Span<byte> bytes, out byte constant)
+    private static bool TryGetConstant(ReadOnlySpan<byte> bytes, out byte constant)
     {
         if (bytes.Length == 1)
         {
@@ -36,7 +37,7 @@ internal static partial class ByteCharSpanTheory
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static Vector<byte> LoadVector(Span<byte> chunk)
+    private static Vector<byte> LoadVector(ReadOnlySpan<byte> chunk)
     {
 #if NET8_0_OR_GREATER
         return Vector.LoadUnsafe(in MemoryMarshal.GetReference(chunk));
@@ -56,21 +57,21 @@ internal static partial class ByteCharSpanTheory
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static bool IsProperToUseVector(Span<byte> target) => Vector.IsHardwareAccelerated && target.Length >= Vs.GetFixedSize();
+    private static bool IsProperToUseVector(ReadOnlySpan<byte> target) => Vector.IsHardwareAccelerated && target.Length >= Vs.GetFixedSize();
 
 #if !NET8_0_OR_GREATER
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static Vector<byte> GetVectorConstant(byte value) => (new Vp()).GetTemporaryConstant(value);
 #endif
 
-    internal static bool LessThanOrEqualAll(Span<byte> left, Span<byte> right)
+    internal static bool LessThanOrEqualAll(ReadOnlySpan<byte> left, ReadOnlySpan<byte> right)
     {
 #if NET8_0_OR_GREATER
         if (TryGetConstant(right, out var rConstant))
         {
             var sr = Sls.SplitSpan(left);
             Span<byte> dest = stackalloc byte[Sls.GetFixedSize()];
-            foreach (Span<byte> chunk in sr.Chunks)
+            foreach (ReadOnlySpan<byte> chunk in sr.Chunks)
             {
                 TensorPrimitives.Min(chunk, rConstant, dest);
                 if (!chunk.SequenceEqual(dest)) {return false;}
@@ -111,7 +112,7 @@ internal static partial class ByteCharSpanTheory
 #else
         if (TryGetConstant(right, out var rConstant))
         {
-            static bool ByteFallback(Span<byte> spanL, byte constR)
+            static bool ByteFallback(ReadOnlySpan<byte> spanL, byte constR)
             {
                 Bp bth = new();
                 for (int i = 0; i < spanL.Length; i++)
@@ -126,7 +127,7 @@ internal static partial class ByteCharSpanTheory
                 Vp vth = new();
                 var sr = Vs.SplitSpan(left);
                 Vector<byte> vbR = GetVectorConstant(rConstant);
-                foreach (Span<byte> chunk in sr.Chunks)
+                foreach (ReadOnlySpan<byte> chunk in sr.Chunks)
                 {
                     Vector<byte> vbL = LoadVector(chunk);
                     if (!vth.LessThanOrEqualAll(vbL, vbR)) { return false; };
@@ -140,7 +141,7 @@ internal static partial class ByteCharSpanTheory
         }
         else
         {
-            static bool ByteFallback(Span<byte> spanL, Span<byte> spanR)
+            static bool ByteFallback(ReadOnlySpan<byte> spanL, ReadOnlySpan<byte> spanR)
             {
                 Bp bth = new();
                 for (int i = 0; i < spanL.Length; i++)
@@ -176,7 +177,7 @@ internal static partial class ByteCharSpanTheory
 #endif
     }
 
-    internal static bool EqualsAll(Span<byte> left, Span<byte> right)
+    internal static bool EqualsAll(ReadOnlySpan<byte> left, ReadOnlySpan<byte> right)
     {
         if (TryGetConstant(right, out var rConstant))
         {
@@ -188,7 +189,7 @@ internal static partial class ByteCharSpanTheory
             {
                 Span<byte> chunkR = stackalloc byte[Sls.GetFixedSize()];
                 chunkR.Fill(rConstant);
-                foreach (Span<byte> chunkL in chunks)
+                foreach (ReadOnlySpan<byte> chunkL in chunks)
                 {
                     if (!chunkL.SequenceEqual(chunkR)) { return false; }
                 }
@@ -218,7 +219,7 @@ internal static partial class ByteCharSpanTheory
         }
     }
 
-    internal static Span<byte> Add(Span<byte> left, Span<byte> right)
+    internal static void Add(Span<byte> left, ReadOnlySpan<byte> right)
     {
 #if NET8_0_OR_GREATER
         if (TryGetConstant(right, out var rConstant))
@@ -238,10 +239,9 @@ internal static partial class ByteCharSpanTheory
             UnsafeByteSpanUpdate(left, right, &ByteOp, &VectorOp);            
         }
 #endif
-        return left;
     }
 
-    internal static Span<byte> Subtract(Span<byte> left, Span<byte> right)
+    internal static void Subtract(Span<byte> left, ReadOnlySpan<byte> right)
     {
 #if NET8_0_OR_GREATER
         if (TryGetConstant(right, out var rConstant))
@@ -261,10 +261,9 @@ internal static partial class ByteCharSpanTheory
             UnsafeByteSpanUpdate(left, right, &ByteOp, &VectorOp);            
         }
 #endif
-        return left;
     }
 
-    internal static Span<byte> Modulus(Span<byte> left, Span<byte> right)
+    internal static void Modulus(Span<byte> left, ReadOnlySpan<byte> right)
     {
 #if NET8_0_OR_GREATER
         if (TryGetConstant(right, out var rConstant))
@@ -284,7 +283,6 @@ internal static partial class ByteCharSpanTheory
             UnsafeByteSpanUpdate(left, right, &ByteOp, &VectorOp);            
         }
 #endif
-        return left;
     }
 
     internal static bool TryUnsafeDecomposeToByteSpan(Span<byte> composed, out Span<byte> unsafeBytes)
@@ -294,7 +292,7 @@ internal static partial class ByteCharSpanTheory
     }
 
 
-    private static readonly PersistedPinnedArray<byte> s_tempConstants = new (byte.MaxValue+1);
+    private static readonly PersistedPinnedArray<byte> s_tempConstants = new (ByteCharConstants.CodePageSize);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static (byte[] Buffer, int Index) GetTemporaryConstantLocation(byte value)
@@ -304,7 +302,7 @@ internal static partial class ByteCharSpanTheory
         return (buffer, value);
     }
 
-    internal static Span<byte> GetTemporaryConstant(byte value)
+    internal static ReadOnlySpan<byte> GetTemporaryConstant(byte value)
     {
         (byte[] b, int i) = GetTemporaryConstantLocation(value);
         return new(b, i, 1);

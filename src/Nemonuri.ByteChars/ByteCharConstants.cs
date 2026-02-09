@@ -83,4 +83,6 @@ public static class ByteCharConstants
     public const byte AsciiDigit9 = (byte)'9';
 
     public const byte AsciiUpperToLowerDistance = AsciiLowerA - AsciiUpperA;
+
+    public const int CodePageSize = byte.MaxValue + 1;
 }

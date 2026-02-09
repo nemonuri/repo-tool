@@ -1,4 +1,5 @@
 using System.Numerics;
+using static Nemonuri.ByteChars.Extensions.GuardExtensions;
 using Vs = Nemonuri.ByteChars.Internal.ByteCharSpanTheory.ByteVectorSizePremise;
 
 namespace Nemonuri.ByteChars.Internal;
@@ -9,7 +10,7 @@ static partial class ByteCharSpanTheory
     internal static unsafe void UnsafeByteSpanUpdate
     (
         Span<byte> left, 
-        Span<byte> right, 
+        ReadOnlySpan<byte> right, 
         delegate*<byte, byte, byte> byteOp,
         delegate*<Vector<byte>, Vector<byte>, Vector<byte>> vectorOp
     )
@@ -43,7 +44,7 @@ static partial class ByteCharSpanTheory
         }
         else
         {
-            static void ByteFallback(Span<byte> spanL, Span<byte> spanR, delegate*<byte, byte, byte> byteOp0)
+            static void ByteFallback(Span<byte> spanL, ReadOnlySpan<byte> spanR, delegate*<byte, byte, byte> byteOp0)
             {
                 for (int i = 0; i < spanL.Length; i++)
                 {
