@@ -193,4 +193,6 @@ public static unsafe class ByteStringTheory
         StringBuilderPoolTheroy.Shared.Return(sb);
         return result;
     }
+
+    public static ImmutableArray<byte> FromByteSpan(params ReadOnlySpan<byte> bytes) => bytes.ToImmutableArray();
 }

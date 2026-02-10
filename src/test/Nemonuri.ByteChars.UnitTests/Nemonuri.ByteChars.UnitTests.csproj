@@ -4,7 +4,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <OutputType>Exe</OutputType>
-    <RootNamespace>Nemonuri.OCamlDotNet.Primitives.UnitTests</RootNamespace>
+    <RootNamespace>Nemonuri.ByteChars.UnitTests</RootNamespace>
     <TargetFrameworks>net10.0;net472</TargetFrameworks>
     <TestingPlatformDotnetTestSupport>true</TestingPlatformDotnetTestSupport>
     <LangVersion>14</LangVersion>
@@ -24,8 +24,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\Nemonuri.OCamlDotNet\Primitives\Nemonuri.OCamlDotNet.Primitives.csproj" />
-    <ProjectReference Include="..\..\Nemonuri.OCamlDotNet\Xunit\Nemonuri.OCamlDotNet.Xunit.csproj" />
+    <ProjectReference Include="..\..\Nemonuri.ByteChars\Nemonuri.ByteChars.csproj" />
   </ItemGroup>
 
 </Project>

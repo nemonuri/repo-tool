@@ -15,7 +15,6 @@
   </Folder>
   <Folder Name="/test/">
     <Project Path="test/Nemonuri.OCamlDotNet.Core.UnitTests/Nemonuri.OCamlDotNet.Core.UnitTests.fsproj" />
-    <Project Path="test/Nemonuri.OCamlDotNet.Primitives.UnitTests/Nemonuri.OCamlDotNet.Primitives.UnitTests.csproj" />
     <Project Path="test/Nemonuri.RepoTools.FStar.BuildTasks.Tests/Nemonuri.RepoTools.FStar.BuildTasks.Tests.fsproj" />
   </Folder>
   <Project Path="Nemonuri.ByteChars/Nemonuri.ByteChars.csproj" />

@@ -12,7 +12,7 @@
   <ItemGroup>
     
     <Compile Include="TheoryDataTheory.fs" />
-    <Compile Include="Char_AsciiTest.fs" />
+    <Compile Include="Char_AsciiTest.fs" /><Compile Include="CharTest.fs" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="xunit.v3.mtp-v2" />

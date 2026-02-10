@@ -1,6 +1,6 @@
-using Nemonuri.OCamlDotNet.Extensions;
+using Nemonuri.ByteChars;
 
-namespace Nemonuri.OCamlDotNet.Primitives.UnitTests;
+namespace Nemonuri.ByteChars.UnitTests;
 
 public class CharTests
 {
@@ -16,7 +16,6 @@ public class CharTests
     public void ToEscaped(byte charValue, byte[] expectedBytes)
     {
         // Arrange
-        Char ocamlChar = new (charValue);
 
         // Act
         String actualString = ocamlChar.ToEscaped();
