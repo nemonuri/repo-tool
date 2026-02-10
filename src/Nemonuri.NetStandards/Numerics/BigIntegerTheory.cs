@@ -1,13 +1,26 @@
 using System.Numerics;
+using System.Runtime.CompilerServices;
+using System.Diagnostics;
 
 namespace Nemonuri.NetStandards.Numerics;
 
 public static class BigIntegerTheory
 {
+#if false
+/** 
+- Reference: https://github.com/dotnet/dotnet/blob/e80c4eea9c18a3e46a3898ad1c3223d88095c722/src/runtime/src/libraries/System.Runtime.Numerics/src/System/Numerics/BigIntegerCalculator.Utils.cs#L16C13-L16C33
+
+왜 stackalloc 한계를 256 (= 64 * sizeof(uint)) 바이트로 잡았을까?
+- 난 byte string 에 대해 이 값을 512 바이트로 정했는데, 괜찮으려나?
+*/
+    internal const int StackAllocThreshold = 64 * sizeof(uint);
+#endif
+
 #if NETSTANDARD2_0
     internal const uint kuMaskHighBit = unchecked((uint)int.MinValue);
     internal const int kcbitUint = 32;
     internal const int kcbitUlong = 64;
+
     /// <summary>
     /// <see cref="System.Numerics.BigInteger(System.ReadOnlySpan{byte}, bool, bool)" />
     /// <a href="https://learn.microsoft.com/en-us/dotnet/api/system.numerics.biginteger.-ctor?view=net-10.0#system-numerics-biginteger-ctor(system-readonlyspan((system-byte))-system-boolean-system-boolean)">
@@ -16,204 +29,54 @@ public static class BigIntegerTheory
     /// </summary>
     public static BigInteger Create(ReadOnlySpan<byte> value, bool isUnsigned = false, bool isBigEndian = false)
     {
+/** 뭐지. netstadard2.1 에서는 맨 앞의 '##'를 '전처리문'으로 인식하네;; */
 /**
+들어가기
+-------
+
+```cs
+byte[] value = CreateRandomByteArray();
+Debug.Assert( new BigInteger((byte[])value) == new BigInteger((ReadOnlySpan<byte>)value, isUnsigned: false, isBigEndian: false) ); // pass
+```
+
+즉, 내가 구현해야 할 것은, `(isUnsigned, isBigEndian) != (false, false)` 인 상황을 처리하는 코드!
+
 - Reference: https://github.com/dotnet/runtime/blob/9ffface2f3fa6fbbb427793c3230b1626a1fdd84/src/libraries/System.Runtime.Numerics/src/System/Numerics/BigInteger.cs#L276
+
+Todo: Allocation 줄이기
+----------------------
+
+- `value`의 길이가 sizeof(long) 이하일 경우, 불필요한 Array 생성을 하지 않는 BigInteger 생성자를 호출할 수 있기는 하다.
+- 그런데 여러 경우의 수를 따져봐야 하니 나중에...
 */
-        int byteCount = value.Length;
-
-        bool isNegative;
-        if (byteCount > 0)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        static int GetMostSignificantByteIndex(ReadOnlySpan<byte> value, bool isBigEndian)
         {
-            byte mostSignificantByte = isBigEndian ? value[0] : value[byteCount - 1];
-            isNegative = (mostSignificantByte & 0x80) != 0 && !isUnsigned;
-
-            if (mostSignificantByte == 0)
-            {
-                // Try to conserve space as much as possible by checking for wasted leading byte[] entries
-                if (isBigEndian)
-                {
-                    int offset = 1;
-
-                    while (offset < byteCount && value[offset] == 0)
-                    {
-                        offset++;
-                    }
-
-                    value = value.Slice(offset);
-                    byteCount = value.Length;
-                }
-                else
-                {
-                    byteCount -= 2;
-
-                    while (byteCount >= 0 && value[byteCount] == 0)
-                    {
-                        byteCount--;
-                    }
-
-                    byteCount++;
-                }
-            }
-        }
-        else
-        {
-            isNegative = false;
+            Debug.Assert(value.Length > 0);
+            return isBigEndian ? 0 : value.Length-1;
         }
 
-        if (byteCount == 0)
+        if (value.Length == 0) { return BigInteger.Zero; }
+
+        if (isUnsigned == false && isBigEndian == false) { return new BigInteger(value.ToArray()); }
+
+        // Get most significant byte
+        byte msByte = value[GetMostSignificantByteIndex(value, isBigEndian)];
+
+        const byte MostSignificantBitMask = 0b_1000_0000;
+
+        bool lookLikeNegative = (msByte & MostSignificantBitMask) != 0;
+
+        bool needExtraZero = isUnsigned && lookLikeNegative;
+
+        byte[] clonedValue = !needExtraZero ? value.ToArray() : [..value, (byte)0];
+
+        if (isBigEndian)
         {
-            // BigInteger.Zero
-            return BigInteger.Zero;
+            clonedValue.AsSpan().Slice(0, value.Length).Reverse();
         }
 
-        if (byteCount <= 4)
-        {
-            _sign = isNegative ? unchecked((int)0xffffffff) : 0;
-
-            if (isBigEndian)
-            {
-                for (int i = 0; i < byteCount; i++)
-                {
-                    _sign = (_sign << 8) | value[i];
-                }
-            }
-            else
-            {
-                for (int i = byteCount - 1; i >= 0; i--)
-                {
-                    _sign = (_sign << 8) | value[i];
-                }
-            }
-
-            _bits = null;
-            if (_sign < 0 && !isNegative)
-            {
-                // Int32 overflow
-                // Example: Int64 value 2362232011 (0xCB, 0xCC, 0xCC, 0x8C, 0x0)
-                // can be naively packed into 4 bytes (due to the leading 0x0)
-                // it overflows into the int32 sign bit
-                _bits = new uint[1] { unchecked((uint)_sign) };
-                _sign = +1;
-            }
-            if (_sign == int.MinValue)
-            {
-                this = s_bnMinInt;
-            }
-        }
-        else
-        {
-            int wholeUInt32Count = Math.DivRem(byteCount, 4, out int unalignedBytes);
-            uint[] val = new uint[wholeUInt32Count + (unalignedBytes == 0 ? 0 : 1)];
-
-            // Copy the bytes to the uint array, apart from those which represent the
-            // most significant uint if it's not a full four bytes.
-            // The uints are stored in 'least significant first' order.
-            if (isBigEndian)
-            {
-                // The bytes parameter is in big-endian byte order.
-                // We need to read the uints out in reverse.
-
-                Span<byte> uintBytes = MemoryMarshal.AsBytes(val.AsSpan(0, wholeUInt32Count));
-
-                // We need to slice off the remainder from the beginning.
-                value.Slice(unalignedBytes).CopyTo(uintBytes);
-
-                uintBytes.Reverse();
-            }
-            else
-            {
-                // The bytes parameter is in little-endian byte order.
-                // We can just copy the bytes directly into the uint array.
-
-                value.Slice(0, wholeUInt32Count * 4).CopyTo(MemoryMarshal.AsBytes<uint>(val.AsSpan()));
-            }
-
-            // In both of the above cases on big-endian architecture, we need to perform
-            // an endianness swap on the resulting uints.
-            if (!BitConverter.IsLittleEndian)
-            {
-                BinaryPrimitives.ReverseEndianness(val.AsSpan(0, wholeUInt32Count), val);
-            }
-
-            // Copy the last uint specially if it's not aligned
-            if (unalignedBytes != 0)
-            {
-                if (isNegative)
-                {
-                    val[wholeUInt32Count] = 0xffffffff;
-                }
-
-                if (isBigEndian)
-                {
-                    for (int curByte = 0; curByte < unalignedBytes; curByte++)
-                    {
-                        byte curByteValue = value[curByte];
-                        val[wholeUInt32Count] = (val[wholeUInt32Count] << 8) | curByteValue;
-                    }
-                }
-                else
-                {
-                    for (int curByte = byteCount - 1; curByte >= byteCount - unalignedBytes; curByte--)
-                    {
-                        byte curByteValue = value[curByte];
-                        val[wholeUInt32Count] = (val[wholeUInt32Count] << 8) | curByteValue;
-                    }
-                }
-            }
-
-            if (isNegative)
-            {
-                NumericsHelpers.DangerousMakeTwosComplement(val); // Mutates val
-
-                // Pack _bits to remove any wasted space after the twos complement
-                int len = val.Length - 1;
-                while (len >= 0 && val[len] == 0) len--;
-                len++;
-
-                if (len == 1)
-                {
-                    switch (val[0])
-                    {
-                        case 1: // abs(-1)
-                            this = s_bnMinusOneInt;
-                            return;
-
-                        case kuMaskHighBit: // abs(Int32.MinValue)
-                            this = s_bnMinInt;
-                            return;
-
-                        default:
-                            if (unchecked((int)val[0]) > 0)
-                            {
-                                _sign = (-1) * ((int)val[0]);
-                                _bits = null;
-                                AssertValid();
-                                return;
-                            }
-
-                            break;
-                    }
-                }
-
-                if (len != val.Length)
-                {
-                    _sign = -1;
-                    _bits = new uint[len];
-                    Array.Copy(val, _bits, len);
-                }
-                else
-                {
-                    _sign = -1;
-                    _bits = val;
-                }
-            }
-            else
-            {
-                _sign = +1;
-                _bits = val;
-            }
-        }
-        AssertValid();
+        return new BigInteger(value.ToArray());
     }
 #endif
 }
