@@ -49,5 +49,7 @@ public readonly ref struct FixedSizeReadOnlyChunkSpan<TSize, T>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get => _source[_index];
         }
+
+        internal readonly bool AreIndexLengthEqual => _index == _source.Length;
     }
 }

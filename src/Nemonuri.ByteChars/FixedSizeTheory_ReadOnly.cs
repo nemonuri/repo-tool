@@ -54,18 +54,4 @@ public static partial class FixedSizeTheory
         public static bool AreAllMembersOfReadOnlyChunkSpanValid<T>(ReadOnlySpan<T> rawValues, int length) =>
             CheckAllMembersOfReadOnlyChunkSpanAreValidCore<TPremise, T>(rawValues, length, throwIfNot: true);
     }
-
-    public readonly ref struct SplitReadOnlySpanResult<TSize, T>
-        where TSize : unmanaged, IFixedSizePremise<TSize>
-    {
-        internal SplitReadOnlySpanResult(FixedSizeReadOnlyChunkSpan<TSize, T> chunks, ReadOnlySpan<T> remainder)
-        {
-            Chunks = chunks;
-            Remainder = remainder;
-        }
-
-        public FixedSizeReadOnlyChunkSpan<TSize, T> Chunks {get;}
-
-        public ReadOnlySpan<T> Remainder {get;}
-    }
 }

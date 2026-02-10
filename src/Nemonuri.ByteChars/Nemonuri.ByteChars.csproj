@@ -19,6 +19,13 @@
           <!-- https://github.com/Sergio0694/PolySharp/tree/main/src/PolySharp.SourceGenerators/EmbeddedResources -->
           System.Runtime.CompilerServices.CallerArgumentExpressionAttribute;
         </PolySharpIncludeGeneratedTypes>
+        <PolySharpIncludeGeneratedTypes Condition="$(TargetFramework) == 'netstandard2.0'">
+          $(PolySharpIncludeGeneratedTypes)
+          System.Index;
+          System.Range;
+          System.Diagnostics.CodeAnalysis.NotNullWhenAttribute;
+          System.Diagnostics.CodeAnalysis.DoesNotReturnAttribute;
+        </PolySharpIncludeGeneratedTypes>
       </PropertyGroup>
     </When>
   </Choose>
@@ -29,14 +36,11 @@
     <PackageReference Include="Microsoft.Extensions.ObjectPool" />
   </ItemGroup>
 
-  <ItemGroup Condition="$(TargetFramework) == 'netstandard2.0'">
-    <PackageReference Include="Microsoft.Bcl.Memory" />
-  </ItemGroup>
-
   <ItemGroup Condition="$(TargetFramework.ToLowerInvariant().StartsWith('netstandard2.'))">
     <PackageReference Include="System.Collections.Immutable" />
     <ProjectReference Include="..\Nemonuri.NetStandards\Core\Nemonuri.NetStandards.Core.csproj" />
     <ProjectReference Include="..\Nemonuri.NetStandards\Numerics\Nemonuri.NetStandards.Numerics.csproj" />
+    <ProjectReference Include="..\Nemonuri.NetStandards\Memory\Nemonuri.NetStandards.Memory.csproj" />
   </ItemGroup>
   
   <ItemGroup Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0'))">

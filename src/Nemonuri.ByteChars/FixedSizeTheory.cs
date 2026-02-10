@@ -97,18 +97,4 @@ public static partial class FixedSizeTheory
             return new(new(rawValues, chunkCount), remainder);
         }
     }
-
-    public readonly ref struct SplitSpanResult<TSize, T>
-        where TSize : unmanaged, IFixedSizePremise<TSize>
-    {
-        internal SplitSpanResult(FixedSizeChunkSpan<TSize, T> chunks, Span<T> remainder)
-        {
-            Chunks = chunks;
-            Remainder = remainder;
-        }
-
-        public FixedSizeChunkSpan<TSize, T> Chunks {get;}
-
-        public Span<T> Remainder {get;}
-    }
 }

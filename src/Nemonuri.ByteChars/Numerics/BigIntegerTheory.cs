@@ -21,6 +21,17 @@ public static class BigIntegerTheory
 #endif
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static Span<byte> ByteTrimStart(Span<byte> span, byte trimElement)
+    {
+#if NET8_0_OR_GREATER
+        return span.TrimStart(trimElement);
+#else
+        return Nemonuri.NetStandards.MemoryTheory.TrimStart(span, trimElement);
+#endif
+    }
+
+
     /// <param name="integerString">Positive signed, little endian integer string.</param>
     public static bool TryParseUnsignedDecimalDigitSpanToIntegerString(ReadOnlySpan<byte> digits, out ImmutableArray<byte> integerString)
     {
@@ -28,8 +39,7 @@ public static class BigIntegerTheory
 
         Span<byte> tempStorage = stackalloc byte[sizeof(uint)];
 
-        var rs = E9s.SplitSpan(digits);
-        foreach (var digit1E9 in rs.Chunks)
+        foreach (var digit1E9 in E9s.SplitSpan(digits))
         {
             if (!Utf8Parser.TryParse(digit1E9, out uint chunkValue, out _))
             {
@@ -37,34 +47,33 @@ public static class BigIntegerTheory
             }
 
             BinaryPrimitives.WriteUInt32BigEndian(tempStorage, chunkValue);
-            MemoryExtensions.IsWhiteSpace
-            Span<byte> leadingZeroTrimmed = tempStorage.TrimStart(ByteCharConstants.AsciiNull);
-
-
+            
+            var leadingZeroTrimmed = ByteTrimStart(tempStorage, ByteCharConstants.AsciiNull);
+            builder.AddRange(leadingZeroTrimmed);
         }
 
-        while (stepDigits.Length > 0 && Utf8Parser.TryParse(stepDigits, out uint stepValue, out int stepBytesConsumed))
+        // To little endian
+        builder.Reverse(); 
+
+        // To positive signed
+        if (ByteTheory.IsMostSignificantBitSet(builder[^1]))
         {
-            stepDigits = stepDigits[stepBytesConsumed..];
-
-            bool wasFinalStep = stepDigits.Length == 0;
-
-            //--- Handle stepStorage ---
-            Span<byte> stepStorage = tempStorage;
-            stepStorage = BinaryPrimitives
-            //---|
+            builder.Add(ByteCharConstants.AsciiNull);
         }
 
-/*
-        while (stepDigits.Length > 0 && Utf8Parser.TryParse(stepDigits, out uint stepValue, out int stepBytesConsumed))
+        integerString = builder.DrainToImmutable();
+        return true;
+    }
+
+    public static bool TryParseUnsignedDecimalDigitSpanToBigInteger(ReadOnlySpan<byte> digits, out BigInteger bigInteger)
+    {
+        if (TryParseUnsignedDecimalDigitSpanToIntegerString(digits, out var integerString))
         {
-            BinaryPrimitives.WriteUInt32BigEndian(tempStorage, stepValue);
-            Span<byte> trimmed = 
-            builder.AddRange(tempStorage);
-
+            bigInteger = IntegerSpanToBigInteger(integerString.AsSpan());
+            return true;
         }
-*/
-
+        bigInteger = default;
+        return false;
     }
 
 }
