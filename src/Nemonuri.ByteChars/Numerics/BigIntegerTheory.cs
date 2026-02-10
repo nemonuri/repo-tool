@@ -1,7 +1,7 @@
 using System.Numerics;
 using System.Buffers.Text;
 using System.Buffers.Binary;
-using I4s = Nemonuri.ByteChars.Internal.Base1E9Premise;
+using E9s = Nemonuri.ByteChars.Internal.Base1E9Premise;
 
 namespace Nemonuri.ByteChars.Numerics;
 
@@ -25,8 +25,23 @@ public static class BigIntegerTheory
     public static bool TryParseUnsignedDecimalDigitSpanToIntegerString(ReadOnlySpan<byte> digits, out ImmutableArray<byte> integerString)
     {
         var builder = ImmutableArray.CreateBuilder<byte>();
-        ReadOnlySpan<byte> stepDigits = digits;
+
         Span<byte> tempStorage = stackalloc byte[sizeof(uint)];
+
+        var rs = E9s.SplitSpan(digits);
+        foreach (var digit1E9 in rs.Chunks)
+        {
+            if (!Utf8Parser.TryParse(digit1E9, out uint chunkValue, out _))
+            {
+                integerString = default; return false;
+            }
+
+            BinaryPrimitives.WriteUInt32BigEndian(tempStorage, chunkValue);
+            MemoryExtensions.IsWhiteSpace
+            Span<byte> leadingZeroTrimmed = tempStorage.TrimStart(ByteCharConstants.AsciiNull);
+
+
+        }
 
         while (stepDigits.Length > 0 && Utf8Parser.TryParse(stepDigits, out uint stepValue, out int stepBytesConsumed))
         {
