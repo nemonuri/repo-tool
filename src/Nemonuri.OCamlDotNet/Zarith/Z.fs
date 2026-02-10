@@ -1,6 +1,6 @@
 ﻿/// - Reference: https://ocaml.org/p/zarith/1.10/doc/zarith/Z/index.html
 module Nemonuri.OCamlDotNet.Zarith.Z
-open Nemonuri.OCamlDotNet.Core
+open Nemonuri.OCamlDotNet
 open System.Globalization
 
 /// Type of integers of arbitrary length.

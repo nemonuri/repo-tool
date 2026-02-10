@@ -42,5 +42,9 @@
   <ItemGroup Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0'))">
     <PackageReference Include="System.Numerics.Tensors" />
   </ItemGroup>
+  
+  <ItemGroup>
+    <Folder Include="Numerics\" />
+  </ItemGroup>
 
 </Project>
