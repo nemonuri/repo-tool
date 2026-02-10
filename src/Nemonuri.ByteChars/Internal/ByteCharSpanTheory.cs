@@ -7,16 +7,6 @@ using Sls = Nemonuri.ByteChars.Internal.StackLimitSizePremise;
 
 namespace Nemonuri.ByteChars.Internal;
 
-internal readonly struct ByteVectorSizePremise : IFixedSizePremise<ByteVectorSizePremise>
-{
-    public readonly int FixedSize => Vector<byte>.Count;
-}
-
-internal readonly struct StackLimitSizePremise : IFixedSizePremise<StackLimitSizePremise>
-{
-    public readonly int FixedSize => ByteStringConstants.ByteCharStackLimitSize;
-}
-
 internal static partial class ByteCharSpanTheory
 {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
