@@ -1,0 +1,17 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>netstandard2.0;netstandard2.1</TargetFrameworks>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="Prims.fs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Nemonuri.OCamlDotNet\Zarith\Nemonuri.OCamlDotNet.Zarith.fsproj" />
+    <ProjectReference Include="..\..\Nemonuri.OCamlDotNet\Batteries\Nemonuri.OCamlDotNet.Batteries.fsproj" />
+  </ItemGroup>
+
+</Project>

@@ -1,6 +1,8 @@
 <Solution>
   <Folder Name="/Nemonuri.FStarDotNet/">
     <Project Path="Nemonuri.FStarDotNet/Primitives/Nemonuri.FStarDotNet.Primitives.fsproj" />
+    <Project Path="Nemonuri.FStarDotNet/FStarC/Basic/Nemonuri.FStarDotNet.FStarC.Basic.fsproj" />
+    <Project Path="Nemonuri.FStarDotNet/Ulib/Nemonuri.FStarDotNet.Ulib.fsproj" />
   </Folder>
   <Folder Name="/Nemonuri.NetStandards/">
     <Project Path="Nemonuri.NetStandards/Core/Nemonuri.NetStandards.Core.csproj" />

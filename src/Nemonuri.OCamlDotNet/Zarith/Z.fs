@@ -1,7 +1,6 @@
 ﻿/// - Reference: https://ocaml.org/p/zarith/1.10/doc/zarith/Z/index.html
 module Nemonuri.OCamlDotNet.Zarith.Z
 open Nemonuri.OCamlDotNet
-open System.Globalization
 
 /// Type of integers of arbitrary length.
 type t = System.Numerics.BigInteger
@@ -40,12 +39,14 @@ let of_nativeint (i: nativeint) : t = t (Operators.int64 i)
 let of_float (n: float) = t n 
 
 (**
-- https://learn.microsoft.com/en-us/dotnet/api/system.numerics.biginteger.parse?view=netstandard-2.0#system-numerics-biginteger-parse(system-string)
+- 현재, '부호 없는 정수 문자열'에 대해서만 구현
 *)
 /// Converts a string to an integer. 
 /// An optional - prefix indicates a negative number, while a + prefix is ignored. 
 /// An optional prefix 0x, 0o, or 0b (following the optional - or + prefix) indicates that the number is, represented, in hexadecimal, octal, or binary, respectively. 
 /// Otherwise, base 10 is assumed. (Unlike C, a lone 0 prefix does not denote octal.) 
 /// Raises an Invalid_argument exception if the string is not a syntactically correct representation of an integer.
-//let of_string (s: string) = 
-    //t.Parse(s.ToDotNetString(), )
+let of_string (s: string) : t = 
+    let success, n = Nemonuri.ByteChars.Numerics.BigIntegerTheory.TryParseUnsignedDecimalDigitSpanToBigInteger(s.AsSpan())
+    if not success then invalidArg (nameof s) "invalid argument" else
+    n
