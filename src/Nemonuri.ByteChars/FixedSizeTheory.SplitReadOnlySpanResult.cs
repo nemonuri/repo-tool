@@ -21,26 +21,22 @@ public static partial class FixedSizeTheory
         {
             private readonly SplitReadOnlySpanResult<TSize, T> _source;
             private readonly FixedSizeReadOnlyChunkSpan<TSize, T>.Enumerator _chunkEnumerator;
-            private ReadOnlySpan<T> _current;
             
 
             internal Enumerator(SplitReadOnlySpanResult<TSize, T> source)
             {
                 _source = source;
                 _chunkEnumerator = _source.Chunks.GetEnumerator();
-                _current = default;
             }
 
-            public bool MoveNext()
+            public readonly bool MoveNext()
             {
                 if (_chunkEnumerator.MoveNext())
                 {
-                    _current = _chunkEnumerator.Current;
                     return true;
                 }
-                else if (_chunkEnumerator.AreIndexLengthEqual && _source.Remainder.Length > 0)
+                else if (_chunkEnumerator.IsOnBorder && _source.Remainder.Length > 0)
                 {
-                    _current = _source.Remainder;
                     return true;
                 }
                 else
@@ -49,7 +45,15 @@ public static partial class FixedSizeTheory
                 }
             }
 
-            public readonly ReadOnlySpan<T> Current => _current;
+            public readonly ReadOnlySpan<T> Current
+            {
+                get
+                {
+                    if (!_chunkEnumerator.IsMoved) { return default; }
+                    if (_chunkEnumerator.IsOnBorder) { return _source.Remainder; }
+                    return _chunkEnumerator.Current;
+                }
+            }
         }
     }
 }

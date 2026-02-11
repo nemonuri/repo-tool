@@ -27,7 +27,7 @@ public readonly ref struct FixedSizeReadOnlyChunkSpan<TSize, T>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Enumerator GetEnumerator() => new(this);
 
-    public ref struct Enumerator
+    public ref struct Enumerator : ISupportEnumeratorState
     {
         private readonly FixedSizeReadOnlyChunkSpan<TSize, T> _source;
         private int _index;
@@ -50,6 +50,8 @@ public readonly ref struct FixedSizeReadOnlyChunkSpan<TSize, T>
             get => _source[_index];
         }
 
-        internal readonly bool AreIndexLengthEqual => _index == _source.Length;
+        public readonly bool IsMoved => _index >= 0;
+
+        public readonly bool IsOnBorder => _index == -1 || _index == _source.Length;
     }
 }
