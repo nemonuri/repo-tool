@@ -4,12 +4,12 @@
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
   <ItemGroup>
-    
     <Compile Include="Prelude.fs" />
-    
+    <Compile Include="Unit.fs" />
     <Compile Include="Char.fs" />
     <Compile Include="Sys.fs" />
     <Compile Include="String.fs" />
+    <Compile Include="Stdlib.fs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Nemonuri.ByteChars\Nemonuri.ByteChars.csproj" />

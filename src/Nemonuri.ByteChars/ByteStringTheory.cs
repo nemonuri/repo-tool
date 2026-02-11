@@ -93,7 +93,7 @@ public static unsafe partial class ByteStringTheory
         }
     }
 
-    public static ImmutableArray<byte> CreateConstantInitialized(int length, byte initialValue)
+    public static ImmutableArray<byte> FromInitialValue(int length, byte initialValue)
     {
         static void Updater(Span<byte> bytes0, byte initialValue0)
         {
@@ -103,7 +103,7 @@ public static unsafe partial class ByteStringTheory
         return UnsafeCreateFixedLength(length, initialValue, &Updater);
     }
 
-    public static ImmutableArray<byte> CreateInitialized(int length, Func<int, byte> initializer)
+    public static ImmutableArray<byte> FromInitializer(int length, Func<int, byte> initializer)
     {
         static void Updater(Span<byte> bytes, Func<int, byte> initializer0)
         {

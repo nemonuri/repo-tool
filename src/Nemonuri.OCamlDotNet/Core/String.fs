@@ -10,7 +10,7 @@ type t = string
 
 let private is_invalid_length n = n < 0 || n > Sys.max_string_length
 
-let private throwOutOfRange message = Forward.invalid_arg message |> raise
+let private throwOutOfRange message = Forward.invalid_arg message
 
 let private (|OutOfRange|_|) (e: exn) =
     match e with
@@ -22,7 +22,7 @@ let private (|OutOfRange|_|) (e: exn) =
 /// Raises Invalid_argument if n < 0 or n > Sys.max_string_length.
 let make (n: int) (c: char) : string = 
     try
-        Sth.CreateConstantInitialized(n, c)
+        Sth.FromInitialValue(n, c)
     with
         | OutOfRange msg -> throwOutOfRange msg
 
@@ -32,7 +32,7 @@ let make (n: int) (c: char) : string =
 /// Raises Invalid_argument if n < 0 or n > Sys.max_string_length.
 let init (n: int) (f: int -> char) : string =
     try
-        Sth.CreateInitialized(n, f)
+        Sth.FromInitializer(n, f)
     with
         | OutOfRange msg -> throwOutOfRange msg
 

@@ -13,31 +13,23 @@ let int_zero = Z.zero
 let int_one = Z.one
 let parse_int = Z.of_string
 
-#if false
 let to_string = Z.to_string
 
-type tmp = string [@@deriving yojson]
-let int_to_yojson x = tmp_to_yojson (to_string x)
-let int_of_yojson x =
-  match tmp_of_yojson x with
-  | Ok x -> Ok (parse_int x)
-  | Error x -> Error x
-
-type attribute = unit
+type attribute = Unit.t
 let (cps : attribute) = ()
-type 'Auu____5 hasEq = unit
-type eqtype = unit
-type bool' = bool
-[@@deriving yojson,show]
-type bool = bool'
-[@@deriving yojson,show]
-type empty = unit
+
+[<RequireQualifiedAccess>]
+type 'Auu____5 hasEq = | hasEq of unit
+type eqtype = Unit.t
+//type bool = 
+
+type empty = Unit.t
 (*This is how Coq extracts Inductive void := . Our extraction needs to be fixed to recognize when there
        are no constructors and generate this type abbreviation*)
 type trivial =
   | T
 let (uu___is_T : trivial -> bool) = fun projectee  -> true
-type nonrec unit = unit
+type unit = Unit.t
 type 'Ap squash = unit
 type 'Ap auto_squash = unit
 type l_True = unit

@@ -41,17 +41,10 @@ public static class BigIntegerTheory
         return BigInteger.TryParse(dotnetString, out bigint);
     }
 
-    public static bool TryFormatBigIntegerToAsciiDecimalByteString(BigInteger bigint, out ImmutableArray<byte> asciiByteString)
+    public static ImmutableArray<byte> FormatBigIntegerToAsciiDecimalByteString(BigInteger bigint)
     {
         var str = bigint.ToString("D");
-        var bs = ByteStringTheory.DotNetStringToUtf8ByteString(str);
-        if (!ByteCharTheory.ImmutableByteArrayPremise.IsValidAll(bs))
-        {
-            asciiByteString = default;
-            return false;
-        }
-        asciiByteString = bs;
-        return true;
+        return ByteStringTheory.DotNetStringToUtf8ByteString(str);
     }
 
 
