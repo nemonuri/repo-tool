@@ -1,7 +1,5 @@
 using System.Numerics;
-using System.Buffers.Text;
-using System.Buffers.Binary;
-using E9s = Nemonuri.ByteChars.Internal.Base1E9Premise;
+
 
 namespace Nemonuri.ByteChars.Numerics;
 
@@ -33,47 +31,28 @@ public static class BigIntegerTheory
 
 
     /// <param name="integerString">Positive signed, little endian integer string.</param>
-    public static bool TryParseUnsignedDecimalDigitSpanToIntegerString(ReadOnlySpan<byte> digits, out ImmutableArray<byte> integerString)
+    public static bool TryParseAsciiByteSpanToBigInteger(ReadOnlySpan<byte> digits, out BigInteger bigint)
     {
-        var builder = ImmutableArray.CreateBuilder<byte>();
-
-        Span<byte> tempStorage = stackalloc byte[sizeof(uint)];
-
-        foreach (var digit1E9 in E9s.SplitSpan(digits))
+        if (!ByteStringTheory.TryAsciiByteSpanToUtf16DotNetString(digits, out var dotnetString))
         {
-            if (!Utf8Parser.TryParse(digit1E9, out uint chunkValue, out _))
-            {
-                integerString = default; return false;
-            }
-
-            BinaryPrimitives.WriteUInt32BigEndian(tempStorage, chunkValue);
-            
-            var leadingZeroTrimmed = ByteTrimStart(tempStorage, ByteCharConstants.AsciiNull);
-            builder.AddRange(leadingZeroTrimmed);
+            bigint = default; return false;
         }
 
-        // To little endian
-        builder.Reverse(); 
+        return BigInteger.TryParse(dotnetString, out bigint);
+    }
 
-        // To positive signed
-        if (ByteTheory.IsMostSignificantBitSet(builder[^1]))
+    public static bool TryFormatBigIntegerToAsciiDecimalByteString(BigInteger bigint, out ImmutableArray<byte> asciiByteString)
+    {
+        var str = bigint.ToString("D");
+        var bs = ByteStringTheory.DotNetStringToUtf8ByteString(str);
+        if (!ByteCharTheory.ImmutableByteArrayPremise.IsValidAll(bs))
         {
-            builder.Add(ByteCharConstants.AsciiNull);
+            asciiByteString = default;
+            return false;
         }
-
-        integerString = builder.DrainToImmutable();
+        asciiByteString = bs;
         return true;
     }
 
-    public static bool TryParseUnsignedDecimalDigitSpanToBigInteger(ReadOnlySpan<byte> digits, out BigInteger bigInteger)
-    {
-        if (TryParseUnsignedDecimalDigitSpanToIntegerString(digits, out var integerString))
-        {
-            bigInteger = IntegerSpanToBigInteger(integerString.AsSpan());
-            return true;
-        }
-        bigInteger = default;
-        return false;
-    }
 
 }

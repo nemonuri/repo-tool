@@ -19,10 +19,6 @@
           <!-- https://github.com/Sergio0694/PolySharp/tree/main/src/PolySharp.SourceGenerators/EmbeddedResources -->
           System.Runtime.CompilerServices.CallerArgumentExpressionAttribute;
         </PolySharpIncludeGeneratedTypes>
-        <PolySharpIncludeGeneratedTypes Condition="$(TargetFramework) == 'netstandard2.0'">
-          $(PolySharpIncludeGeneratedTypes)
-          System.Diagnostics.CodeAnalysis.NotNullWhenAttribute;
-        </PolySharpIncludeGeneratedTypes>
       </PropertyGroup>
     </When>
   </Choose>
@@ -32,6 +28,20 @@
     <PackageReference Include="CommunityToolkit.HighPerformance" />
     <PackageReference Include="Microsoft.Extensions.ObjectPool" />
   </ItemGroup>
+  
+  <Choose>
+    <When Condition="$(TargetFramework) == 'netstandard2.0'">
+      <PropertyGroup>
+        <PolySharpIncludeGeneratedTypes>
+          $(PolySharpIncludeGeneratedTypes)
+          System.Diagnostics.CodeAnalysis.NotNullWhenAttribute;
+        </PolySharpIncludeGeneratedTypes>
+      </PropertyGroup>
+      <ItemGroup>
+        <ProjectReference Include="..\Nemonuri.NetStandards\Text\Nemonuri.NetStandards.Text.csproj" />
+      </ItemGroup>
+    </When>
+  </Choose>
 
   <ItemGroup Condition="$(TargetFramework.ToLowerInvariant().StartsWith('netstandard2.'))">
     <PackageReference Include="System.Collections.Immutable" />

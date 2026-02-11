@@ -9,15 +9,25 @@ namespace Nemonuri.ByteChars;
 
 static unsafe partial class ByteStringTheory
 {
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static StringBuilder AppendCharSpan(StringBuilder sb, ReadOnlySpan<char> chars)
+    {
+#if NETSTANDARD2_1_OR_GREATER
+        return sb.Append(chars);
+#else
+        return Nemonuri.NetStandards.Text.StringBuilderTheory.AppendSpan(sb, chars);
+#endif
+    }
+
     public static bool TryAsciiByteSpanToUtf16DotNetString
     (
         ReadOnlySpan<byte> byteSpan,
-        [NotNullWhen(true)] out string? dotnetString
+        [NotNullWhen(true)] out string? dotNetString
     )
     {
         if (byteSpan.Length == 0)
         {
-            dotnetString = string.Empty;
+            dotNetString = string.Empty;
             return true;
         }
 
@@ -26,7 +36,7 @@ static unsafe partial class ByteStringTheory
             UnsafePinnedSpanPointer<byte> sp = new(ptr, byteSpan.Length);
             if (!PinnedByteSpanPointerPremise.IsValidAll(sp))
             {
-                dotnetString = null;
+                dotNetString = null;
                 return false;
             }
         }
@@ -41,7 +51,7 @@ static unsafe partial class ByteStringTheory
             OperationStatus status = Utf8.ToUtf16(chunk, dest, out int bytesRead, out int charsWritten);
             Debug.Assert(status == OperationStatus.Done);
             Debug.Assert(bytesRead == charsWritten);
-            sb.Append(dest[..charsWritten]);
+            AppendCharSpan(sb, dest[..charsWritten]);
         }
         
         string result = sb.ToString();
@@ -49,7 +59,24 @@ static unsafe partial class ByteStringTheory
 
         Internal.StringBuilderPoolTheroy.Shared.Return(sb);
         
-        dotnetString = result;
+        dotNetString = result;
         return true;
+    }
+
+    public static bool TryAsciiByteStringToUtf16DotNetString
+    (
+        ImmutableArray<byte> byteString,
+        [NotNullWhen(true)] out string? dotNetString
+    )
+    {
+        return TryAsciiByteSpanToUtf16DotNetString(byteString.AsSpan(), out dotNetString);
+    }
+
+    public static ImmutableArray<byte> DotNetStringToUtf8ByteString
+    (
+        string dotNetString
+    )
+    {
+        return UnicodeEncoding.UTF8.GetBytes(dotNetString).ToImmutableArray();
     }
 }

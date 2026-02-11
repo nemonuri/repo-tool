@@ -1,10 +1,12 @@
-﻿namespace Nemonuri.NetStandards.Text;
+﻿using System.Text;
 
-using System.Text;
+namespace Nemonuri.NetStandards.Text;
+
+#if false
 
 public static class EncodingExtensions
 {
-#if !NETSTANDARD2_1_OR_GREATER
+
     extension(Encoding encoding)
     {
         public int GetCharCount(ReadOnlySpan<byte> bytes)
@@ -18,5 +20,7 @@ public static class EncodingExtensions
             }
         }
     }
-#endif
+
 }
+
+#endif
