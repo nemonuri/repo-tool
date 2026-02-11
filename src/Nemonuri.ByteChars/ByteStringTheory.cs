@@ -4,7 +4,7 @@ using static Nemonuri.ByteChars.Extensions.ImmutableArrayBuilderExtensions;
 
 namespace Nemonuri.ByteChars;
 
-public static unsafe class ByteStringTheory
+public static unsafe partial class ByteStringTheory
 {
 #if NETSTANDARD2_1_OR_GREATER
     private static Span<byte> BuilderToSpan(ImmutableArray<byte>.Builder builder)

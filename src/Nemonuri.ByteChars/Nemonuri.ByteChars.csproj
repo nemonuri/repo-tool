@@ -21,10 +21,7 @@
         </PolySharpIncludeGeneratedTypes>
         <PolySharpIncludeGeneratedTypes Condition="$(TargetFramework) == 'netstandard2.0'">
           $(PolySharpIncludeGeneratedTypes)
-          System.Index;
-          System.Range;
           System.Diagnostics.CodeAnalysis.NotNullWhenAttribute;
-          System.Diagnostics.CodeAnalysis.DoesNotReturnAttribute;
         </PolySharpIncludeGeneratedTypes>
       </PropertyGroup>
     </When>
@@ -38,6 +35,7 @@
 
   <ItemGroup Condition="$(TargetFramework.ToLowerInvariant().StartsWith('netstandard2.'))">
     <PackageReference Include="System.Collections.Immutable" />
+    <PackageReference Include="Microsoft.Bcl.Memory" />
     <ProjectReference Include="..\Nemonuri.NetStandards\Core\Nemonuri.NetStandards.Core.csproj" />
     <ProjectReference Include="..\Nemonuri.NetStandards\Numerics\Nemonuri.NetStandards.Numerics.csproj" />
     <ProjectReference Include="..\Nemonuri.NetStandards\Memory\Nemonuri.NetStandards.Memory.csproj" />

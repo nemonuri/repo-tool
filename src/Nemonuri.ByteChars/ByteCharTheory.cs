@@ -144,4 +144,5 @@ public static partial class ByteCharTheory
     public static byte CheckedDotNetCharToByteChar(char dotNetChar) => checked((byte)dotNetChar);
 
     public static char ByteCharToDotNetChar(byte byteChar) => (char)byteChar;
+
 }
