@@ -53,10 +53,20 @@ let of_string (s: string) : t =
     if not success then Stdlib.invalid_arg "invalid argument" else
     n
 
+
+
+//// <category name="Conversions">
+
+/// Converts to a base integer. May raise Overflow.
+let to_int (n: t) : int = BigInteger.op_Explicit n
+
+
 /// Gives a human-readable, decimal string representation of the argument.
 let to_string (n: t) : string = FormatBigIntegerToAsciiDecimalByteString n
 
 
+
+//// </category> 
 
 
 //// <category name="Ordering">
@@ -171,3 +181,25 @@ let erem (left: t) (right: t) : t = ediv_rem left right |> Microsoft.FSharp.Core
 
 //// </category>
 
+//// <category name="Bit-level operations">
+
+/// Bitwise logical and.
+let logand (left: t) (right: t) : t = left &&& right
+
+/// Bitwise logical or.
+let logor (left: t) (right: t) : t = left ||| right
+
+/// Bitwise logical exclusive or.
+let logxor (left: t) (right: t) : t = left ^^^ right
+
+/// Bitwise logical negation. The identity lognot a=-a-1 always hold.
+let lognot (n: t) : t = BigInteger.op_OnesComplement n
+
+/// Shifts to the left. Equivalent to a multiplication by a power of 2. The second argument must be nonnegative.
+let shift_left (left: t) (right: int) : t = left <<< right
+
+/// Shifts to the right. This is an arithmetic shift, equivalent to a division by a power of 2 with rounding towards -oo. 
+/// The second argument must be nonnegative.
+let shift_right (left: t) (right: int) : t = left >>> right
+
+//// </category>

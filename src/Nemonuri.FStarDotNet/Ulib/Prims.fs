@@ -9,6 +9,7 @@ module Nemonuri.FStarDotNet.Prims
 
 open Nemonuri.OCamlDotNet
 open Nemonuri.OCamlDotNet.Zarith
+open Nemonuri.OCamlDotNet.String
 
 type int = Z.t
 let of_int = Z.of_int
@@ -141,27 +142,27 @@ let strcat x y = x ^ y
 let op_Hat x y = x ^ y
 
 type 'a list = Microsoft.FSharp.Collections.list<'a>
-let uu___is_Nil : 'Aa . 'Aa list -> bool =
+let uu___is_Nil<'Aa> : 'Aa list -> bool =
   fun projectee  -> match projectee with | []  -> true | uu____1190 -> false
-let uu___is_Cons : 'Aa . 'Aa list -> bool =
+let uu___is_Cons<'Aa> : 'Aa list -> bool =
   fun projectee  ->
     match projectee with | hd::tl -> true | uu____1216 -> false
 
-let __proj__Cons__item__hd : 'Aa . 'Aa list -> 'Aa =
+let __proj__Cons__item__hd<'Aa> : 'Aa list -> 'Aa =
   fun projectee  -> match projectee with | hd::tl -> hd
-let __proj__Cons__item__tl : 'Aa . 'Aa list -> 'Aa list =
+let __proj__Cons__item__tl<'Aa> : 'Aa list -> 'Aa list =
   fun projectee  -> match projectee with | hd::tl -> tl
 type pattern = unit
 
 
-type ('Aa,'Auu____1278) decreases = unit
-let returnM : 'Aa . 'Aa -> 'Aa = fun x  -> x
+type [<RequireQualifiedAccess>] ('Aa,'Auu____1278) decreases = | decreases of unit
+let returnM<'Aa> : 'Aa -> 'Aa = fun x  -> x
 
-type ('Aa,'Awp) as_requires = 'Awp
-type ('Aa,'Awp,'Ax) as_ensures = unit
+type [<RequireQualifiedAccess>] ('Aa,'Awp) as_requires = | as_requires of 'Awp
+type [<RequireQualifiedAccess>] ('Aa,'Awp,'Ax) as_ensures = | as_ensures of unit
 let admit () = failwith "Prims.admit: cannot be executed"
 let magic () = failwith "Prims.magic: cannot be executed"
-let unsafe_coerce : 'Aa 'Ab . 'Aa -> 'Ab =
+let unsafe_coerce<'Aa, 'Ab> : 'Aa -> 'Ab =
   fun x -> Obj.magic x
 
 type 'Ap spinoff = 'Ap
@@ -172,14 +173,13 @@ type pos = int
 type nonzero = int
 let op_Modulus x y = x mod y
 let op_Division x y = x / y
-let rec (pow2 : nat -> pos) =
+let rec pow2 : nat -> pos =
   fun x  ->
     Z.shift_left Z.one (Z.to_int x)
 
 let (min : int -> int -> int) =
   fun x  -> fun y  -> if x <= y then x else y
 let (abs : int -> int) =
-  fun x  -> if x >= (parse_int "0") then x else op_Minus x
+  fun x  -> if x >= (parse_int "0"B) then x else op_Minus x
 let string_of_bool = string_of_bool
 let string_of_int = to_string
-#endif

@@ -30,12 +30,14 @@ public static unsafe partial class ByteStringTheory
 #endif
     }
 
+    /// <exception cref="System.ArgumentOutOfRangeException" />
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static void GuardLengthIsInValidRange(int length)
     {
         Guard.IsInRange(length, 0, ByteStringConstants.MaxLength);
     }
 
+    /// <exception cref="System.ArgumentOutOfRangeException" />
     private static ImmutableArray<byte> UnsafeCreateFixedLength<TAux>(int length, TAux aux, delegate*<Span<byte>, TAux, void> updater)
     {
         GuardLengthIsInValidRange(length);
@@ -70,6 +72,7 @@ public static unsafe partial class ByteStringTheory
 #endif
     }
 
+    /// <exception cref="System.ArgumentOutOfRangeException" />
     private static ImmutableArray<byte> UnsafeCreateFixedLengthByReadOnlySpan<TAux>
     (
         ReadOnlySpan<TAux> auxSpan, 
@@ -93,6 +96,7 @@ public static unsafe partial class ByteStringTheory
         }
     }
 
+    /// <exception cref="System.ArgumentOutOfRangeException" />
     public static ImmutableArray<byte> FromInitialValue(int length, byte initialValue)
     {
         static void Updater(Span<byte> bytes0, byte initialValue0)
@@ -103,6 +107,7 @@ public static unsafe partial class ByteStringTheory
         return UnsafeCreateFixedLength(length, initialValue, &Updater);
     }
 
+    /// <exception cref="System.ArgumentOutOfRangeException" />
     public static ImmutableArray<byte> FromInitializer(int length, Func<int, byte> initializer)
     {
         static void Updater(Span<byte> bytes, Func<int, byte> initializer0)
@@ -119,6 +124,7 @@ public static unsafe partial class ByteStringTheory
 
     public static ImmutableArray<byte> Empty => [];
 
+    /// <exception cref="System.ArgumentOutOfRangeException" />
     public static ImmutableArray<byte> DotNetCharSpanToByteString(params ReadOnlySpan<char> dotNetChars)
     {
         static void Updater(Span<byte> bytes, ReadOnlySpan<char> dotNetChars0)
@@ -132,6 +138,7 @@ public static unsafe partial class ByteStringTheory
         return UnsafeCreateFixedLengthByReadOnlySpan(dotNetChars, &Updater);
     }
 
+    /// <exception cref="System.ArgumentOutOfRangeException" />
     public static ImmutableArray<byte> CheckedDotNetCharSpanToByteString(params ReadOnlySpan<char> dotNetChars)
     {
         static void Updater(Span<byte> bytes, ReadOnlySpan<char> dotNetChars0)
@@ -145,6 +152,7 @@ public static unsafe partial class ByteStringTheory
         return UnsafeCreateFixedLengthByReadOnlySpan(dotNetChars, &Updater);
     }
 
+    /// <exception cref="System.ArgumentOutOfRangeException" />
     public static ImmutableArray<byte> DotNetStringToByteString(string? dotNetString)
     {
         static void Updater(Span<byte> bytes, string dotNetString0)
@@ -195,4 +203,12 @@ public static unsafe partial class ByteStringTheory
     }
 
     public static ImmutableArray<byte> FromByteSpan(params ReadOnlySpan<byte> bytes) => bytes.ToImmutableArray();
+
+    /// <exception cref="System.ArgumentOutOfRangeException" />
+    public static ImmutableArray<byte> Concat(ImmutableArray<byte> left, ImmutableArray<byte> right)
+    {
+        GuardLengthIsInValidRange(left.Length + right.Length);
+        return left.AddRange(right);
+    }
+     
 }

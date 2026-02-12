@@ -42,3 +42,19 @@ let empty : string = Sth.Empty
 /// length s is the length (number of bytes/characters) of s.
 let length (s: string) : int = s.Length
 
+//// <category name="Concatenating">
+
+/// cat s1 s2 concatenates s1 and s2 (s1 ^ s2).
+///
+/// Since 4.13
+/// Raises Invalid_argument if the result is longer than Sys.max_string_length bytes.
+let cat (s1: string) (s2: string) : string = 
+    try
+        Sth.Concat(s1, s2)
+    with
+        | OutOfRange msg -> throwOutOfRange msg
+
+let (^) s1 s2 : string = cat s1 s2
+
+
+//// </category>

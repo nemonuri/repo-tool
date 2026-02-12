@@ -8,6 +8,7 @@ module Prelude =
     type string = System.Collections.Immutable.ImmutableArray<char>
     type bool = Microsoft.FSharp.Core.bool
     type unit = Microsoft.FSharp.Core.unit
+    type nativeint = Microsoft.FSharp.Core.nativeint
 
 module internal Forward =
 
