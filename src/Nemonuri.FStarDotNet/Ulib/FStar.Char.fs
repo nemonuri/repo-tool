@@ -4,6 +4,7 @@ module Nemonuri.FStarDotNet.FStar.Char
 
 open Nemonuri.FStarDotNet
 open Nemonuri.OCamlDotNet
+open Nemonuri.OCamlDotNet.Zarith
 open Nemonuri.OCamlDotNet.Batteries
 
 
@@ -11,7 +12,7 @@ module UChar = BatUChar
 
 module U32 = FStar.UInt32
 
-type char = Char.t
+type char = Int.t
 type char_code = U32.t
 
 (* FIXME(adl) UChar.lowercase/uppercase removed from recent Batteries. Use Camomile? *)
@@ -23,8 +24,11 @@ let uppercase (x:char) : char =
   try Char.code (Char.uppercase_ascii (Char.chr x))
   with _ -> x
 
-let int_of_char (x:char) : Z.t= Z.of_int x
+let int_of_char (x:char) : Z.t = Z.of_int x
 let char_of_int (i:Z.t) : char = Z.to_int i
 
+(** 
+- 왜 'of_int' 가 아니라, 'of_native_int' 라고 이름을 지었지?
+*)
 let u32_of_char (x:char) : char_code = U32.of_native_int x
 let char_of_u32 (x:char_code) : char = U32.to_native_int x

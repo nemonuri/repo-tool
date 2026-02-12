@@ -6,6 +6,8 @@ module Nemonuri.OCamlDotNet.Batteries.BatUTF8
 open Nemonuri.OCamlDotNet
 open Nemonuri.OCamlDotNet.Batteries
 
+open System.Text
+open System.Buffers
 open System.Text.Unicode
 open FSharp.NativeInterop
 open System.Collections.Immutable
@@ -24,6 +26,22 @@ let validate (s: t) : unit =
     match Utf8.IsValid(s.AsSpan()) with
     | true -> ()
     | false -> raise Malformed_code
+
+/// get s n returns n-th Unicode character of s. The call requires O(n)-time.
+let get (s: t) (n: int) : BatUChar.t =
+    if n < 0 then Stdlib.invalid_arg !>($"n is less then zero. n = {n}") else
+
+    let mutable currentSource = s.AsSpan()
+    let mutable currentRune : BatUChar.t = Unchecked.defaultof<_>()
+    for i = n+1 downto 0 do
+        let status, result, consumed = Rune.DecodeFromUtf8 currentSource
+        if status <> OperationStatus.Done then Stdlib.invalid_arg !>"Invalid string."B else
+        currentRune <- result
+        currentSource <- currentSource.Slice(consumed)
+    
+    currentRune
+
+
 
 let [<Literal>] private spanSize = 4
 

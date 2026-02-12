@@ -11,6 +11,7 @@ module Prelude =
     type bool = Microsoft.FSharp.Core.bool
     type unit = Microsoft.FSharp.Core.unit
     type nativeint = Microsoft.FSharp.Core.nativeint
+    type 'a list = Microsoft.FSharp.Collections.list<'a>
 
     [<Struct; RequireQualifiedAccess>]
     type StringDomain =
@@ -43,10 +44,10 @@ module Prelude =
         static member inline op_Implicit (dotNetString: System.String) : StringDomain = DotNetString dotNetString
 
     /// Convert to byte string.
-    let inline ( !- ) (chars: StringDomain) : string = chars.ToByteString()
+    let inline ( !> ) (chars: StringDomain) : string = chars.ToByteString()
 
     /// Convert to .NET string.
-    let inline ( !+ ) (chars: StringDomain) : System.String = chars.ToDotNetString()
+    let inline ( !< ) (chars: StringDomain) : System.String = chars.ToDotNetString()
 
 
 module internal Forward =
@@ -59,7 +60,7 @@ module internal Forward =
         | :? Invalid_argument as inv -> Some inv.Message
         | _ -> None
 
-    let invalid_arg (message: string) = !+message |> System.ArgumentException |> raise
+    let invalid_arg (message: string) = !<message |> System.ArgumentException |> raise
 
     let inline equal a0 a1 = Microsoft.FSharp.Core.LanguagePrimitives.GenericEquality a0 a1
 

@@ -15,4 +15,4 @@ let inline equal (u1 : t) (u2 : t) = Forward.equal u1 u2
 let inline compare (u1 : t) (u2 : t) = Forward.compare u1 u2
 
 /// to_string b is "()".
-let to_string (b: t) : string = !-"()"B
+let to_string (b: t) : string = !>"()"B

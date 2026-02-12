@@ -2,10 +2,11 @@
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0;netstandard2.1</TargetFrameworks>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);FS3391</NoWarn>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="BatUChar.fs" />
-    <Compile Include="BatUTF8.fs" /><Compile Include="BatString.fs" />
+    <Compile Include="BatUTF8.fs" /><Compile Include="BatString.fs" /><Compile Include="BatList.fs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Core\Nemonuri.OCamlDotNet.Core.fsproj" />

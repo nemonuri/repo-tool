@@ -61,7 +61,7 @@ let of_string (s: string) =
     if not success then Stdlib.invalid_arg s else
     v
 
-let to_string (v: uint8) = !-v.ToString()
+let to_string (v: uint8) = !>v.ToString()
 
 // The hex printing for BigInteger in .NET is a bit non-standard as it 
 // prints an extra leading '0' for positive numbers

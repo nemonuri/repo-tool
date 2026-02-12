@@ -46,7 +46,7 @@ let logand    : t -> t -> t = (&&&)
 let logxor    : t -> t -> t = (^^^)
 let logor     : t -> t -> t = (|||)
 let lognot    :      t -> t = (~~~)
-let to_string (v: t) : string = !-v.ToString()
+let to_string (v: t) : string = !>v.ToString()
 let of_string (s: string) : t = 
     let success, (v: t), _ = Utf8Parser.TryParse(s.AsSpan())
     if not success then Stdlib.invalid_arg s else
@@ -71,3 +71,6 @@ let lte (a:t) (b:t) : bool = a <= b
 (* NOT Constant time operators *)
 let eq_mask  (a:t) (b:t) : t = if a  = b then ones else zero
 let gte_mask (a:t) (b:t) : t = if a >= b then ones else zero
+
+let of_native_int (n: int) = Operators.uint32 n
+let to_native_int (n:t) = Operators.int n

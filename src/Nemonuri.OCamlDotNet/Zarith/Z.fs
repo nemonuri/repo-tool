@@ -50,7 +50,7 @@ let of_float (n: float) = t n
 /// Raises an Invalid_argument exception if the string is not a syntactically correct representation of an integer.
 let of_string (s: string) : t = 
     let success, n = TryParseAsciiByteSpanToBigInteger(s.AsSpan())
-    if not success then Stdlib.invalid_arg "invalid argument" else
+    if not success then Stdlib.invalid_arg !>"invalid argument"B else
     n
 
 

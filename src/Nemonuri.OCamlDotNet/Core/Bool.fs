@@ -29,7 +29,7 @@ let inline compare (b0: bool) (b1: bool) : int = Forward.compare b0 b1
 /// to_string b is "true" if b is true and "false" if b is false.
 let to_string (b: bool) : string =
     match b with
-    | true -> !-"true"B
-    | false -> !-"false"B
+    | true -> !>"true"B
+    | false -> !>"false"B
 
 let hash (b: bool) : int = b.GetHashCode()

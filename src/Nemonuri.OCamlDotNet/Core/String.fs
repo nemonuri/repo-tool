@@ -14,7 +14,7 @@ let private throwOutOfRange message = Forward.invalid_arg message
 
 let private (|OutOfRange|_|) (e: exn) =
     match e with
-    | :? System.ArgumentOutOfRangeException as e0 -> Some !-e0.Message
+    | :? System.ArgumentOutOfRangeException as e0 -> Some !>e0.Message
     | _ -> None
 
 /// make n c is a string of length n with each index holding the character c.

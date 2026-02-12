@@ -23,7 +23,7 @@ let chr (i: int) : char =
     try
         System.Convert.ToByte i
     with
-        | :? System.OverflowException as oe -> Forward.invalid_arg !-oe.Message
+        | :? System.OverflowException as oe -> Forward.invalid_arg !>oe.Message
 
 /// Return a string representing the given character, with special characters escaped following the lexical conventions of OCaml. 
 /// All characters outside the ASCII printable range \[`0x20`;`0x7E`\] are escaped, as well as backslash, double-quote, and single-quote.
@@ -102,7 +102,7 @@ module rec Ascii =
     let digit_to_int (c: char) : int = 
         match is_digit c with
         | true -> Cth.UncheckedDecimalDigitToInteger c |> code
-        | false -> Forward.invalid_arg !-"Char.Ascii.is_digit c is false."B
+        | false -> Forward.invalid_arg !>"Char.Ascii.is_digit c is false."B
 
     /// digit_of_int n is an ASCII decimal digit for the decimal value abs (n mod 10).    
     let digit_of_int (n: int) : char = Cth.UncheckedIntegerToDecimalDigit(Operators.byte n)
@@ -119,7 +119,7 @@ module rec Ascii =
     /// Raises Invalid_argument if Char.Ascii.is_hex_digit c is false.
     let hex_digit_to_int (c: char) : int = 
         let success, integer = Cth.TryHexadecimalDigitToInteger c
-        if not success then Forward.invalid_arg !-"Char.Ascii.is_hex_digit c is false."B else
+        if not success then Forward.invalid_arg !>"Char.Ascii.is_hex_digit c is false."B else
         Operators.int integer
     
     //// </category>
@@ -137,6 +137,12 @@ module rec Ascii =
 
 //// <category name="Predicates and comparisons">
 //// See also the Char.Ascii module.
+
+/// Use the equivalent Char.Ascii.lowercase instead.
+let lowercase_ascii = Ascii.lowercase
+
+/// Use the equivalent Char.Ascii.uppercase instead.
+let uppercase_ascii = Ascii.uppercase
 
 /// The comparison function for characters, with the same specification as compare. 
 /// Along with the type t, this function compare allows the module Char to be passed as argument to the functors Set.Make and Map.Make.
