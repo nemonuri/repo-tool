@@ -2,6 +2,7 @@
 /// - Reference: https://ocaml.org/manual/5.4/api/String.html
 module Nemonuri.OCamlDotNet.String
 open Nemonuri.OCamlDotNet
+open type System.MemoryExtensions
 
 type private Sth = Nemonuri.ByteChars.ByteStringTheory
 
@@ -55,6 +56,30 @@ let cat (s1: string) (s2: string) : string =
         | OutOfRange msg -> throwOutOfRange msg
 
 let (^) s1 s2 : string = cat s1 s2
+
+/// concat sep ss concatenates the list of strings ss, inserting the separator string sep between each.
+///
+/// Raises Invalid_argument if the result is longer than Sys.max_string_length bytes.
+let concat (sep: string) (ss: string list) : string =
+    try
+        Sth.Join(sep, ss)
+    with
+        | OutOfRange msg -> throwOutOfRange msg
+
+//// </category>
+
+//// <category name="Predicates and comparisons">
+
+/// equal s0 s1 is true if and only if s0 and s1 are character-wise equal.
+///
+/// Since 4.03 (4.05 in StringLabels)
+let equal (s0: t) (s1: t) : bool = s0.AsSpan().SequenceEqual(s1.AsSpan())
+
+/// compare s0 s1 sorts s0 and s1 in lexicographical order. compare behaves like compare on strings but may be more efficient.
+let compare (s0: t) (s1: t) : int = s0.AsSpan().SequenceCompareTo(s1.AsSpan())
+
+
+
 
 
 //// </category>

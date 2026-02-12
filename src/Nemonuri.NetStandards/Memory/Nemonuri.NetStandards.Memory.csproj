@@ -15,7 +15,7 @@
         <NoWarn>$(NoWarn);CS8602</NoWarn> 
       </PropertyGroup>
       <ItemGroup>
-        <PackageReference Include="System.Memory" />
+        <PackageReference Include="Microsoft.Bcl.Memory" />
       </ItemGroup>
     </When>
   </Choose>

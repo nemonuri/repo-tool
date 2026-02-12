@@ -44,7 +44,7 @@ static unsafe partial class ByteStringTheory
         Span<char> dest = new char[Sls.GetFixedSize()];
         var rs = Sls.SplitSpan(byteSpan);
 
-        var sb = Internal.StringBuilderPoolTheroy.Shared.Get();
+        var sb = Internal.StringBuilderPoolTheory.Shared.Get();
 
         foreach (var chunk in rs)
         {
@@ -57,7 +57,7 @@ static unsafe partial class ByteStringTheory
         string result = sb.ToString();
         Debug.Assert( byteSpan.Length == result.Length );
 
-        Internal.StringBuilderPoolTheroy.Shared.Return(sb);
+        Internal.StringBuilderPoolTheory.Shared.Return(sb);
         
         dotNetString = result;
         return true;

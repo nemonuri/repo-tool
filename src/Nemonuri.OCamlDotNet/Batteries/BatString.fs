@@ -27,7 +27,8 @@ let split_on_string (sep: string) (s: string) : string list =
     let splited = s.Split([|sep|], System.StringSplitOptions.None) |> List.ofArray
     if s.EndsWith sep then splited @ [""] else splited
 
-let inline compare (left: t) (right: t) = left.CompareTo right
+/// The comparison function for strings, with the same specification as Pervasives.compare. Along with the type t, this function compare allows the module String to be passed as argument to the functors Set.Make and Map.Make.
+let inline compare (left: t) (right: t) = String.compare left right
 
 /// `String.concat sep sl` concatenates the list of strings sl, inserting the separator string sep between each.
-let inline concat (sep: string) (sl: string list) : string = t.Join(sep, values = sl)
+let inline concat (sep: string) (sl: string list) : string = String.concat sep sl

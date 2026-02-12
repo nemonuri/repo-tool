@@ -192,13 +192,13 @@ public static unsafe partial class ByteStringTheory
 
     public static string ByteStringToDotNetString(ImmutableArray<byte> byteString)
     {
-        var sb = StringBuilderPoolTheroy.Shared.Get();
+        var sb = StringBuilderPoolTheory.Shared.Get();
         foreach (byte byteChar in byteString)
         {
             sb.Append(ByteCharTheory.ByteCharToDotNetChar(byteChar));
         }
         string result = sb.ToString();
-        StringBuilderPoolTheroy.Shared.Return(sb);
+        StringBuilderPoolTheory.Shared.Return(sb);
         return result;
     }
 
@@ -210,5 +210,30 @@ public static unsafe partial class ByteStringTheory
         GuardLengthIsInValidRange(left.Length + right.Length);
         return left.AddRange(right);
     }
+
+    /// <exception cref="System.ArgumentOutOfRangeException" />
+    public static ImmutableArray<byte> Join(ImmutableArray<byte> seperator, IEnumerable<ImmutableArray<byte>> byteStrings)
+    {
+        var builder = ImmutableByteArrayBuilderPoolTheory.Shared.Get();
+
+        bool looped = false;
+        foreach (var byteString in byteStrings)
+        {
+            if (looped)
+            {
+                builder.AddRange(seperator);
+            }
+            builder.AddRange(byteString);
+
+            GuardLengthIsInValidRange(builder.Count);
+            looped = true;
+        }
+
+        var result = builder.DrainToImmutable();
+        ImmutableByteArrayBuilderPoolTheory.Shared.Return(builder);
+
+        return result;
+    }
      
+    
 }
