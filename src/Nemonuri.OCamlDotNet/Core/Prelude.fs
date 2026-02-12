@@ -20,3 +20,7 @@ module internal Forward =
         | _ -> None
 
     let invalid_arg message = System.ArgumentException message |> raise
+
+    let inline equal a0 a1 = Microsoft.FSharp.Core.LanguagePrimitives.GenericEquality a0 a1
+
+    let inline compare a0 a1 = Microsoft.FSharp.Core.LanguagePrimitives.GenericComparison a0 a1

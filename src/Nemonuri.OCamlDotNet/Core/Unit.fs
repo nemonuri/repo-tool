@@ -9,10 +9,10 @@ open Nemonuri.OCamlDotNet
 type t = unit
 
 /// equal u1 u2 is true.
-let inline equal (u1 : t) (u2 : t) = Microsoft.FSharp.Core.LanguagePrimitives.GenericEquality u1 u2
+let inline equal (u1 : t) (u2 : t) = Forward.equal u1 u2
 
 /// compare u1 u2 is 0.
-let inline compare (u1 : t) (u2 : t) = Microsoft.FSharp.Core.LanguagePrimitives.GenericComparison u1 u2
+let inline compare (u1 : t) (u2 : t) = Forward.compare u1 u2
 
 /// to_string b is "()".
 let to_string (b: t) : string = Nemonuri.ByteChars.ByteStringTheory.FromByteSpan "()"B

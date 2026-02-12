@@ -5,7 +5,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Prelude.fs" />
-    <Compile Include="Unit.fs" />
+    <Compile Include="Unit.fs" /><Compile Include="Bool.fs" />
     <Compile Include="Char.fs" />
     <Compile Include="Sys.fs" />
     <Compile Include="String.fs" />
