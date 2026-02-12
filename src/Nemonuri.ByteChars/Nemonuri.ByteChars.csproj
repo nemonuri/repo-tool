@@ -47,6 +47,7 @@
   <ItemGroup Condition="$(TargetFramework.ToLowerInvariant().StartsWith('netstandard2.'))">
     <PackageReference Include="System.Collections.Immutable" />
     <PackageReference Include="Microsoft.Bcl.Memory" />
+    <PackageReference Include="Shim.System.Text.Rune" />
     <ProjectReference Include="..\Nemonuri.NetStandards\Core\Nemonuri.NetStandards.Core.csproj" />
     <ProjectReference Include="..\Nemonuri.NetStandards\Numerics\Nemonuri.NetStandards.Numerics.csproj" />
     <ProjectReference Include="..\Nemonuri.NetStandards\Memory\Nemonuri.NetStandards.Memory.csproj" />

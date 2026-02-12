@@ -79,4 +79,34 @@ static unsafe partial class ByteStringTheory
     {
         return UnicodeEncoding.UTF8.GetBytes(dotNetString).ToImmutableArray();
     }
+
+    public static ByteCharSpanEnumerator EnumerateRunes(ReadOnlySpan<byte> byteCharSpan) => new(byteCharSpan);
+
+    public static int GetRuneCount(ReadOnlySpan<byte> byteCharSpan)
+    {
+        int count = 0;
+        var e = EnumerateRunes(byteCharSpan);
+        while (e.MoveNext())
+        {
+            count++;
+        }
+        return count;
+    }
+
+    public static bool TryGetRuneAt(ReadOnlySpan<byte> byteCharSpan, int index, out Rune rune)
+    {
+        Guard.IsGreaterThanOrEqualTo(index, 0);
+        int stepIndex = 0;
+        foreach (Rune stepRune in EnumerateRunes(byteCharSpan))
+        {
+            if (stepIndex == index)
+            {
+                rune = stepRune;
+                return true;
+            }
+            stepIndex++;
+        }
+        rune = default;
+        return false;
+    }
 }
