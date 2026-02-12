@@ -140,8 +140,7 @@ type 'a array = Microsoft.FSharp.Core.array<'a>
 let strcat x y = x ^ y
 let op_Hat x y = x ^ y
 
-type 'a list' = 'a list[@@deriving yojson,show]
-type 'a list = 'a list'[@@deriving yojson,show]
+type 'a list = Microsoft.FSharp.Collections.list<'a>
 let uu___is_Nil : 'Aa . 'Aa list -> bool =
   fun projectee  -> match projectee with | []  -> true | uu____1190 -> false
 let uu___is_Cons : 'Aa . 'Aa list -> bool =
