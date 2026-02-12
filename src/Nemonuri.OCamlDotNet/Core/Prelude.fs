@@ -24,3 +24,5 @@ module internal Forward =
     let inline equal a0 a1 = Microsoft.FSharp.Core.LanguagePrimitives.GenericEquality a0 a1
 
     let inline compare a0 a1 = Microsoft.FSharp.Core.LanguagePrimitives.GenericComparison a0 a1
+
+    exception Division_by_zero = System.DivideByZeroException

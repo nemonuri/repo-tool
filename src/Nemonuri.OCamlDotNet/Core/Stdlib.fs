@@ -12,3 +12,5 @@ let (|Invalid_argument|_|) = Forward.(|Invalid_argument|_|)
 let failwith = Microsoft.FSharp.Core.Operators.failwith
 
 let invalid_arg = Forward.invalid_arg
+
+exception Division_by_zero = Forward.Division_by_zero

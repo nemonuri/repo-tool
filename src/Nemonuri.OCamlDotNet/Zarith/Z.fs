@@ -1,24 +1,25 @@
 ﻿/// - Reference: https://ocaml.org/p/zarith/1.10/doc/zarith/Z/index.html
 module Nemonuri.OCamlDotNet.Zarith.Z
+
+open System.Numerics
 open Nemonuri.OCamlDotNet
 open type Nemonuri.ByteChars.Numerics.BigIntegerTheory
 
 /// Type of integers of arbitrary length.
-type t = System.Numerics.BigInteger
+type t = BigInteger
 
 /// Raised by conversion functions when the value cannot be represented in the destination type.
 exception Overflow = System.OverflowException
 
-let private throwOverflow() = raise Overflow
 
 /// The number 0.
-let zero = t.Zero
+let zero: t = t.Zero
 
 /// The number 1.
-let one = t.One
+let one: t = t.One
 
 /// The number -1.
-let minus_one = t.MinusOne
+let minus_one: t = t.MinusOne
 
 /// Converts from a base integer.
 let of_int (n: int) = t n
@@ -40,7 +41,7 @@ let of_nativeint (i: nativeint) : t = t (Operators.int64 i)
 let of_float (n: float) = t n 
 
 (**
-- 현재, '부호 없는 정수 문자열'에 대해서만 구현
+- 현재, '10진법 문자열'에 대해서만 구현
 *)
 /// Converts a string to an integer. 
 /// An optional - prefix indicates a negative number, while a + prefix is ignored. 
@@ -54,3 +55,40 @@ let of_string (s: string) : t =
 
 /// Gives a human-readable, decimal string representation of the argument.
 let to_string (n: t) : string = FormatBigIntegerToAsciiDecimalByteString n
+
+//// <category name="Basic arithmetic operations">
+
+/// Returns its argument plus one.
+let succ (n: t) : t = BigInteger.op_Increment(n)
+
+/// Returns its argument minus one.
+let pred (n: t) : t = BigInteger.op_Decrement(n)
+
+/// Absolute value.
+let abs (n: t) : t = BigInteger.Abs(n)
+
+/// Unary negation.
+let neg (n: t) : t = BigInteger.op_UnaryNegation(n)
+
+/// Addition.
+let add (left: t) (right: t) : t = BigInteger.Add(left, right)
+
+/// Subtraction.
+let sub (left: t) (right: t) : t = BigInteger.Subtract(left, right)
+
+/// Multiplication.
+let mul (left: t) (right: t) : t = BigInteger.Multiply(left, right)
+
+/// Integer division. The result is truncated towards zero and obeys the rule of signs. Raises Division_by_zero if the divisor (second argument) is 0.
+let div (left: t) (right: t) : t = BigInteger.Divide(left, right)
+
+/// Integer remainder. Can raise a Division_by_zero. 
+/// The result of rem a b has the sign of a, and its absolute value is strictly smaller than the absolute value of b. 
+/// The result satisfies the equality a = b * div a b + rem a b.
+let rem (left: t) (right: t) : t = BigInteger.Remainder(left, right)
+
+/// Computes both the integer quotient and the remainder. 
+/// div_rem a b is equal to (div a b, rem a b). Raises Division_by_zero if b = 0.
+let div_rem (left: t) (right: t) : t * t = BigInteger.DivRem(left, right)
+
+//// </category">

@@ -2,6 +2,9 @@
 - Reference: https://github.com/FStarLang/FStar/blob/v2025.12.15/ulib/ml/app/Prims.ml
 *)
 
+#nowarn "25" // Incomplete pattern matches
+#nowarn "86" // Comparison perator should not normally be redefined
+
 module Nemonuri.FStarDotNet.Prims
 
 open Nemonuri.OCamlDotNet
@@ -17,9 +20,7 @@ let to_string = Z.to_string
 
 type attribute = Unit.t
 let (cps : attribute) = ()
-
-[<RequireQualifiedAccess>]
-type 'Auu____5 hasEq = | hasEq of unit
+type [<RequireQualifiedAccess>] 'Auu____5 hasEq = | hasEq of unit
 type eqtype = Unit.t
 //type bool = 
 
@@ -30,79 +31,81 @@ type trivial =
   | T
 let (uu___is_T : trivial -> bool) = fun projectee  -> true
 type unit = Unit.t
-type 'Ap squash = unit
-type 'Ap auto_squash = unit
+type [<RequireQualifiedAccess>] 'Ap squash = | squash of unit
+type [<RequireQualifiedAccess>] 'Ap auto_squash = | auto_squash of unit
 type l_True = unit
 type l_False = unit
 type ('Aa,'Ax,'dummyV0) equals =
   | Refl
-let uu___is_Refl : 'Aa . 'Aa -> 'Aa -> ('Aa,unit,unit) equals -> bool =
-  fun x  -> fun uu____65  -> fun projectee  -> true
-type ('Aa,'Ax,'Ay) eq2 = unit
-type ('Aa,'Ab,'Ax,'Ay) op_Equals_Equals_Equals = unit
-type 'Ab b2t = unit
+(**
+ocaml 의 'explicit polymorphic type' 에 해당하는 것은, F#의 'explicit generic type' 인 것 같다.
+*)
+let inline uu___is_Refl<'Aa> : 'Aa -> 'Aa -> equals<'Aa,unit,unit> -> bool =
+  fun x -> fun uu____65 -> fun projectee -> true
+type [<RequireQualifiedAccess>] ('Aa,'Ax,'Ay) eq2 = | eq2 of unit
+type [<RequireQualifiedAccess>] ('Aa,'Ab,'Ax,'Ay) op_Equals_Equals_Equals = | op_Equals_Equals_Equals of unit
+type [<RequireQualifiedAccess>] 'Ab b2t = | b2t of unit
 type ('Ap,'Aq) pair =
   | Pair of 'Ap * 'Aq
-let uu___is_Pair : 'Ap 'Aq . ('Ap,'Aq) pair -> bool =
+let uu___is_Pair<'Ap, 'Aq> : pair<'Ap, 'Aq> -> bool =
   fun projectee  -> true
-let __proj__Pair__item___1 : 'Ap 'Aq . ('Ap,'Aq) pair -> 'Ap =
+let __proj__Pair__item___1<'Ap, 'Aq> : pair<'Ap, 'Aq> -> 'Ap =
   fun projectee  -> match projectee with | Pair (_0,_1) -> _0
-let __proj__Pair__item___2 : 'Ap 'Aq . ('Ap,'Aq) pair -> 'Aq =
+let __proj__Pair__item___2<'Ap, 'Aq> : pair<'Ap, 'Aq> -> 'Aq =
   fun projectee  -> match projectee with | Pair (_0,_1) -> _1
-type ('Ap,'Aq) l_and = unit
+type [<RequireQualifiedAccess>] ('Ap,'Aq) l_and = | l_and of unit
 type ('Ap,'Aq) sum =
   | Left of 'Ap
   | Right of 'Aq
-let uu___is_Left : 'Ap 'Aq . ('Ap,'Aq) sum -> bool =
+let uu___is_Left<'Ap, 'Aq> : sum<'Ap, 'Aq> -> bool =
   fun projectee  ->
     match projectee with | Left _0 -> true | uu____344 -> false
 
-let __proj__Left__item___0 : 'Ap 'Aq . ('Ap,'Aq) sum -> 'Ap =
+let __proj__Left__item___0<'Ap, 'Aq> : sum<'Ap, 'Aq> -> 'Ap =
   fun projectee  -> match projectee with | Left _0 -> _0
-let uu___is_Right : 'Ap 'Aq . ('Ap,'Aq) sum -> bool =
+let uu___is_Right<'Ap, 'Aq> : sum<'Ap, 'Aq> -> bool =
   fun projectee  ->
     match projectee with | Right _0 -> true | uu____404 -> false
 
-let __proj__Right__item___0 : 'Ap 'Aq . ('Ap,'Aq) sum -> 'Aq =
+let __proj__Right__item___0<'Ap, 'Aq> : sum<'Ap, 'Aq> -> 'Aq =
   fun projectee  -> match projectee with | Right _0 -> _0
-type ('Ap,'Aq) l_or = unit
-type ('Ap,'Aq) l_imp = unit
-type ('Ap,'Aq) l_iff = unit
-type 'Ap l_not = unit
-type ('Ap,'Aq,'Ar) l_ITE = unit
-type ('Aa,'Ab,'Auu____484,'Auu____485) precedes = unit
-type ('Aa,'Auu____490,'Auu____491) has_type = unit
-type ('Aa,'Ap) l_Forall = unit
+type [<RequireQualifiedAccess>] ('Ap,'Aq) l_or = | l_or of unit
+type [<RequireQualifiedAccess>] ('Ap,'Aq) l_imp = | l_imp of unit
+type [<RequireQualifiedAccess>] ('Ap,'Aq) l_iff = | l_iff of unit
+type [<RequireQualifiedAccess>] 'Ap l_not = | l_not of unit
+type [<RequireQualifiedAccess>] ('Ap,'Aq,'Ar) l_ITE = | l_ITE of unit
+type [<RequireQualifiedAccess>] ('Aa,'Ab,'Auu____484,'Auu____485) precedes = | precedes of unit
+type [<RequireQualifiedAccess>] ('Aa,'Auu____490,'Auu____491) has_type = | has_type of unit
+type [<RequireQualifiedAccess>] ('Aa,'Ap) l_Forall = | l_Forall of unit
 type prop = unit
 let id x = x
 type ('Aa,'Ab) dtuple2 =
   | Mkdtuple2 of 'Aa * 'Ab
-let uu___is_Mkdtuple2 : 'Aa 'Ab . ('Aa,'Ab) dtuple2 -> bool =
+let uu___is_Mkdtuple2<'Aa, 'Ab> : dtuple2<'Aa, 'Ab> -> bool =
   fun projectee  -> true
-let __proj__Mkdtuple2__item___1 : 'Aa 'Ab . ('Aa,'Ab) dtuple2 -> 'Aa =
+let __proj__Mkdtuple2__item___1<'Aa, 'Ab> :  dtuple2<'Aa, 'Ab> -> 'Aa =
   fun projectee  -> match projectee with | Mkdtuple2 (_1,_2) -> _1
-let __proj__Mkdtuple2__item___2 : 'Aa 'Ab . ('Aa,'Ab) dtuple2 -> 'Ab =
+let __proj__Mkdtuple2__item___2<'Aa, 'Ab> : dtuple2<'Aa, 'Ab> -> 'Ab =
   fun projectee  -> match projectee with | Mkdtuple2 (_1,_2) -> _2
-type ('Aa,'Ap) l_Exists = unit
-type string' = string[@@deriving yojson,show]
-type string = string'[@@deriving yojson,show]
+type [<RequireQualifiedAccess>] ('Aa,'Ap) l_Exists = | l_Exists of unit
+type string = String.t
 type pure_pre = unit
-type ('Aa,'Apre) pure_post' = unit
-type 'Aa pure_post = unit
-type 'Aa pure_wp = unit
-type 'Auu____655 guard_free = unit
-type ('Aa,'Ax,'Ap) pure_return = unit
-type ('Ar1,'Aa,'Ab,'Awp1,'Awp2,'Ap) pure_bind_wp = 'Awp1
-type ('Aa,'Ap,'Awp_then,'Awp_else,'Apost) pure_if_then_else = unit[@@deriving yojson,show]
-type ('Aa,'Awp,'Apost) pure_ite_wp = unit
-type ('Aa,'Awp1,'Awp2) pure_stronger = unit
-type ('Aa,'Ab,'Awp,'Ap) pure_close_wp = unit
-type ('Aa,'Aq,'Awp,'Ap) pure_assert_p = unit
-type ('Aa,'Aq,'Awp,'Ap) pure_assume_p = unit
-type ('Aa,'Ap) pure_null_wp = unit
-type ('Aa,'Awp) pure_trivial = 'Awp
-type ('Ap, 'Apost) pure_assert_wp = unit
-type ('Aa,'Awp,'Auu____878) purewp_id = 'Awp
+type [<RequireQualifiedAccess>] ('Aa,'Apre) pure_post' = | pure_post' of unit
+type [<RequireQualifiedAccess>] 'Aa pure_post = | pure_post of unit
+type [<RequireQualifiedAccess>] 'Aa pure_wp = | pure_wp of unit
+type [<RequireQualifiedAccess>] 'Auu____655 guard_free = | guard_free of unit
+type [<RequireQualifiedAccess>] ('Aa,'Ax,'Ap) pure_return = | pure_return of unit
+type [<RequireQualifiedAccess>] ('Ar1,'Aa,'Ab,'Awp1,'Awp2,'Ap) pure_bind_wp = | pure_bind_wp of 'Awp1
+type [<RequireQualifiedAccess>] ('Aa,'Ap,'Awp_then,'Awp_else,'Apost) pure_if_then_else = | pure_if_then_else of unit
+type [<RequireQualifiedAccess>] ('Aa,'Awp,'Apost) pure_ite_wp = | pure_ite_wp of unit
+type [<RequireQualifiedAccess>] ('Aa,'Awp1,'Awp2) pure_stronger = | pure_stronger of unit
+type [<RequireQualifiedAccess>] ('Aa,'Ab,'Awp,'Ap) pure_close_wp = | pure_close_wp of unit
+type [<RequireQualifiedAccess>] ('Aa,'Aq,'Awp,'Ap) pure_assert_p = | pure_assert_p of unit
+type [<RequireQualifiedAccess>] ('Aa,'Aq,'Awp,'Ap) pure_assume_p = | pure_assume_p of unit
+type [<RequireQualifiedAccess>] ('Aa,'Ap) pure_null_wp = | pure_null_wp of unit
+type [<RequireQualifiedAccess>] ('Aa,'Awp) pure_trivial = | pure_trivial of 'Awp
+type [<RequireQualifiedAccess>] ('Ap, 'Apost) pure_assert_wp = | pure_assert_wp of unit
+type [<RequireQualifiedAccess>] ('Aa,'Awp,'Auu____878) purewp_id = | purewp_id of 'Awp
 
 
 let op_AmpAmp x y = x && y
@@ -132,9 +135,8 @@ let op_GreaterThanOrEqual x y = x >= y
 let op_Equality x y = x = y
 let op_disEquality x y = x<>y
 
-type nonrec exn = exn
-type 'a array' = 'a array[@@deriving yojson,show]
-type 'a array = 'a array'[@@deriving yojson,show]
+type exn = Microsoft.FSharp.Core.exn
+type 'a array = Microsoft.FSharp.Core.array<'a>
 let strcat x y = x ^ y
 let op_Hat x y = x ^ y
 
