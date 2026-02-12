@@ -1,5 +1,7 @@
 namespace Nemonuri.OCamlDotNet
 
+open Nemonuri.ByteChars
+
 [<AutoOpen>]
 module Prelude =
 
@@ -9,6 +11,27 @@ module Prelude =
     type bool = Microsoft.FSharp.Core.bool
     type unit = Microsoft.FSharp.Core.unit
     type nativeint = Microsoft.FSharp.Core.nativeint
+
+    [<Struct; RequireQualifiedAccess>]
+    type StringDomain =
+        | None
+        | ByteString of byteString : string
+        | CharArray of chars : char array
+        | DotNetString of dotNetString : System.String
+
+        member x.ToByteString() : string =
+            match x with
+            | None -> ByteStringTheory.Empty
+            | ByteString b -> b
+            | CharArray c -> ByteStringTheory.FromByteSpan c
+            | DotNetString d -> ByteStringTheory.DotNetStringToUtf8ByteString d
+
+        static member inline op_Implicit (byteString: string) : StringDomain = ByteString byteString
+        static member inline op_Implicit (chars: char array) : StringDomain = CharArray chars
+        static member inline op_Implicit (dotNetString: System.String) : StringDomain = DotNetString dotNetString
+
+    let inline ( ! ) (chars: StringDomain) : string = chars.ToByteString()
+
 
 module internal Forward =
 

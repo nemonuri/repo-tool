@@ -14,3 +14,9 @@ let failwith = Microsoft.FSharp.Core.Operators.failwith
 let invalid_arg = Forward.invalid_arg
 
 exception Division_by_zero = Forward.Division_by_zero
+
+//// <category name="String conversion functions">
+
+let string_of_bool (b: bool) : string = Bool.to_string b
+
+//// <category/>

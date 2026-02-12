@@ -10,6 +10,7 @@ module Nemonuri.FStarDotNet.Prims
 open Nemonuri.OCamlDotNet
 open Nemonuri.OCamlDotNet.Zarith
 open Nemonuri.OCamlDotNet.String
+open Nemonuri.OCamlDotNet.Stdlib
 
 type int = Z.t
 let of_int = Z.of_int
@@ -125,16 +126,20 @@ let ( mod )   = Z.erem
 let ( ~- )    = Z.neg
 let abs       = Z.abs
 
+(*
 let op_Multiply x y = x * y
 let op_Subtraction x y = x - y
 let op_Addition x y = x + y
+*)
 let op_Minus x = -x
+(*
 let op_LessThan x y = x < y
 let op_LessThanOrEqual x y = x <= y
 let op_GreaterThan x y = x > y
 let op_GreaterThanOrEqual x y = x >= y
+*)
 let op_Equality x y = x = y
-let op_disEquality x y = x<>y
+let op_disEquality x y = x <> y
 
 type exn = Microsoft.FSharp.Core.exn
 type 'a array = Microsoft.FSharp.Core.array<'a>
@@ -172,14 +177,18 @@ type nat = int
 type pos = int
 type nonzero = int
 let op_Modulus x y = x mod y
+(*
 let op_Division x y = x / y
+*)
 let rec pow2 : nat -> pos =
   fun x  ->
     Z.shift_left Z.one (Z.to_int x)
 
 let (min : int -> int -> int) =
   fun x  -> fun y  -> if x <= y then x else y
+(*
 let (abs : int -> int) =
-  fun x  -> if x >= (parse_int "0"B) then x else op_Minus x
+  fun x  -> if x >= (parse_int !"0"B) then x else op_Minus x
+*)
 let string_of_bool = string_of_bool
 let string_of_int = to_string
