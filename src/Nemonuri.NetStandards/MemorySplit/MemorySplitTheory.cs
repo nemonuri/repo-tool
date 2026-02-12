@@ -7,7 +7,7 @@ using System.Diagnostics;
 
 namespace Nemonuri.NetStandards;
 
-public static partial class MemoryTheory
+public static class MemorySplitTheory
 {
 
 /// <summary>

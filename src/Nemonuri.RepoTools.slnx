@@ -9,6 +9,7 @@
     <Project Path="Nemonuri.NetStandards/Text/Nemonuri.NetStandards.Text.csproj" />
     <Project Path="Nemonuri.NetStandards/Numerics/Nemonuri.NetStandards.Numerics.csproj" />
     <Project Path="Nemonuri.NetStandards/Memory/Nemonuri.NetStandards.Memory.csproj" />
+    <Project Path="Nemonuri.NetStandards/MemorySplit/Nemonuri.NetStandards.MemorySplit.csproj" />
   </Folder>
   <Folder Name="/Nemonuri.OCamlDotNet/">
     <Project Path="Nemonuri.OCamlDotNet/Core/Nemonuri.OCamlDotNet.Core.fsproj" />

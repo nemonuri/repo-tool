@@ -234,6 +234,28 @@ public static unsafe partial class ByteStringTheory
 
         return result;
     }
-     
-    
+
+    public static ByteStringSplitEnumerator SplitByteSpan(ReadOnlySpan<byte> source, byte seperator)
+    {
+        return new 
+        (
+#if NET9_0_OR_GREATER
+            source.Split(seperator)
+#else
+            Nemonuri.NetStandards.MemorySplitTheory.Split(source, seperator)
+#endif
+        );
+    }
+
+    public static ByteStringSplitEnumerator SplitByteSpan(ReadOnlySpan<byte> source, ReadOnlySpan<byte> seperator)
+    {
+        return new 
+        (
+#if NET9_0_OR_GREATER
+            source.Split(seperator)
+#else
+            Nemonuri.NetStandards.MemorySplitTheory.Split(source, seperator)
+#endif
+        );
+    }
 }

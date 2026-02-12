@@ -22,4 +22,18 @@ public static unsafe class UnsafePinnedSpanPointerTheory
     {
         return LoadSpan(pointer.PinnedPointer, pointer.SpanLength);
     }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static ReadOnlySpan<T> LoadReadOnlySpan<T>(T* pinnedPointer, int spanLength)
+        where T : unmanaged
+    {
+        return new ReadOnlySpan<T>(pinnedPointer, spanLength);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static ReadOnlySpan<T> LoadReadOnlySpan<T>(IUnsafePinnedSpanPointer<T> pointer)
+        where T : unmanaged
+    {
+        return LoadReadOnlySpan(pointer.PinnedPointer, pointer.SpanLength);
+    }
 }
