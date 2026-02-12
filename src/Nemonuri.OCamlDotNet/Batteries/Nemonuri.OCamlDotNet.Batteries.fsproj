@@ -1,16 +1,16 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
-
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0;netstandard2.1</TargetFrameworks>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
-
   <ItemGroup>
-    <Compile Include="Library.fs" />
+    <Compile Include="BatUChar.fs" />
+    <Compile Include="BatUTF8.fs" /><Compile Include="BatString.fs" />
   </ItemGroup>
-
   <ItemGroup>
     <ProjectReference Include="..\Core\Nemonuri.OCamlDotNet.Core.fsproj" />
   </ItemGroup>
-
+  <ItemGroup>
+    <PackageReference Include="Shim.System.Text.Rune" />
+  </ItemGroup>
 </Project>

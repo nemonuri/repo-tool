@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0;netstandard2.1</TargetFrameworks>
@@ -7,7 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include="Prims.fs" />
+    <Compile Include="Prims.fs" /><Compile Include="FStar.Pervasives.Native.fs" /><Compile Include="FStar.UInt8.fs" /><Compile Include="FStar.String.fs" />
   </ItemGroup>
 
   <ItemGroup>

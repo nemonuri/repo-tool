@@ -34,9 +34,9 @@ type trivial =
 let (uu___is_T : trivial -> bool) = fun projectee  -> true
 type unit = Unit.t
 type [<RequireQualifiedAccess>] 'Ap squash = | squash of unit
-type [<RequireQualifiedAccess>] 'Ap auto_squash = | auto_squash of unit
-type l_True = unit
-type l_False = unit
+type 'Ap auto_squash = squash<'Ap>
+type l_True = squash<trivial>
+type l_False = squash<empty>
 type ('Aa,'Ax,'dummyV0) equals =
   | Refl
 (**

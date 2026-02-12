@@ -12,9 +12,10 @@
   </Folder>
   <Folder Name="/Nemonuri.OCamlDotNet/">
     <Project Path="Nemonuri.OCamlDotNet/Core/Nemonuri.OCamlDotNet.Core.fsproj" />
-	<Project Path="Nemonuri.OCamlDotNet/Primitives/Nemonuri.OCamlDotNet.Primitives.csproj" />
-	<Project Path="Nemonuri.OCamlDotNet/Xunit/Nemonuri.OCamlDotNet.Xunit.csproj" />
-	<Project Path="Nemonuri.OCamlDotNet/Zarith/Nemonuri.OCamlDotNet.Zarith.fsproj" />
+    <Project Path="Nemonuri.OCamlDotNet/Primitives/Nemonuri.OCamlDotNet.Primitives.csproj" />
+    <Project Path="Nemonuri.OCamlDotNet/Xunit/Nemonuri.OCamlDotNet.Xunit.csproj" />
+    <Project Path="Nemonuri.OCamlDotNet/Zarith/Nemonuri.OCamlDotNet.Zarith.fsproj" />
+    <Project Path="Nemonuri.OCamlDotNet/Batteries/Nemonuri.OCamlDotNet.Batteries.fsproj" />
   </Folder>
   <Folder Name="/test/">
     <Project Path="test/Nemonuri.OCamlDotNet.Core.UnitTests/Nemonuri.OCamlDotNet.Core.UnitTests.fsproj" />

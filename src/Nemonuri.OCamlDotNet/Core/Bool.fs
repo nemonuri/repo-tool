@@ -2,7 +2,6 @@
 /// - Reference: https://ocaml.org/manual/5.4/api/Unit.html
 module Nemonuri.OCamlDotNet.Bool
 open Nemonuri.OCamlDotNet
-open type Nemonuri.ByteChars.ByteStringTheory
 
 /// The type of booleans (truth values).
 ///
@@ -30,7 +29,7 @@ let inline compare (b0: bool) (b1: bool) : int = Forward.compare b0 b1
 /// to_string b is "true" if b is true and "false" if b is false.
 let to_string (b: bool) : string =
     match b with
-    | true -> FromByteSpan "true"B
-    | false -> FromByteSpan "false"B
+    | true -> !"true"B
+    | false -> !"false"B
 
 let hash (b: bool) : int = b.GetHashCode()
