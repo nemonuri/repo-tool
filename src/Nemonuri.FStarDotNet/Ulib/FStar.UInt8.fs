@@ -1,7 +1,10 @@
 // Reference: https://github.com/FStarLang/FStar/blob/v2025.12.15/fsharp/base/FStar_UInt8.fs
 
 module Nemonuri.FStarDotNet.FStar.UInt8
+
 open Nemonuri.FStarDotNet
+open Nemonuri.OCamlDotNet
+open System.Buffers.Text
 
 // TODO: Would it make sense to use .net byte here?
 type uint8 = FSharp.Core.byte
@@ -53,8 +56,13 @@ let lte (a:uint8) (b:uint8) : bool =  a <= b
 let gte_mask (a:uint8) (b:uint8) : uint8 = if a >= b then 255uy else 0uy
 let eq_mask (a:uint8) (b:uint8) : uint8 = if a = b then 255uy else 0uy
 
-let of_string s = System.Byte.Parse s
-let to_string (s: uint8) = s.ToString()
+let of_string (s: string) = 
+    let success, (v: t), _ = Utf8Parser.TryParse(s.AsSpan())
+    if not success then Stdlib.invalid_arg s else
+    v
+
+let to_string (v: uint8) = !-v.ToString()
+
 // The hex printing for BigInteger in .NET is a bit non-standard as it 
 // prints an extra leading '0' for positive numbers
 let to_string_hex (s : t) = "0x" + (s.ToString("X").TrimStart([| '0' |]))

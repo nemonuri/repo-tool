@@ -9,13 +9,12 @@ type private Sth = Nemonuri.ByteChars.ByteStringTheory
 /// The type for strings.
 type t = string
 
-let private is_invalid_length n = n < 0 || n > Sys.max_string_length
 
 let private throwOutOfRange message = Forward.invalid_arg message
 
 let private (|OutOfRange|_|) (e: exn) =
     match e with
-    | :? System.ArgumentOutOfRangeException as e0 -> Some e0.Message
+    | :? System.ArgumentOutOfRangeException as e0 -> Some !-e0.Message
     | _ -> None
 
 /// make n c is a string of length n with each index holding the character c.

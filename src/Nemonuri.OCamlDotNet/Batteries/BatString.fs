@@ -15,7 +15,7 @@
 /// - Reference: https://ocaml-batteries-team.github.io/batteries-included/hdoc2/BatString.html
 module Nemonuri.OCamlDotNet.Batteries.BatString
 open Nemonuri.OCamlDotNet
-open Nemonuri.OCamlDotNet.Batteries
+open type Nemonuri.ByteChars.ByteStringTheory
 
 type t = string
 
@@ -24,8 +24,15 @@ type t = string
 ///
 /// Example: String.split_on_string "bc" "abcabcabc" = ["a"; "a"; "a"; ""]
 let split_on_string (sep: string) (s: string) : string list = 
-    let splited = s.Split([|sep|], System.StringSplitOptions.None) |> List.ofArray
-    if s.EndsWith sep then splited @ [""] else splited
+    let sepLength = sep.Length
+    let mutable e = SplitByteSpan(s.AsSpan(), sep.AsSpan())
+    let mutable curList : string list = []
+    while e.MoveNext() do
+        let rrs = e.Current
+        let newString = FromByteSpan(rrs.GetSliced().Slice(sepLength))
+        curList <- curList @ [newString]
+
+    curList
 
 /// The comparison function for strings, with the same specification as Pervasives.compare. Along with the type t, this function compare allows the module String to be passed as argument to the functors Set.Make and Map.Make.
 let inline compare (left: t) (right: t) = String.compare left right

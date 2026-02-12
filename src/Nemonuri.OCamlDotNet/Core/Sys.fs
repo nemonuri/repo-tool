@@ -3,8 +3,6 @@ module Nemonuri.OCamlDotNet.Sys
 open Nemonuri.OCamlDotNet
 open System.IO
 
-type private Ia = System.Collections.Immutable.ImmutableArray
-//let private utf8Encoding = System.Text.UTF8Encoding(false, true)
 
 let private dotnetToOCaml (dotnetString: Microsoft.FSharp.Core.string) : string = Nemonuri.ByteChars.ByteStringTheory.DotNetStringToByteStringByEncoding(dotnetString)
 
@@ -27,3 +25,8 @@ The array size is limited to a total of 4 billion elements, and to a maximum ind
 /// Maximum length of strings and byte sequences.
 let [<Literal>] max_string_length = Nemonuri.ByteChars.ByteStringConstants.MaxLength
 
+/// Size of int, in bits. It is 31 (resp. 63) when using OCaml on a 32-bit (resp. 64-bit) platform. 
+/// It may differ for other implementations, e.g. it can be 32 bits when compiling to JavaScript.
+/// 
+/// Since 4.03
+let int_size = sizeof<int>
