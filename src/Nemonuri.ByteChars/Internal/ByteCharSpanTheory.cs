@@ -1,5 +1,5 @@
-using System.Numerics;
 using static Nemonuri.ByteChars.Extensions.GuardExtensions;
+using static Nemonuri.ByteChars.Internal.ByteVectorTheory;
 using Vp = Nemonuri.ByteChars.ByteCharTheory.ByteVectorPremise;
 using Bp = Nemonuri.ByteChars.ByteCharTheory.BytePremise;
 using Vs = Nemonuri.ByteChars.Internal.ByteVectorSizePremise;
@@ -22,26 +22,6 @@ internal static partial class ByteCharSpanTheory
             constant = default;
             return false;
         }
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static Vector<byte> LoadVector(ReadOnlySpan<byte> chunk)
-    {
-#if NET8_0_OR_GREATER
-        return Vector.LoadUnsafe(in MemoryMarshal.GetReference(chunk));
-#else
-        return Nemonuri.NetStandards.Numerics.VectorTheory.LoadUnsafe(in MemoryMarshal.GetReference(chunk));
-#endif
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static void StoreVector(Span<byte> chunk, Vector<byte> vector)
-    {
-#if NET8_0_OR_GREATER
-        vector.StoreUnsafe(ref MemoryMarshal.GetReference(chunk));
-#else
-        Nemonuri.NetStandards.Numerics.VectorTheory.StoreUnsafe(vector, ref MemoryMarshal.GetReference(chunk));
-#endif
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

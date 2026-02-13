@@ -57,10 +57,20 @@ public static unsafe partial class ByteCharTheory
             return th.EqualsAll(chars, th.GetTemporaryConstant(constant));
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool IsComposeFromByteSpanRequired() => (new TPremise()).ComposeFromByteSpan != null;
+
+        public static void ComposeFromByteSpanIfRequired(Span<byte> byteSpan, object? aux, ref TOperand dest)
+        {
+            if (!IsComposeFromByteSpanRequired<TPremise, TOperand>()) { return; }
+
+            dest = (new TPremise()).ComposeFromByteSpan(byteSpan, aux);
+        }
+
         public static bool UnsafeAll(TOperand chars, delegate*<byte, bool> predicate)
         {
             TPremise th = new();
-            if (th.TryUnsafeDecomposeToByteSpan(chars, out var unsafeBytes))
+            if (th.TryDecomposeToReadOnlyByteSpan(chars, out var unsafeBytes))
             {
                 foreach (byte b in unsafeBytes)
                     { if (predicate(b)) {return false;} }
@@ -81,9 +91,10 @@ public static unsafe partial class ByteCharTheory
         public static void UnsafeUpdate(ref TOperand chars, delegate*<ref byte, void> updater)
         {
             TPremise th = new();
-            if (th.TryUnsafeDecomposeToByteSpan(chars, out Span<byte> unsafeBytes))
+            if (th.TryDecomposeToByteSpan(chars, out Span<byte> unsafeBytes, out var aux))
             {
                 foreach (ref byte b in unsafeBytes) { updater(ref b); }
+                ComposeFromByteSpanIfRequired<TPremise, TOperand>(unsafeBytes, aux, ref chars);
             }
             else if (chars is byte)
             {
@@ -99,9 +110,10 @@ public static unsafe partial class ByteCharTheory
         public static void UnsafeUpdateWithAux<TAux>(ref TOperand chars, TAux aux, delegate*<ref byte, TAux, void> updater)
         {
             TPremise th = new();
-            if (th.TryUnsafeDecomposeToByteSpan(chars, out Span<byte> unsafeBytes))
+            if (th.TryDecomposeToByteSpan(chars, out Span<byte> unsafeBytes, out var aux0))
             {
                 foreach (ref byte b in unsafeBytes) { updater(ref b, aux); }
+                ComposeFromByteSpanIfRequired<TPremise, TOperand>(unsafeBytes, aux0, ref chars);
             }
             else if (chars is byte)
             {
@@ -117,7 +129,7 @@ public static unsafe partial class ByteCharTheory
         public static int UnsafeUpdateWhileSuccess(ref TOperand chars, delegate*<ref byte, bool> updater)
         {
             TPremise th = new();
-            if (th.TryUnsafeDecomposeToByteSpan(chars, out Span<byte> unsafeBytes))
+            if (th.TryDecomposeToByteSpan(chars, out Span<byte> unsafeBytes, out var aux))
             {
                 int i = 0;
                 for (; i < unsafeBytes.Length; i++)
@@ -127,6 +139,7 @@ public static unsafe partial class ByteCharTheory
                         break;
                     }
                 }
+                ComposeFromByteSpanIfRequired<TPremise, TOperand>(unsafeBytes, aux, ref chars);
                 return i;
             }
             else if (chars is byte)

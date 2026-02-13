@@ -1,4 +1,4 @@
-using System.Numerics;
+using static Nemonuri.ByteChars.Internal.ByteVectorTheory;
 using static Nemonuri.ByteChars.Extensions.GuardExtensions;
 using Vs = Nemonuri.ByteChars.Internal.ByteVectorSizePremise;
 

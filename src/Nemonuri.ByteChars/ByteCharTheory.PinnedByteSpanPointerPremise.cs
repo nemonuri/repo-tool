@@ -32,16 +32,25 @@ public static partial class ByteCharTheory
             return left;
         }
 
-        public bool TryUnsafeDecomposeToByteSpan(UnsafePinnedSpanPointer<byte> composed, out Span<byte> unsafeBytes)
-        {
-            unsafeBytes = composed.LoadSpan();
-            return true;
-        }
-
         public unsafe UnsafePinnedSpanPointer<byte> GetTemporaryConstant(byte value)
         {
             var (b, l) = ByteCharSpanTheory.GetTemporaryConstantLocation(value);
             return new((byte*)Unsafe.AsPointer(ref b.DangerousGetReferenceAt(l)), 1);
         }
+
+        public bool TryDecomposeToReadOnlyByteSpan(UnsafePinnedSpanPointer<byte> source, out ReadOnlySpan<byte> readOnlyByteSpan)
+        {
+            readOnlyByteSpan = source.LoadSpan();
+            return true;
+        }
+
+        public bool TryDecomposeToByteSpan(UnsafePinnedSpanPointer<byte> source, out Span<byte> byteSpan, [MaybeNullWhen(false)] out object? aux)
+        {
+            byteSpan = source.LoadSpan();
+            aux = default;
+            return true;
+        }
+
+        public unsafe delegate*<ReadOnlySpan<byte>, object?, UnsafePinnedSpanPointer<byte>> ComposeFromByteSpan => null;
     }
 }

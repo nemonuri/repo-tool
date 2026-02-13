@@ -36,6 +36,7 @@
         <PolySharpIncludeGeneratedTypes>
           $(PolySharpIncludeGeneratedTypes)
           System.Diagnostics.CodeAnalysis.NotNullWhenAttribute;
+          System.Diagnostics.CodeAnalysis.MaybeNullWhenAttribute;
         </PolySharpIncludeGeneratedTypes>
       </PropertyGroup>
       <ItemGroup>

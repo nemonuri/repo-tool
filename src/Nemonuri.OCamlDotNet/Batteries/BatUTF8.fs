@@ -6,11 +6,10 @@ module Nemonuri.OCamlDotNet.Batteries.BatUTF8
 open Nemonuri.OCamlDotNet
 open Nemonuri.OCamlDotNet.Batteries
 
-open System.Text
-open System.Buffers
 open System.Text.Unicode
 open FSharp.NativeInterop
 open System.Collections.Immutable
+type private Sth = Nemonuri.ByteChars.ByteStringTheory
 
 /// UTF-8 encoded Unicode strings. The type is normal string.
 type t = String.t
@@ -18,7 +17,7 @@ type t = String.t
 exception Malformed_code
 
 /// `length s` returns the number of Unicode characters contained in s
-let inline length (s: t) : int = s.Length
+let inline length (s: t) : int = Sth.GetRuneCount(s.AsSpan())
 
 /// `validate s` successes if s is valid UTF-8, otherwise raises Malformed_code. 
 /// Other functions assume strings are valid UTF-8, so it is prudent to test their validity for strings from untrusted origins.
@@ -29,19 +28,12 @@ let validate (s: t) : unit =
 
 /// get s n returns n-th Unicode character of s. The call requires O(n)-time.
 let get (s: t) (n: int) : BatUChar.t =
-    if n < 0 then Stdlib.invalid_arg !>($"n is less then zero. n = {n}") else
-
-    let mutable currentSource = s.AsSpan()
-    let mutable currentRune : BatUChar.t = Unchecked.defaultof<_>()
-    for i = n+1 downto 0 do
-        let status, result, consumed = Rune.DecodeFromUtf8 currentSource
-        if status <> OperationStatus.Done then Stdlib.invalid_arg !>"Invalid string."B else
-        currentRune <- result
-        currentSource <- currentSource.Slice(consumed)
-    
-    currentRune
-
-
+    try
+        let success, rune = Sth.TryGetRuneAt(s.AsSpan(), n)
+        if not success then Stdlib.invalid_arg !>"Out of range"B else
+        rune
+    with
+        | :? System.ArgumentOutOfRangeException as e -> Stdlib.invalid_arg !>e.Message
 
 let [<Literal>] private spanSize = 4
 
@@ -59,3 +51,9 @@ let init (len: int) (f: int -> BatUChar.t) : t =
 
 /// Positions in the string represented by the number of bytes from the head. The location of the first character is 0
 type index = int
+
+/// iter f s applies f to all Unicode characters in s. The order of application is same to the order of the Unicode characters in s.
+let iter (f: BatUChar.t -> unit) (s: t) : unit =
+    let e = Sth.EnumerateRunes(s.AsSpan())
+    for runeStep in e do
+        f runeStep

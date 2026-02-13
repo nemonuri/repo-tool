@@ -20,13 +20,23 @@ public static partial class ByteCharTheory
         public byte Modulus(byte left, byte right) => unchecked((byte)(left % right));
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool TryUnsafeDecomposeToByteSpan(byte composed, out Span<byte> unsafeBytes)
+        public bool TryDecomposeToReadOnlyByteSpan(byte source, out ReadOnlySpan<byte> readOnlyByteSpan)
         {
-            unsafeBytes = default;
+            readOnlyByteSpan = default;
+            return false;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool TryDecomposeToByteSpan(byte source, out Span<byte> byteSpan, [MaybeNullWhen(false)] out object? aux)
+        {
+            byteSpan = default;
+            aux = default;
             return false;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public byte GetTemporaryConstant(byte value) => value;
+
+        public unsafe delegate*<ReadOnlySpan<byte>, object?, byte> ComposeFromByteSpan => null;
     }
 }

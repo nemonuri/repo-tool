@@ -3,6 +3,7 @@
 module Nemonuri.OCamlDotNet.String
 open Nemonuri.OCamlDotNet
 open type System.MemoryExtensions
+open type Nemonuri.ByteChars.ByteCharTheory
 
 type private Sth = Nemonuri.ByteChars.ByteStringTheory
 
@@ -77,8 +78,13 @@ let equal (s0: t) (s1: t) : bool = s0.AsSpan().SequenceEqual(s1.AsSpan())
 /// compare s0 s1 sorts s0 and s1 in lexicographical order. compare behaves like compare on strings but may be more efficient.
 let compare (s0: t) (s1: t) : int = s0.AsSpan().SequenceCompareTo(s1.AsSpan())
 
+//// </category>
 
 
+//// <category name="Transforming" />
+
+/// uppercase_ascii s is s with all lowercase letters translated to uppercase, using the US-ASCII character set.
+//let uppercase_ascii (s: string) : string = UpdateToUpperCase<ImmutableByteArrayPremise, _>(s)
 
 
 //// </category>

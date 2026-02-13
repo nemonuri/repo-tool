@@ -1,6 +1,10 @@
+using System.Buffers;
+using System.Numerics;
+using Nemonuri.ByteChars.Internal;
+using Vs = Nemonuri.ByteChars.Internal.ByteVectorSizePremise;
+
 namespace Nemonuri.ByteChars;
 
-using System.Numerics;
 
 public static partial class ByteCharTheory
 {
@@ -21,11 +25,35 @@ public static partial class ByteCharTheory
             return remainder;
         }
 
-        public bool TryUnsafeDecomposeToByteSpan(Vector<byte> composed, out Span<byte> unsafeBytes)
+        private static int SpanSize => Vs.GetFixedSize();
+
+        public bool TryDecomposeToReadOnlyByteSpan(Vector<byte> source, out ReadOnlySpan<byte> readOnlyByteSpan)
         {
-            unsafeBytes = default;
-            return false;
+            byte[] spanSource = new byte[SpanSize]; // allocation
+            source.CopyTo(spanSource);
+            readOnlyByteSpan = spanSource;
+            return true;
         }
+
+        public bool TryDecomposeToByteSpan(Vector<byte> source, out Span<byte> byteSpan, [MaybeNullWhen(false)] out object? aux)
+        {
+            byte[] spanSource = ArrayPool<byte>.Shared.Rent(SpanSize);
+            source.CopyTo(spanSource);
+            byteSpan = spanSource.AsSpan()[..SpanSize];
+            aux = spanSource;
+            return true;
+        }
+
+        private static Vector<byte> ComposeFromByteSpanImpl(ReadOnlySpan<byte> span, object? aux)
+        {
+            byte[]? spanSourceFromAux = aux as byte[];
+            Guard.IsNotNull(spanSourceFromAux);
+            Vector<byte> resultVector = ByteVectorTheory.LoadVector(span);
+            ArrayPool<byte>.Shared.Return(spanSourceFromAux);
+            return resultVector;
+        }
+
+        public unsafe delegate*<ReadOnlySpan<byte>, object?, Vector<byte>> ComposeFromByteSpan => &ComposeFromByteSpanImpl;
 
         public Vector<byte> GetTemporaryConstant(byte value) => new (value);
     }

@@ -28,13 +28,25 @@ public static partial class ByteCharTheory
             return left;
         }
 
-        public bool TryUnsafeDecomposeToByteSpan(ArraySegment<byte> composed, out Span<byte> unsafeBytes) => ByteCharSpanTheory.TryUnsafeDecomposeToByteSpan(composed, out unsafeBytes);
-            
-
         public ArraySegment<byte> GetTemporaryConstant(byte value)
         {
             var (b, i) = ByteCharSpanTheory.GetTemporaryConstantLocation(value);
             return new(b, i, 1);
         }
+
+        public bool TryDecomposeToReadOnlyByteSpan(ArraySegment<byte> source, out ReadOnlySpan<byte> readOnlyByteSpan)
+        {
+            readOnlyByteSpan = source;
+            return true;
+        }
+
+        public bool TryDecomposeToByteSpan(ArraySegment<byte> source, out Span<byte> byteSpan, [MaybeNullWhen(false)] out object? aux)
+        {
+            byteSpan = source;
+            aux = null;
+            return true;
+        }
+
+        public unsafe delegate*<ReadOnlySpan<byte>, object?, ArraySegment<byte>> ComposeFromByteSpan => null;
     }
 }

@@ -93,6 +93,7 @@ static unsafe partial class ByteStringTheory
         return count;
     }
 
+    /// <exception cref="System.ArgumentOutOfRangeException" />
     public static bool TryGetRuneAt(ReadOnlySpan<byte> byteCharSpan, int index, out Rune rune)
     {
         Guard.IsGreaterThanOrEqualTo(index, 0);

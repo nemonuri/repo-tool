@@ -1,6 +1,6 @@
 namespace Nemonuri.ByteChars;
 
-public interface IByteCharPremise<TSelf, TOperand>
+public unsafe interface IByteCharPremise<TSelf, TOperand>
     where TSelf : unmanaged, IByteCharPremise<TSelf, TOperand>
 #if NET9_0_OR_GREATER
     where TOperand : allows ref struct
@@ -22,7 +22,11 @@ public interface IByteCharPremise<TSelf, TOperand>
 
     TOperand Modulus(TOperand left, TOperand right);
 
-    bool TryUnsafeDecomposeToByteSpan(TOperand composed, out Span<byte> unsafeBytes);
+    bool TryDecomposeToReadOnlyByteSpan(TOperand source, out ReadOnlySpan<byte> readOnlyByteSpan);
+
+    bool TryDecomposeToByteSpan(TOperand source, out Span<byte> byteSpan, [MaybeNullWhen(false)] out object? aux);
+
+    delegate*<ReadOnlySpan<byte>, object?, TOperand> ComposeFromByteSpan {get;}
 
     TOperand GetTemporaryConstant(byte value);
 }

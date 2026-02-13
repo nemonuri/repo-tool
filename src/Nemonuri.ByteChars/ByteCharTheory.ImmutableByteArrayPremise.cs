@@ -39,12 +39,6 @@ public static partial class ByteCharTheory
 
         public ImmutableArray<byte> Modulus(ImmutableArray<byte> left, ImmutableArray<byte> right) => UnsafeOperate(left, right, &ByteCharSpanTheory.Modulus);
 
-        public bool TryUnsafeDecomposeToByteSpan(ImmutableArray<byte> composed, out Span<byte> unsafeBytes)
-        {
-            unsafeBytes = default;
-            return false;
-        }
-
         private static readonly ImmutableArray<byte>[] s_constants = 
             [..
                 Enumerable.Range(0, ByteCharConstants.CodePageSize)
@@ -53,5 +47,31 @@ public static partial class ByteCharTheory
             ];
 
         public ImmutableArray<byte> GetTemporaryConstant(byte value) => s_constants[value];
+
+        public bool TryDecomposeToReadOnlyByteSpan(ImmutableArray<byte> source, out ReadOnlySpan<byte> readOnlyByteSpan)
+        {
+            readOnlyByteSpan = source.AsSpan();
+            return true;
+        }
+
+        public bool TryDecomposeToByteSpan(ImmutableArray<byte> source, out Span<byte> byteSpan, [MaybeNullWhen(false)] out object? aux)
+        {
+            byte[] rented = ArrayPool<byte>.Shared.Rent(source.Length);
+            source.CopyTo(rented);
+            byteSpan = rented.AsSpan()[..source.Length];
+            aux = rented;
+            return true;
+        }
+
+        private static ImmutableArray<byte> ComposeFromByteSpanImpl(ReadOnlySpan<byte> span, object? aux)
+        {
+            byte[]? rented = aux as byte[];
+            Guard.IsNotNull(rented);
+            var result = ByteStringTheory.FromByteSpan(span);
+            ArrayPool<byte>.Shared.Return(rented);
+            return result;
+        }
+
+        public unsafe delegate*<ReadOnlySpan<byte>, object?, ImmutableArray<byte>> ComposeFromByteSpan => &ComposeFromByteSpanImpl;
     }
 }
