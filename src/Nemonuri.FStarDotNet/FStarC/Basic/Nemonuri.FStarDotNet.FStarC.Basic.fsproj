@@ -4,8 +4,8 @@
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="Compatibility.fs" />
-    <Compile Include="Batteries.fs" />
+    
+    
     <Compile Include="FStarC.Effect.fs" />
     <Compile Include="FStarC.Char.fs" />
     <Compile Include="FStarC.BaseTypes.fs" />
@@ -15,13 +15,6 @@
     <Compile Include="FStarC.String.fs" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="FSharp.Core" />
-    <PackageReference Include="FSharp.Compatibility.OCaml" />
-    <PackageReference Include="Shim.System.Text.Rune" />
-    <PackageReference Include="CommunityToolkit.HighPerformance" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\..\Primitives\Nemonuri.FStarDotNet.Primitives.fsproj" />
-    <ProjectReference Include="..\..\..\Nemonuri.NetStandards\Text\Nemonuri.NetStandards.Text.csproj" />
+    <ProjectReference Include="..\..\Ulib\Nemonuri.FStarDotNet.Ulib.fsproj" />
   </ItemGroup>
 </Project>

@@ -12,6 +12,7 @@ module Prelude =
     type unit = Microsoft.FSharp.Core.unit
     type nativeint = Microsoft.FSharp.Core.nativeint
     type 'a list = Microsoft.FSharp.Collections.list<'a>
+    type float = Microsoft.FSharp.Core.double
 
     [<Struct; RequireQualifiedAccess>]
     type StringDomain =
