@@ -3,4 +3,4 @@
 module Nemonuri.FStarDotNet.FStarC.Char
 open Nemonuri.FStarDotNet
 
-type char = Microsoft.FSharp.Core.char
+type char = FStar.Char.char

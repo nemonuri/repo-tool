@@ -5,13 +5,12 @@
 
 module Nemonuri.FStarDotNet.FStarC.Getopt
 open Nemonuri.FStarDotNet
-open Nemonuri.OCamlDotNet.Stdlib
-open Nemonuri.OCamlDotNet.zarith
+open Nemonuri.OCamlDotNet
 open FStarC.BaseTypes
 
 //val nolong : string
 
-let noshort: char = Operators.char 0
+let noshort: char = 0
 type 'a opt_variant =
   | ZeroArgs of (unit -> 'a)
   | OneArg of (string -> 'a) * string
