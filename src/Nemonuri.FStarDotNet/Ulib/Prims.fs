@@ -165,8 +165,8 @@ let returnM<'Aa> : 'Aa -> 'Aa = fun x  -> x
 
 type [<RequireQualifiedAccess>] ('Aa,'Awp) as_requires = | as_requires of 'Awp
 type [<RequireQualifiedAccess>] ('Aa,'Awp,'Ax) as_ensures = | as_ensures of unit
-let admit () = failwith "Prims.admit: cannot be executed"
-let magic () = failwith "Prims.magic: cannot be executed"
+let admit () = failwith !>"Prims.admit: cannot be executed"B
+let magic () = failwith !>"Prims.magic: cannot be executed"B
 let unsafe_coerce<'Aa, 'Ab> : 'Aa -> 'Ab =
   fun x -> Obj.magic x
 

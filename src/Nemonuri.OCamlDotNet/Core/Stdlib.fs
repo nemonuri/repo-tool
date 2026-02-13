@@ -3,17 +3,20 @@
 module Nemonuri.OCamlDotNet.Stdlib
 open Nemonuri.OCamlDotNet
 
-let raise = Microsoft.FSharp.Core.Operators.raise
-
 exception Invalid_argument = Forward.Invalid_argument
+
+exception Division_by_zero = Forward.Division_by_zero
+
+exception Failure = Forward.Failure
+
+let raise = Microsoft.FSharp.Core.Operators.raise
 
 let (|Invalid_argument|_|) = Forward.(|Invalid_argument|_|)
 
-let failwith = Microsoft.FSharp.Core.Operators.failwith
+let failwith (message: string) = Forward.failwith message
 
-let invalid_arg = Forward.invalid_arg
+let invalid_arg (message: string) = Forward.invalid_arg message
 
-exception Division_by_zero = Forward.Division_by_zero
 
 //// <category name="String conversion functions">
 

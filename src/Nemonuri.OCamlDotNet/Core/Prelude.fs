@@ -54,16 +54,21 @@ module internal Forward =
 
     exception Invalid_argument = System.ArgumentException
 
+    exception Division_by_zero = System.DivideByZeroException
+
+    exception Failure = System.Exception
+
     [<CompiledNameAttribute("MatchInvalidArgument")>]
     let (|Invalid_argument|_|) (e: exn) =
         match e with
         | :? Invalid_argument as inv -> Some inv.Message
         | _ -> None
 
-    let invalid_arg (message: string) = !<message |> System.ArgumentException |> raise
+    let invalid_arg (message: StringDomain) = !<message |> System.ArgumentException |> raise
+
+    let failwith (message: StringDomain) = Microsoft.FSharp.Core.Operators.failwith !<message |> raise
 
     let inline equal a0 a1 = Microsoft.FSharp.Core.LanguagePrimitives.GenericEquality a0 a1
 
     let inline compare a0 a1 = Microsoft.FSharp.Core.LanguagePrimitives.GenericComparison a0 a1
 
-    exception Division_by_zero = System.DivideByZeroException

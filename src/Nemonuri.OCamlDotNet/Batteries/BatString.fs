@@ -46,3 +46,13 @@ let uppercase_ascii = String.uppercase_ascii
 /// Return a copy of the argument, with all uppercase letters translated to lowercase, using the US-ASCII character set.
 let lowercase_ascii = String.lowercase_ascii
 
+/// Return a copy of the argument, with special characters represented by escape sequences, following the lexical conventions of OCaml. 
+/// If there is no special character in the argument, return the original string itself, not a copy. Its inverse function is Scanf.unescaped.
+let escaped = String.escaped
+
+/// Returns a string containing one given character.
+///
+/// Example:  String.of_char 's' = "s" 
+let of_char (c: char) : string = 
+    let charArray : char array = [|c|]
+    !>charArray

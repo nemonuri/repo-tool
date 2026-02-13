@@ -57,3 +57,10 @@ let iter (f: BatUChar.t -> unit) (s: t) : unit =
     let e = Sth.EnumerateRunes(s.AsSpan())
     for runeStep in e do
         f runeStep
+
+let iteri (f: BatUChar.t -> int -> unit) (s: t) : unit =
+    let e = Sth.EnumerateRunes(s.AsSpan())
+    let mutable stepIndex = 0
+    for runeStep in e do
+        f runeStep stepIndex;
+        stepIndex <- stepIndex + 1

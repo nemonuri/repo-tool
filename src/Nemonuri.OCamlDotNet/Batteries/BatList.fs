@@ -25,3 +25,15 @@ let flatten  = L.flatten
 
 /// map f [a0; a1; ...; an] applies function f to a0, a1, ..., an, and builds the list [f a0; f a1; ...; f an] with the results returned by f. Tail-recursive.
 let map = L.map
+
+/// Similar to Array.init, init n f returns the list containing the results of (f 0),(f 1).... (f (n-1)).
+let init = L.init
+
+/// Return the length (number of elements) of the given list.
+let length = L.length
+
+/// at l n returns the n-th element of the list l or
+///
+/// Raises Invalid_argument if the index is outside of l bounds. O(l)
+let at (l : 'a list) n = 
+    try l[n] with | :? System.ArgumentException as e -> Stdlib.invalid_arg !>e.Message
