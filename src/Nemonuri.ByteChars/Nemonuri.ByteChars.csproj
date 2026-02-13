@@ -38,6 +38,7 @@
           System.Diagnostics.CodeAnalysis.NotNullWhenAttribute;
           System.Diagnostics.CodeAnalysis.MaybeNullWhenAttribute;
         </PolySharpIncludeGeneratedTypes>
+        <NoWarn>$(NoWarn);CS8601;CS8602;CS8618</NoWarn>
       </PropertyGroup>
       <ItemGroup>
         <ProjectReference Include="..\Nemonuri.NetStandards\Text\Nemonuri.NetStandards.Text.csproj" />
@@ -45,14 +46,25 @@
     </When>
   </Choose>
 
-  <ItemGroup Condition="$(TargetFramework.ToLowerInvariant().StartsWith('netstandard2.'))">
-    <PackageReference Include="System.Collections.Immutable" />
-    <PackageReference Include="Microsoft.Bcl.Memory" />
-    <PackageReference Include="Shim.System.Text.Rune" />
-    <ProjectReference Include="..\Nemonuri.NetStandards\Core\Nemonuri.NetStandards.Core.csproj" />
-    <ProjectReference Include="..\Nemonuri.NetStandards\Numerics\Nemonuri.NetStandards.Numerics.csproj" />
-    <ProjectReference Include="..\Nemonuri.NetStandards\Memory\Nemonuri.NetStandards.Memory.csproj" />
-  </ItemGroup>
+  <Choose>
+    <When Condition="$(TargetFramework.ToLowerInvariant().StartsWith('netstandard2.'))">
+      <PropertyGroup>
+        <PolySharpIncludeGeneratedTypes>
+          $(PolySharpIncludeGeneratedTypes)
+          System.Diagnostics.CodeAnalysis.MemberNotNullAttribute;
+          System.Diagnostics.CodeAnalysis.MemberNotNullWhenAttribute;
+        </PolySharpIncludeGeneratedTypes>
+      </PropertyGroup>
+      <ItemGroup>
+        <PackageReference Include="System.Collections.Immutable" />
+        <PackageReference Include="Microsoft.Bcl.Memory" />
+        <PackageReference Include="Shim.System.Text.Rune" />
+        <ProjectReference Include="..\Nemonuri.NetStandards\Core\Nemonuri.NetStandards.Core.csproj" />
+        <ProjectReference Include="..\Nemonuri.NetStandards\Numerics\Nemonuri.NetStandards.Numerics.csproj" />
+        <ProjectReference Include="..\Nemonuri.NetStandards\Memory\Nemonuri.NetStandards.Memory.csproj" />
+      </ItemGroup>
+    </When>
+  </Choose>
   
   <ItemGroup Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0'))">
     <PackageReference Include="System.Numerics.Tensors" />

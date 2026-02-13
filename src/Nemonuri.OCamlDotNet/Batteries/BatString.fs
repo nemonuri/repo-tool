@@ -39,3 +39,10 @@ let inline compare (left: t) (right: t) = String.compare left right
 
 /// `String.concat sep sl` concatenates the list of strings sl, inserting the separator string sep between each.
 let inline concat (sep: string) (sl: string list) : string = String.concat sep sl
+
+/// Return a copy of the argument, with all lowercase letters translated to uppercase, using the US-ASCII character set.
+let uppercase_ascii = String.uppercase_ascii
+
+/// Return a copy of the argument, with all uppercase letters translated to lowercase, using the US-ASCII character set.
+let lowercase_ascii = String.lowercase_ascii
+
