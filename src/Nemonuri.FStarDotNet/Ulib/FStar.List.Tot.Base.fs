@@ -1,16 +1,19 @@
+#nowarn "25" // Incomplete pattern matches
+
 // Reference: https://github.com/FStarLang/FStar/blob/v2025.12.15/ulib/ml/app/FStar_List_Tot_Base.ml
 module Nemonuri.FStarDotNet.FStar.List.Tot.Base
 
 open Nemonuri.OCamlDotNet
 open Nemonuri.OCamlDotNet.Zarith
 open Nemonuri.OCamlDotNet.Batteries
+open Nemonuri.FStarDotNet
 
 
 (* We give an implementation here using OCaml's BatList,
    which provide tail-recursive versions of most functions.
    The rest we implement manually. *)
 
-#if false
+
 let isEmpty l = l = []
 let hd = BatList.hd
 let tail = BatList.tl
@@ -25,6 +28,7 @@ let rec init = function
   | hd :: tl -> hd :: init tl
 
 let length l = Z.of_int (BatList.length l)
+
 let nth l i = try Some (BatList.nth l (Z.to_int i)) with _ -> None
 let index l i = BatList.nth l (Z.to_int i)
 
@@ -40,6 +44,7 @@ let snoc (x, y) = append x [y]
 let flatten = BatList.flatten
 let map = BatList.map
 let mapi_init _ _ _ = failwith "FStar_List_Tot_Base.ml: Not implemented: mapi_init"
+#if false
 let mapi f l = BatList.mapi (fun i x -> f (Z.of_int i) x) l
 let concatMap f l = flatten (map f l)
 let fold_left = BatList.fold_left

@@ -17,6 +17,16 @@ module L = Nemonuri.OCamlDotNet.List
 
 type 'a t = L.t<'a>
 
+/// Returns the first element of the list, or
+/// 
+/// - Raises Failure if the list is empty.
+let hd = L.hd
+
+/// Return the given list without its first element.
+/// 
+/// - Raises Failure if the list is empty.
+let tl = L.tl
+
 /// Concatenate a list of lists. The elements of the argument are all concatenated together (in the same order) to give the result. Tail-recursive.
 let concat = L.concat
 
@@ -37,3 +47,15 @@ let length = L.length
 /// Raises Invalid_argument if the index is outside of l bounds. O(l)
 let at (l : 'a list) n = 
     try l[n] with | :? System.ArgumentException as e -> Stdlib.invalid_arg !>e.Message
+
+/// Obsolete. As at.
+let nth = at
+
+/// List reversal.
+let rev = L.rev
+
+/// append l1 l2 is a concatenation of l1 and l2. Same function as the infix operator @. Tail-recursive. This function takes O(length l1) time.
+let append = L.append
+
+/// List.rev_append l1 l2 reverses l1 and concatenates it to l2.
+let rev_append = L.rev_append

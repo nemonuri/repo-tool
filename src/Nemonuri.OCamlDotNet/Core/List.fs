@@ -29,13 +29,18 @@ let rec compare_lengths (l1: 'a list) (l2: 'a list) : int =
     | _::_, [] -> -1
     | _::tl1, _::tl2 -> compare_lengths tl1 tl2
 
-/// Concatenate a list of lists. 
-/// The elements of the argument are all concatenated together (in the same order) to give the result. 
-/// Not tail-recursive (length of the argument + length of the longest sub-list).
-let concat (ls: 'a list list) : 'a list = L.concat ls
+/// Return the first element of the given list.
+///
+/// Raises Failure if the list is empty.
+let hd l = try L.head l with | :? System.ArgumentException as e -> Forward.failwith e.Message
 
-/// Same as List.concat. Not tail-recursive (length of the argument + length of the longest sub-list).
-let flatten = concat
+/// Return the given list without its first element.
+/// 
+/// Raises Failure if the list is empty.
+let tl l = try L.tail l with | :? System.ArgumentException as e -> Forward.failwith e.Message
+
+
+
 
 /// init len f is [f 0; f 1; ...; f (len-1)], evaluated left to right.
 ///
@@ -60,6 +65,25 @@ let nth (l: 'a list) (n: int) : 'a =
     with
         | :? System.ArgumentException as e -> Forward.failwith e.Message
     
+/// List reversal.
+let rev = L.rev
+
+/// append l0 l1 appends l1 to l0. Same function as the infix operator @.
+///
+/// Since 5.1 this function is tail-recursive.
+let append = L.append
+
+/// rev_append l1 l2 reverses l1 and concatenates it with l2. This is equivalent to (List.rev l1) @ l2.
+let inline rev_append l1 l2 = append (rev l1) l2
+
+/// Concatenate a list of lists. 
+/// The elements of the argument are all concatenated together (in the same order) to give the result. 
+/// Not tail-recursive (length of the argument + length of the longest sub-list).
+let concat (ls: 'a list list) : 'a list = L.concat ls
+
+/// Same as List.concat. Not tail-recursive (length of the argument + length of the longest sub-list).
+let flatten = concat
+
 
 //// <category name="Iterators">
 

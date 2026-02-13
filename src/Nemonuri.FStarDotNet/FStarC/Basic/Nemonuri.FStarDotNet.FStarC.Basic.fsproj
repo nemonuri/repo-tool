@@ -4,14 +4,11 @@
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
   <ItemGroup>
-    
-    
     <Compile Include="FStarC.Effect.fs" />
     <Compile Include="FStarC.Char.fs" />
     <Compile Include="FStarC.BaseTypes.fs" />
     <Compile Include="FStarC.Getopt.fs" />
     <Compile Include="FStarC.VConfig.fs" />
-    <Compile Include="FStarC.List.fs" />
     <Compile Include="FStarC.String.fs" />
   </ItemGroup>
   <ItemGroup>
