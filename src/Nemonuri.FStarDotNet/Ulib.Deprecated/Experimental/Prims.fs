@@ -2,7 +2,9 @@
 - Reference: https://github.com/FStarLang/FStar/blob/v2025.12.15/ulib/Prims.fst
 *)
 
-namespace Nemonuri.FStarDotNet
+namespace Nemonuri.FStarDotNet.Experimental
+
+type Bool = Nemonuri.FStarDotNet.Primitives.Bool
 
 (*
    Copyright 2008-2020 Microsoft Research
@@ -32,162 +34,162 @@ namespace Nemonuri.FStarDotNet
 [<RequireQualifiedAccess>]
 module Prims =
 
-    type ieq<'a> = System.IEquatable<'a>
+  type ieq<'a> = System.IEquatable<'a>
 
-    (***** Begin trusted primitives *****)
+  (***** Begin trusted primitives *****)
 
-    (** Primitives up to the definition of the GTot effect are trusted
-        Beyond that all definitions are fully verified *)
+  (** Primitives up to the definition of the GTot effect are trusted
+      Beyond that all definitions are fully verified *)
 
 
-    (** Type of attributes *)
-    type attribute = System.Attribute
+  (** Type of attributes *)
+  type attribute = System.Attribute
 
-    (** An attribute indicating that some definition must be processed by the
-        Dijkstra monads for free construction *)
-    type cps() = inherit attribute()
+  (** An attribute indicating that some definition must be processed by the
+      Dijkstra monads for free construction *)
+  type cps() = inherit attribute()
 
-    (** This attribute marks definitions for logical connectives that should
-        not be unfolded during tactics. *)
-    type tac_opaque() = inherit attribute()
+  (** This attribute marks definitions for logical connectives that should
+      not be unfolded during tactics. *)
+  type tac_opaque() = inherit attribute()
 
-    (** This attribute is added to all projectors. *)
-    type projector() = inherit attribute()
+  (** This attribute is added to all projectors. *)
+  type projector() = inherit attribute()
 
-    (** This attribute is added to all discriminators. *)
-    type discriminator() = inherit attribute()
+  (** This attribute is added to all discriminators. *)
+  type discriminator() = inherit attribute()
 
-    (** This attribute can be used on type binders to make unifier attempt
-        to unrefine them before instantiating them. This is useful in polymorphic
-        definitions where the type does not change the result type, for example
-        eq2 below. Using the attribute, an equality between two nats will happen
-        at type int, which is more canonical.
+  (** This attribute can be used on type binders to make unifier attempt
+      to unrefine them before instantiating them. This is useful in polymorphic
+      definitions where the type does not change the result type, for example
+      eq2 below. Using the attribute, an equality between two nats will happen
+      at type int, which is more canonical.
 
-        This feature is experimental and only enabled with "--ext __unrefine" *)
-    type unrefine() = inherit attribute()
+      This feature is experimental and only enabled with "--ext __unrefine" *)
+  type unrefine() = inherit attribute()
 
-    (** This attribute can be attached to a type definition to partly counter the
-        behavior of the `unrefine` attribute. It will cause the definition marked
-        `do_not_unrefine` to not be unfolded during the unrefining process. *)
-    type do_not_unrefine() = inherit attribute()
+  (** This attribute can be attached to a type definition to partly counter the
+      behavior of the `unrefine` attribute. It will cause the definition marked
+      `do_not_unrefine` to not be unfolded during the unrefining process. *)
+  type do_not_unrefine() = inherit attribute()
 
-    type Type0 = System.Type
+  type Type0 = System.Type
 
-    (** A predicate to express when a type supports decidable equality
-        The type-checker emits axioms for [hasEq] for each inductive type *)
-    type hasEq<'Type> = 'Type -> Type0 
+  (** A predicate to express when a type supports decidable equality
+      The type-checker emits axioms for [hasEq] for each inductive type *)
+  type hasEq<'Type> = 'Type -> Type0 
 
-    [<MeasureAnnotatedAbbreviation>]
-    type Type0<'a> = Type0
+  [<MeasureAnnotatedAbbreviation>]
+  type Type0<'a> = Type0
 
-    (** A convenient abbreviation, [eqtype] is the type of types in
-        universe 0 which support decidable equality *)
-    type eqtype<'a> = Type0<hasEq<'a>>
+  (** A convenient abbreviation, [eqtype] is the type of types in
+      universe 0 which support decidable equality *)
+  type eqtype<'a> = Type0<hasEq<'a>>
 
-    (** [bool] is a two element type with elements [true] and [false]. We
-        assume it is primitive, for convenient interop with other
-        languages, although it could easily be defined as an inductive type
-        with two cases, [BTrue | BFalse] *)
-    type Bool = Nemonuri.FStarDotNet.Bool
+  (** [bool] is a two element type with elements [true] and [false]. We
+      assume it is primitive, for convenient interop with other
+      languages, although it could easily be defined as an inductive type
+      with two cases, [BTrue | BFalse] *)
+  type Bool = | True of unit | False of unit
 
-    (** [empty] is the empty inductive type. The type with no
-        inhabitants represents logical falsehood. Note, [empty] is
-        seldom used directly in F*. We instead use its "squashed" variant,
-        [False], see below. *)
-    type empty = System.Void
+  (** [empty] is the empty inductive type. The type with no
+      inhabitants represents logical falsehood. Note, [empty] is
+      seldom used directly in F*. We instead use its "squashed" variant,
+      [False], see below. *)
+  type empty = System.Void
 
-    (** [trivial] is the singleton inductive type---it is trivially
-        inhabited. Like [empty], [trivial] is seldom used. We instead use
-        its "squashed" variants, [True] *)
-    type trivial = | T
+  (** [trivial] is the singleton inductive type---it is trivially
+      inhabited. Like [empty], [trivial] is seldom used. We instead use
+      its "squashed" variants, [True] *)
+  type trivial = | T
 
-    (** [unit]: another singleton type, with its only inhabitant written [()]
-        we assume it is primitive, for convenient interop with other languages *)
-    type unit = Core.unit
+  (** [unit]: another singleton type, with its only inhabitant written [()]
+      we assume it is primitive, for convenient interop with other languages *)
+  type unit = Core.unit
 
-    (** [squash p] is a central type in F*---[squash p] is the proof
-        irrelevant analog of [p] and is represented as a unit
-        refinement. Squashed proofs are typically discharged using an SMT
-        solver, without any proof terms explicitly reconstructed. As
-        such, one way to think of [squash p] is as the type of properties
-        proven using classical axioms without building proof terms.
+  (** [squash p] is a central type in F*---[squash p] is the proof
+      irrelevant analog of [p] and is represented as a unit
+      refinement. Squashed proofs are typically discharged using an SMT
+      solver, without any proof terms explicitly reconstructed. As
+      such, one way to think of [squash p] is as the type of properties
+      proven using classical axioms without building proof terms.
 
-        Note, [squash p] is just a unit refinement, it resides in universe
-        0, lowering the universe of [p]. From this perspective, one may
-        also see [squash] as a coercion down to universe 0.
+      Note, [squash p] is just a unit refinement, it resides in universe
+      0, lowering the universe of [p]. From this perspective, one may
+      also see [squash] as a coercion down to universe 0.
 
-        The type is marked [tac_opaque] to indicate to Meta-F* that
-        instances of [squash] should not be unfolded when evaluating
-        tactics (since many optimizations in F*'s SMT encoding rely
-        specifically on occurrences of [squash].
+      The type is marked [tac_opaque] to indicate to Meta-F* that
+      instances of [squash] should not be unfolded when evaluating
+      tactics (since many optimizations in F*'s SMT encoding rely
+      specifically on occurrences of [squash].
 
-        See FStar.Squash for various ways of manipulating squashed
-        types. *)
-    [<tac_opaque>]
-    [<MeasureAnnotatedAbbreviation>]
-    type squash<'p> = unit
+      See FStar.Squash for various ways of manipulating squashed
+      types. *)
+  [<tac_opaque>]
+  [<MeasureAnnotatedAbbreviation>]
+  type squash<'p> = unit
 
-    (** [auto_squash] is equivalent to [squash]. However, F* will
-        automatically insert `auto_squash` when simplifying terms,
-        converting terms of the form `p /\ True` to `auto_squash p`.
+  (** [auto_squash] is equivalent to [squash]. However, F* will
+      automatically insert `auto_squash` when simplifying terms,
+      converting terms of the form `p /\ True` to `auto_squash p`.
 
-        We distinguish these automatically inserted squashes from explicit,
-        user-written squashes.
+      We distinguish these automatically inserted squashes from explicit,
+      user-written squashes.
 
-        A user should not have to manipulate [auto_squash] at all, except
-        in rare circumstances when writing tactics to process proofs that
-        have already been partially simplified by F*'s simplifier.
-    *)
-    type auto_squash<'p> = squash<'p>
+      A user should not have to manipulate [auto_squash] at all, except
+      in rare circumstances when writing tactics to process proofs that
+      have already been partially simplified by F*'s simplifier.
+  *)
+  type auto_squash<'p> = squash<'p>
 
-    (** The [logical] type is transitionary. It is just an abbreviation
-        for [Type0], but is used to classify uses of the basic squashed
-        logical connectives that follow. Some day, we plan to remove the
-        [logical] type, replacing it with [prop] (also defined below).
+  (** The [logical] type is transitionary. It is just an abbreviation
+      for [Type0], but is used to classify uses of the basic squashed
+      logical connectives that follow. Some day, we plan to remove the
+      [logical] type, replacing it with [prop] (also defined below).
 
-        The type is marked [private] to intentionally prevent user code
-        from referencing this type, hopefully easing the removal of
-        [logical] in the future. *)
-    type private logical = Type0
+      The type is marked [private] to intentionally prevent user code
+      from referencing this type, hopefully easing the removal of
+      [logical] in the future. *)
+  type private logical = Type0
 
-    (** An attribute indicating that a symbol is an smt theory symbol and
-        hence may not be used in smt patterns.  The typechecker warns if
-        such symbols are used in patterns *)
-    type smt_theory_symbol() = inherit attribute()
+  (** An attribute indicating that a symbol is an smt theory symbol and
+      hence may not be used in smt patterns.  The typechecker warns if
+      such symbols are used in patterns *)
+  type smt_theory_symbol() = inherit attribute()
 
-    (** [l_True] has a special bit of syntactic sugar. It is written just
-        as "True" and rendered in the ide as [True]. It is a squashed version
-        of constructive truth, [trivial]. *)
-    [<tac_opaque; smt_theory_symbol>]
-    type l_True = squash<trivial>
+  (** [l_True] has a special bit of syntactic sugar. It is written just
+      as "True" and rendered in the ide as [True]. It is a squashed version
+      of constructive truth, [trivial]. *)
+  [<tac_opaque; smt_theory_symbol>]
+  type l_True = squash<trivial>
 
-    (** [l_False] has a special bit of syntactic sugar. It is written just
-        as "False" and rendered in the ide as [False]. It is a squashed version
-        of constructive falsehood, the empty type. *)
-    [<tac_opaque; smt_theory_symbol>]
-    type l_False = squash<empty>
+  (** [l_False] has a special bit of syntactic sugar. It is written just
+      as "False" and rendered in the ide as [False]. It is a squashed version
+      of constructive falsehood, the empty type. *)
+  [<tac_opaque; smt_theory_symbol>]
+  type l_False = squash<empty>
 
-    (** The type of provable equalities, defined as the usual inductive
-        type with a single constructor for reflexivity.  As with the other
-        connectives, we often work instead with the squashed version of
-        equality, below. *)
-    type equals<'a, 'x, 'Dummy0 when 'x :> ieq<'a> and 'Dummy0 :> ieq<'a>> = 
-        | Refl of equals<'a, 'x, 'x>
+  (** The type of provable equalities, defined as the usual inductive
+      type with a single constructor for reflexivity.  As with the other
+      connectives, we often work instead with the squashed version of
+      equality, below. *)
+  type equals<'a, 'x, 'Dummy0 when 'x :> ieq<'a> and 'Dummy0 :> ieq<'a>> = 
+    | Refl of equals<'a, 'x, 'x>
 
-    (** [eq2] is the squashed version of [equals]. It's a proof
-        irrelevant, homogeneous equality in Type#0 and is written with
-        an infix binary [==].
+  (** [eq2] is the squashed version of [equals]. It's a proof
+    irrelevant, homogeneous equality in Type#0 and is written with
+    an infix binary [==].
 
-        TODO: instead of hard-wiring the == syntax,
-            we should just rename eq2 to op_Equals_Equals
-    *)
-    [<tac_opaque; smt_theory_symbol>]
-    type eq2<[<unrefine>] 'a, 'x, 'y when 'x :> ieq<'a> and 'y :> ieq<'a>> = squash<equals<'a, 'x, 'y>>
+    TODO: instead of hard-wiring the == syntax,
+          we should just rename eq2 to op_Equals_Equals
+  *)
+  [<tac_opaque; smt_theory_symbol>]
+  type eq2<[<unrefine>] 'a, 'x, 'y when 'x :> ieq<'a> and 'y :> ieq<'a>> = squash<equals<'a, 'x, 'y>>
 
-    (** bool-to-type coercion: This is often automatically inserted type,
-        when using a boolean in context expecting a type. But,
-        occasionally, one may have to write [b2t] explicitly *)
-    type b2t<'b when 'b :> ieq<Bool>> = eq2<Bool, 'b , Bool.True>
+  (** bool-to-type coercion: This is often automatically inserted type,
+      when using a boolean in context expecting a type. But,
+      occasionally, one may have to write [b2t] explicitly *)
+  type b2t<'b when 'b :> ieq<Bool>> = eq2<Bool, 'b, Nemonuri.FStarDotNet.Primitives.Bool.True>
 
 #if false
   (** constructive conjunction *)
