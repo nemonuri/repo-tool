@@ -1,5 +1,8 @@
 ﻿(**
-- Reference: https://github.com/FStarLang/FStar/blob/v2025.12.15/ulib/Prims.fst
+### Reference
+
+- https://github.com/FStarLang/FStar/blob/v2025.12.15/ulib/Prims.fst
+- https://github.com/FStarLang/FStar/blob/v2025.12.15/ulib/ml/app/Prims.ml
 *)
 
 namespace Nemonuri.FStarDotNet
@@ -32,7 +35,7 @@ namespace Nemonuri.FStarDotNet
 [<RequireQualifiedAccess>]
 module Prims =
 
-    type ieq<'a> = System.IEquatable<'a>
+    open System
 
     (***** Begin trusted primitives *****)
 
@@ -45,16 +48,20 @@ module Prims =
 
     (** An attribute indicating that some definition must be processed by the
         Dijkstra monads for free construction *)
+    [<AttributeUsage(AttributeTargets.All)>]
     type cps() = inherit attribute()
 
     (** This attribute marks definitions for logical connectives that should
         not be unfolded during tactics. *)
+    [<AttributeUsage(AttributeTargets.All)>]
     type tac_opaque() = inherit attribute()
 
     (** This attribute is added to all projectors. *)
+    [<AttributeUsage(AttributeTargets.All)>]
     type projector() = inherit attribute()
 
     (** This attribute is added to all discriminators. *)
+    [<AttributeUsage(AttributeTargets.All)>]
     type discriminator() = inherit attribute()
 
     (** This attribute can be used on type binders to make unifier attempt
@@ -64,11 +71,13 @@ module Prims =
         at type int, which is more canonical.
 
         This feature is experimental and only enabled with "--ext __unrefine" *)
+    [<AttributeUsage(AttributeTargets.All)>]
     type unrefine() = inherit attribute()
 
     (** This attribute can be attached to a type definition to partly counter the
         behavior of the `unrefine` attribute. It will cause the definition marked
         `do_not_unrefine` to not be unfolded during the unrefining process. *)
+    [<AttributeUsage(AttributeTargets.All)>]
     type do_not_unrefine() = inherit attribute()
 
     type Type0 = System.Type
@@ -78,7 +87,7 @@ module Prims =
     type hasEq<'Type> = 'Type -> Type0 
 
     [<MeasureAnnotatedAbbreviation>]
-    type Type0<'a> = Type0
+    type Type0<'p> = Type0
 
     (** A convenient abbreviation, [eqtype] is the type of types in
         universe 0 which support decidable equality *)
@@ -88,7 +97,7 @@ module Prims =
         assume it is primitive, for convenient interop with other
         languages, although it could easily be defined as an inductive type
         with two cases, [BTrue | BFalse] *)
-    type Bool = Nemonuri.FStarDotNet.Bool
+    type bool = Nemonuri.FStarDotNet.FStarBool
 
     (** [empty] is the empty inductive type. The type with no
         inhabitants represents logical falsehood. Note, [empty] is
@@ -103,7 +112,7 @@ module Prims =
 
     (** [unit]: another singleton type, with its only inhabitant written [()]
         we assume it is primitive, for convenient interop with other languages *)
-    type unit = Core.unit
+    type unit = Nemonuri.FStarDotNet.FStarUnit
 
     (** [squash p] is a central type in F*---[squash p] is the proof
         irrelevant analog of [p] and is represented as a unit
@@ -148,7 +157,7 @@ module Prims =
         The type is marked [private] to intentionally prevent user code
         from referencing this type, hopefully easing the removal of
         [logical] in the future. *)
-    type private logical = Type0
+    type private logical = Nemonuri.FStarDotNet.logical
 
     (** An attribute indicating that a symbol is an smt theory symbol and
         hence may not be used in smt patterns.  The typechecker warns if
@@ -171,8 +180,12 @@ module Prims =
         type with a single constructor for reflexivity.  As with the other
         connectives, we often work instead with the squashed version of
         equality, below. *)
-    type equals<'a, 'x, 'Dummy0 when 'x :> ieq<'a> and 'Dummy0 :> ieq<'a>> = 
-        | Refl of equals<'a, 'x, 'x>
+    [<MeasureAnnotatedAbbreviation>]
+    [<RequireQualifiedAccess>]
+    type equals<'a, 'x, '_0 when 'x :> elem<'a> and '_0 :> elem<'a>> = | _0_Refl
+
+    let (|Refl|) (e: equals<'a, 'x, 'x>) = e
+    
 
     (** [eq2] is the squashed version of [equals]. It's a proof
         irrelevant, homogeneous equality in Type#0 and is written with
@@ -182,557 +195,550 @@ module Prims =
             we should just rename eq2 to op_Equals_Equals
     *)
     [<tac_opaque; smt_theory_symbol>]
-    type eq2<[<unrefine>] 'a, 'x, 'y when 'x :> ieq<'a> and 'y :> ieq<'a>> = squash<equals<'a, 'x, 'y>>
+    type eq2<[<unrefine>] 'a, 'x, 'y when 'x :> elem<'a> and 'y :> elem<'a>> = squash<equals<'a, 'x, 'y>>
 
     (** bool-to-type coercion: This is often automatically inserted type,
         when using a boolean in context expecting a type. But,
         occasionally, one may have to write [b2t] explicitly *)
-    type b2t<'b when 'b :> ieq<Bool>> = eq2<Bool, 'b , Bool.True>
+    type b2t<'b when 'b :> elem<bool>> = eq2<bool, 'b , bool.True>
+
+
+    (** constructive conjunction *)
+    type pair<'p, 'q> = | Pair of _1: 'p * _2: 'q
+
+
+    (** squashed conjunction, specialized to [Type0], written with an
+        infix binary [/\] *)
+    [<tac_opaque; smt_theory_symbol>]
+    type l_and<'p, 'q when 'p :> logical and 'q :> logical> = squash<pair<'p, 'q>>
+
+    (** constructive disjunction *)
+    type sum<'p,'q> =
+        | Left of v: 'p
+        | Right of v: 'q
+
+    (** squashed disjunction, specialized to [Type0], written with an
+        infix binary [\/] *)
+    [<tac_opaque; smt_theory_symbol>]
+    type l_or<'p, 'q when 'p :> logical and 'q :> logical> = squash<sum<'p, 'q>>
+
+    (** squashed (non-dependent) implication, specialized to [Type0],
+        written with an infix binary [==>]. Note, [==>] binds weaker than
+        [/\] and [\/] *)
+    [<tac_opaque; smt_theory_symbol>]
+    type l_imp<'p, 'q when 'p :> logical and 'q :> logical> = squash<'p -> 'q>
+    (* ^^^ NB: The GTot effect is primitive;            *)
+    (*         elaborated using GHOST a few lines below *)
+
+    (** squashed double implication, infix binary [<==>] *)
+    [<smt_theory_symbol>]
+    type l_iff<'p, 'q when 'p :> logical and 'q :> logical> = l_and<l_imp<'p, 'q> , l_imp<'q, 'p>>
+
+    (** squashed negation, prefix unary [~] *)
+    [<smt_theory_symbol>]
+    type l_not<'p when 'p :> logical> = l_imp<'p, l_False>
+
+    (** l_ITE is a weak form of if-then-else at the level of
+        logical formulae. It's not much used.
+
+        TODO: Can we remove it *)
+    [<unfold>]
+    type l_ITE<'p, 'q, 'r when 'p :> logical and 'q :> logical and 'r :> logical> = l_and<l_imp<'p, 'q> , l_imp<l_not<'p>, 'r>>
+
+    (** One of the main axioms provided by prims is [precedes], a
+        built-in well-founded partial order over all terms. It's typically
+        written with an infix binary [<<].
+
+        The [<<] order includes:
+            * The [<] ordering on natural numbers
+            * The subterm ordering on inductive types
+            * [f x << D f] for data constructors D of an inductive t whose
+                arguments include a ghost or total function returning a t *)
+
+    [<MeasureAnnotatedAbbreviation>]
+    type precedes<'a, 'b, '_2, '_3 when '_2 :> elem<'a> and '_3 :> elem<'a>> = unit
+
+    (** The type of primitive strings of characters; See FStar.String *)
+    type string = Core.string
+
+    (** This attribute can be added to the declaration or definition of
+        any top-level symbol. It causes F* to report a warning on any
+        use of that symbol, printing the [msg] argument.
+        
+        This is used, for instance to:
+        
+        - tag every escape hatch, e.g., [assume], [admit], etc
+
+        Reports for uses of symbols tagged with this attribute
+        are controlled using the `--report_assumes` option
+        and warning number 334. 
+        
+        See tests/micro-benchmarks/WarnOnUse.fst
+    *)
+    [<AttributeUsage(AttributeTargets.All)>]
+    type warn_on_use (msg: string) = inherit Attribute()
+        
+
+    (** The [deprecated "s"] attribute: "s" is an alternative function
+        that should be printed in the warning it can be omitted if the use
+        case has no such function *)
+    [<AttributeUsage(AttributeTargets.All)>]
+    type deprecated (s: string) = inherit Attribute()
+
+    (** Within the SMT encoding, we have a relation [(HasType e t)]
+        asserting that (the encoding of) [e] has a type corresponding to
+        (the encoding of) [t].
+
+        It is sometimes convenient, e.g., when writing triggers for
+        quantifiers, to have access to this relation at the source
+        level. The [has_type] predicate below reflects the SMT encodings
+        [HasType] relation. We also use it to define the type [prop] or
+        proof irrelevant propositions, below.
+
+        Note, unless you have a really good reason, you probably don't
+        want to use this [has_type] predicate. F*'s type theory certainly
+        does not internalize its own typing judgment *)
+    [<deprecated "'has_type' is intended for internal use and debugging purposes only; \
+                    do not rely on it for your proofs">]
+    type has_type<'a, '_1, 'Type when '_1 :> elem<'a>>() = 
+        let inner = Internal.has_type<'a, 'Type>.Singleton
+        member _.Invoke(o: '_1) = inner.Invoke(o)
+
+
+    (** Squashed universal quantification, or dependent products, written
+        [forall (x:a). p x], specialized to Type0 *)
+    [<smt_theory_symbol>]
+    [<RequireQualifiedAccess>]
+    type l_Forall<'a, 'p when 'p : (member Invoke : elem<'a> -> Type0)> = 
+        | l_Forall of squash<'a -> App<'p, elem<'a>, Type0>> * 'p
+
+        member inline this.Invoke(e: elem<'a>) : Type0 = 
+            match this with 
+            | l_Forall (_0, _1) -> _1.Invoke(e)
+
+    (** [p1 `subtype_of` p2] when every element of [p1] is also an element
+        of [p2]. *)
+    type subtype_of<'p1, 'p2> = l_Forall<'p1, has_type<'p1, elem<'p1>, 'p2>>
+
+    (** The type of squashed types.
+
+        Note, the [prop] type is a work in progress in F*. In particular,
+        we would like in the future to more systematically use [prop] for
+        proof-irrelevant propositions throughout the libraries. However,
+        we still use [Type0] in many places. 
+
+        See https://github.com/FStarLang/FStar/issues/1048 for more
+        details and the current status of the work.
+        *)
+    type prop = unit
+
+    (**** The PURE effect *)
+
+    (** The type of pure preconditions *)
+    type pure_pre = prop
+
+    (** Pure postconditions, predicates on [a], on which the precondition
+        [pre] is also valid. This provides a way for postcondition formula
+        to be typed in a context where they can assume the validity of the
+        precondition. This is discussed extensively in Issue #57 *)
+    [<MeasureAnnotatedAbbreviation>]
+    type pure_post'<'a, 'pre> = prop
+    type pure_post<'a> = pure_post'<'a, l_True>
+
+    (** A pure weakest precondition transforms postconditions on [a]-typed
+        results to pure preconditions
+
+        We require the weakest preconditions to satisfy the monotonicity
+        property over the postconditions
+        To enforce it, we first define a vanilla wp type,
+        and then refine it with the monotonicity condition *)
+    type pure_wp'<'a> = pure_post<'a> -> pure_pre
+
+    (** The monotonicity predicate is marked opaque_to_smt,
+        meaning that its definition is hidden from the SMT solver,
+        and if required, will need to be explicitly revealed
+        This has the advantage that clients that do not need to work with it
+        directly, don't have the (quantified) definition in their solver context *)
+    [<MeasureAnnotatedAbbreviation>]
+    type pure_wp_monotonic0<'a> = prop
+
+    [<opaque_to_smt>]
+    type pure_wp_monotonic<'a> = pure_wp_monotonic0<'a>
+
+    [<MeasureAnnotatedAbbreviation>]
+    type pure_wp<'a> = prop
+
+    (** This predicate is an internal detail, used to optimize the
+        encoding of some quantifiers to SMT by omitting their typing
+        guards. This is safe to use only when the quantifier serves to
+        introduce a local macro---use with caution. *)
+    [<MeasureAnnotatedAbbreviation>]
+    type guard_free<'a> = prop
+
+    (** The return combinator for the PURE effect requires
+        proving the postcondition only on [x]
+        
+        Clients should not use it directly,
+        instead use FStar.Pervasives.pure_return *)
+    [<MeasureAnnotatedAbbreviation>]
+    [<unfold>]
+    type pure_return0<'a, 'x, 'p when 'x :> elem<'a>> = prop
+
+    (** Sequential composition for the PURE effect
+
+        Clients should not use it directly,
+        instead use FStar.Pervasives.pure_bind_wp *)
+    [<MeasureAnnotatedAbbreviation>]
+    [<unfold>]
+    type pure_bind_wp0<'r1, 'a, 'b, 'wp1, 'wp2, 'p> = 'wp1
+
+    (** Conditional composition for the PURE effect 
+
+        The combinator is optimized to make use of how the typechecker generates VC
+        for conditionals.
+
+        The more intuitive form of the combinator would have been:
+        [(p ==> wp_then post) /\ (~p ==> wp_else post)]
+
+        However, the way the typechecker constructs the VC, [wp_then] is already
+        weakened with [p].
+
+        Hence, here we only weaken [wp_else]
+
+        Clients should not use it directly,
+        instead use FStar.Pervasives.pure_if_then_else *)
+    [<MeasureAnnotatedAbbreviation>]
+    [<unfold>]
+    type pure_if_then_else0<'a,'p,'wp_then,'wp_else,'post> = prop
+
+    (** Conditional composition for the PURE effect, while trying to avoid
+        duplicating the postcondition by giving it a local name [k].
+
+        Note the use of [guard_free] here: [k] is just meant to be a macro
+        for [post].
+            
+        Clients should not use it directly,
+        instead use FStar.Pervasives.pure_ite_wp *)
+    [<MeasureAnnotatedAbbreviation>]
+    [<unfold>]
+    type pure_ite_wp0<'a,'wp,'post> = prop
+
+    (** Subsumption for the PURE effect *)
+    [<MeasureAnnotatedAbbreviation>]
+    [<unfold>]
+    type pure_stronger<'a,'wp1,'wp2> = prop
+
+    (** Closing a PURE WP under a binder for [b]
+        
+        Clients should not use it directly,
+        instead use FStar.Pervasives.pure_close_wp *)
+    [<MeasureAnnotatedAbbreviation>]
+    [<unfold>]
+    type pure_close_wp0<'a,'b,'wp,'p> = prop
+
+    (** Trivial WP for PURE: Prove the WP with the trivial postcondition *)
+    [<MeasureAnnotatedAbbreviation>]
+    [<unfold>]
+    type pure_trivial<'a,'wp> = prop
 
 #if false
-  (** constructive conjunction *)
-  type pair (p: Type) (q: Type) = | Pair : _1:p -> _2:q -> pair p q
-
-  (** squashed conjunction, specialized to [Type0], written with an
-      infix binary [/\] *)
-  [@@ tac_opaque; smt_theory_symbol]
-  type l_and (p: logical) (q: logical) : logical = squash (pair p q)
-
-  (** constructive disjunction *)
-  type sum (p: Type) (q: Type) =
-    | Left : v:p -> sum p q
-    | Right : v:q -> sum p q
-
-  (** squashed disjunction, specialized to [Type0], written with an
-      infix binary [\/] *)
-  [@@ tac_opaque; smt_theory_symbol]
-  type l_or (p: logical) (q: logical) : logical = squash (sum p q)
-
-  (** squashed (non-dependent) implication, specialized to [Type0],
-      written with an infix binary [==>]. Note, [==>] binds weaker than
-      [/\] and [\/] *)
-  [@@ tac_opaque; smt_theory_symbol]
-  type l_imp (p: logical) (q: logical) : logical = squash (p -> GTot q)
-  (* ^^^ NB: The GTot effect is primitive;            *)
-  (*         elaborated using GHOST a few lines below *)
-
-  (** squashed double implication, infix binary [<==>] *)
-  [@@ smt_theory_symbol]
-  type l_iff (p: logical) (q: logical) : logical = (p ==> q) /\ (q ==> p)
-
-  (** squashed negation, prefix unary [~] *)
-  [@@ smt_theory_symbol]
-  type l_not (p: logical) : logical = l_imp p False
-
-  (** l_ITE is a weak form of if-then-else at the level of
-      logical formulae. It's not much used.
-
-      TODO: Can we remove it *)
-  unfold
-  type l_ITE (p: logical) (q: logical) (r: logical) : logical = (p ==> q) /\ (~p ==> r)
-
-
-  (** One of the main axioms provided by prims is [precedes], a
-      built-in well-founded partial order over all terms. It's typically
-      written with an infix binary [<<].
-
-      The [<<] order includes:
-          * The [<] ordering on natural numbers
-          * The subterm ordering on inductive types
-          * [f x << D f] for data constructors D of an inductive t whose
-            arguments include a ghost or total function returning a t *)
-
-  assume
-  type precedes : #a: Type -> #b: Type -> a -> b -> Type0
-
-  (** The type of primitive strings of characters; See FStar.String *)
-  assume new
-  type string : eqtype 
-
-  (** This attribute can be added to the declaration or definition of
-      any top-level symbol. It causes F* to report a warning on any
-      use of that symbol, printing the [msg] argument.
-      
-      This is used, for instance to:
-      
-      - tag every escape hatch, e.g., [assume], [admit], etc
-
-      Reports for uses of symbols tagged with this attribute
-      are controlled using the `--report_assumes` option
-      and warning number 334. 
-      
-      See tests/micro-benchmarks/WarnOnUse.fst
-  *)
-  assume
-  val warn_on_use (msg: string) : Tot unit
-
-  (** The [deprecated "s"] attribute: "s" is an alternative function
-      that should be printed in the warning it can be omitted if the use
-      case has no such function *)
-  assume
-  val deprecated (s: string) : Tot unit
-
-
-  (** Within the SMT encoding, we have a relation [(HasType e t)]
-      asserting that (the encoding of) [e] has a type corresponding to
-      (the encoding of) [t].
-
-      It is sometimes convenient, e.g., when writing triggers for
-      quantifiers, to have access to this relation at the source
-      level. The [has_type] predicate below reflects the SMT encodings
-      [HasType] relation. We also use it to define the type [prop] or
-      proof irrelevant propositions, below.
-
-      Note, unless you have a really good reason, you probably don't
-      want to use this [has_type] predicate. F*'s type theory certainly
-      does not internalize its own typing judgment *)
-  [@@deprecated "'has_type' is intended for internal use and debugging purposes only; \
-                  do not rely on it for your proofs"]
-  assume
-  type has_type : #a: Type -> a -> Type -> Type0 
-
-  (** Squashed universal quantification, or dependent products, written
-      [forall (x:a). p x], specialized to Type0 *)
-  [@@ tac_opaque; smt_theory_symbol]
-  type l_Forall (#a: Type) (p: (a -> GTot Type0)) : logical = squash (x: a -> GTot (p x))
-
-  #push-options "--warn_error -288" 
-  (** [p1 `subtype_of` p2] when every element of [p1] is also an element
-      of [p2]. *)
-  let subtype_of (p1 p2: Type) = forall (x: p1). has_type x p2
-  #pop-options
-
-  (** The type of squashed types.
-
-      Note, the [prop] type is a work in progress in F*. In particular,
-      we would like in the future to more systematically use [prop] for
-      proof-irrelevant propositions throughout the libraries. However,
-      we still use [Type0] in many places. 
-
-      See https://github.com/FStarLang/FStar/issues/1048 for more
-      details and the current status of the work.
-      *)
-  type prop = a: Type0{a `subtype_of` unit}
-
-  (**** The PURE effect *)
-
-  (** The type of pure preconditions *)
-  let pure_pre = Type0
-
-  (** Pure postconditions, predicates on [a], on which the precondition
-      [pre] is also valid. This provides a way for postcondition formula
-      to be typed in a context where they can assume the validity of the
-      precondition. This is discussed extensively in Issue #57 *)
-  let pure_post' (a pre: Type) = _: a{pre} -> GTot Type0
-  let pure_post (a: Type) = pure_post' a True
-
-  (** A pure weakest precondition transforms postconditions on [a]-typed
-      results to pure preconditions
-
-      We require the weakest preconditions to satisfy the monotonicity
-      property over the postconditions
-      To enforce it, we first define a vanilla wp type,
-      and then refine it with the monotonicity condition *)
-  let pure_wp' (a: Type) = pure_post a -> GTot pure_pre
-
-  (** The monotonicity predicate is marked opaque_to_smt,
-      meaning that its definition is hidden from the SMT solver,
-      and if required, will need to be explicitly revealed
-      This has the advantage that clients that do not need to work with it
-      directly, don't have the (quantified) definition in their solver context *)
-
-  let pure_wp_monotonic0 (a:Type) (wp:pure_wp' a) =
-    forall (p q:pure_post a). (forall (x:a). p x ==> q x) ==> (wp p ==> wp q)
-
-  [@@ "opaque_to_smt"]
-  let pure_wp_monotonic = pure_wp_monotonic0
-
-  let pure_wp (a: Type) = wp:pure_wp' a{pure_wp_monotonic a wp}
-
-  (** This predicate is an internal detail, used to optimize the
-      encoding of some quantifiers to SMT by omitting their typing
-      guards. This is safe to use only when the quantifier serves to
-      introduce a local macro---use with caution. *)
-  assume
-  type guard_free : Type0 -> Type0 
-
-  (** The return combinator for the PURE effect requires
-      proving the postcondition only on [x]
-      
-      Clients should not use it directly,
-      instead use FStar.Pervasives.pure_return *)
-  unfold
-  let pure_return0 (a: Type) (x: a) : pure_wp a =
-    fun (p: pure_post a) ->
-    forall (return_val: a). return_val == x ==> p return_val
-
-  (** Sequential composition for the PURE effect
-
-      Clients should not use it directly,
-      instead use FStar.Pervasives.pure_bind_wp *)
-  unfold
-  let pure_bind_wp0
-        (a b: Type)
-        (wp1: pure_wp a)
-        (wp2: (a -> GTot (pure_wp b)))
-        : pure_wp b
-      = fun (p: pure_post b) ->
-        wp1 (fun (bind_result_1: a) -> wp2 bind_result_1 p)
-
-  (** Conditional composition for the PURE effect 
-
-      The combinator is optimized to make use of how the typechecker generates VC
-      for conditionals.
-
-      The more intuitive form of the combinator would have been:
-      [(p ==> wp_then post) /\ (~p ==> wp_else post)]
-
-      However, the way the typechecker constructs the VC, [wp_then] is already
-      weakened with [p].
-
-      Hence, here we only weaken [wp_else]
-
-      Clients should not use it directly,
-      instead use FStar.Pervasives.pure_if_then_else *)
-  unfold
-  let pure_if_then_else0 (a p: Type) (wp_then wp_else: pure_wp a) : pure_wp a =
-    fun (post: pure_post a) ->
-    wp_then post /\ (~p ==> wp_else post)
-
-  (** Conditional composition for the PURE effect, while trying to avoid
-      duplicating the postcondition by giving it a local name [k].
-
-      Note the use of [guard_free] here: [k] is just meant to be a macro
-      for [post].
-          
-      Clients should not use it directly,
-      instead use FStar.Pervasives.pure_ite_wp *)
-  unfold
-  let pure_ite_wp0 (a: Type) (wp: pure_wp a) : pure_wp a =
-    fun (post: pure_post a) ->
-    forall (k: pure_post a). (forall (x: a). {:pattern (guard_free (k x))} post x ==> k x) ==> wp k
-
-  (** Subsumption for the PURE effect *)
-  unfold
-  let pure_stronger (a: Type) (wp1 wp2: pure_wp a) = forall (p: pure_post a). wp1 p ==> wp2 p
-
-  (** Closing a PURE WP under a binder for [b]
-    
-      Clients should not use it directly,
-      instead use FStar.Pervasives.pure_close_wp *)
-  unfold
-  let pure_close_wp0 (a b: Type) (wp: (b -> GTot (pure_wp a))) : pure_wp a = fun (p: pure_post a) -> forall (b: b). wp b p
-
-  (** Trivial WP for PURE: Prove the WP with the trivial postcondition *)
-  unfold
-  let pure_trivial (a: Type) (wp: pure_wp a) = wp (fun (trivial_result: a) -> True)
-
-  (** Introduces the PURE effect.
-      The definition of the PURE effect is fixed.
-      NO USER SHOULD EVER CHANGE THIS. *)
-  total
-  new_effect {
-    PURE : a: Type -> wp: pure_wp a -> Effect
-    with
-      return_wp    = pure_return0
-    ; bind_wp      = pure_bind_wp0
-    ; if_then_else = pure_if_then_else0
-    ; ite_wp       = pure_ite_wp0
-    ; stronger     = pure_stronger
-    ; close_wp     = pure_close_wp0
-    ; trivial      = pure_trivial
-  }
-
-  (** [Pure] is a Hoare-style counterpart of [PURE]
-      
-      Note the type of post, which allows to assume the precondition
-      for the well-formedness of the postcondition. c.f. #57 *)
-  effect Pure (a: Type) (pre: pure_pre) (post: pure_post' a pre) =
-    PURE a
-      (fun (p: pure_post a) -> pre /\ (forall (pure_result: a). post pure_result ==> p pure_result))
-
-  (** [Admit] is an effect abbreviation for a computation that
-      disregards the verification condition of its continuation *)
-  effect Admit (a: Type) = PURE a (fun (p: pure_post a) -> True)
-
-  (** The primitive effect [Tot] is definitionally equal to an instance of [PURE] *)
-
-  (** Clients should not use it directly, instead use FStar.Pervasives.pure_null_wp *)
-  unfold
-  let pure_null_wp0 (a: Type) : pure_wp a = fun (p: pure_post a) -> forall (any_result: a). p any_result
-
-  (** [Tot]: From here on, we have [Tot] as a defined symbol in F*. *)
-  effect Tot (a: Type) = PURE a (pure_null_wp0 a)
-
-  (** Clients should not use it directly, instead use FStar.Pervasives.pure_assert_wp *)
-  [@@ "opaque_to_smt"]
-  unfold
-  let pure_assert_wp0 (p: Type) : pure_wp unit = fun (post: pure_post unit) -> p /\ post ()
-
-  (** Clients should not use it directly, instead use FStar.Pervasives.pure_assume_wp *)
-  [@@ "opaque_to_smt"]
-  unfold
-  let pure_assume_wp0 (p: Type) : pure_wp unit = fun (post: pure_post unit) -> p ==> post ()
-
-  (**** The [GHOST] effect *)
-
-  (** [GHOST] is logically equivalent to [PURE], but distinguished from
-      it nominally so that specific, computationally irrelevant
-      operations, are provided only in [GHOST] and are erased during
-      extraction *)
-  total
-  new_effect GHOST = PURE
-
-  unfold
-  let purewp_id (a: Type) (wp: pure_wp a) = wp
-
-  (** [PURE] computations can be lifted to the [GHOST] effect (but not
-      vice versa) using just the identity lifting on pure wps *)
-  sub_effect PURE ~> GHOST { lift_wp = purewp_id }
-
-  (** [Ghost] is a the Hoare-style counterpart of [GHOST] *)
-  effect Ghost (a: Type) (pre: Type) (post: pure_post' a pre) =
-    GHOST a
-      (fun (p: pure_post a) -> pre /\ (forall (ghost_result: a). post ghost_result ==> p ghost_result)
-      )
-
-  (** As with [Tot], the primitive effect [GTot] is definitionally equal
-      to an instance of GHOST *)
-  effect GTot (a: Type) = GHOST a (pure_null_wp0 a)
-
-
-  (***** End trusted primitives *****)
-
-  (** This point onward, F* fully verifies all the definitions *)
-
-  (** [===] heterogeneous equality *)
-  let ( === ) (#a #b: Type) (x: a) (y: b) : logical = a == b /\ x == y
-
-  (** Dependent pairs [dtuple2] in concrete syntax is [x:a & b x].
-      Its values can be constructed with the concrete syntax [(| x, y |)] *)
-  unopteq
-  type dtuple2 (a: Type) (b: (a -> GTot Type)) =
-    | Mkdtuple2 : _1: a -> _2: b _1 -> dtuple2 a b
-
-  (** Squashed existential quantification, or dependent sums,
-      are written [exists (x:a). p x] : specialized to Type0 *)
-  [@@ tac_opaque; smt_theory_symbol]
-  type l_Exists (#a: Type) (p: (a -> GTot Type0)) : logical = squash (x: a & p x)
-
-  (** Primitive type of mathematical integers, mapped to zarith in OCaml
-      extraction and to the SMT sort of integers *)
-  assume new
-  type int : eqtype 
-
-  (**** Basic operators on booleans and integers *)
-
-  (** [&&] boolean conjunction *)
-
-  [@@ smt_theory_symbol]
-  assume
-  val op_AmpAmp: bool -> bool -> Tot bool
-
-  (** [||] boolean disjunction *)
-
-  [@@ smt_theory_symbol]
-  assume
-  val op_BarBar: bool -> bool -> Tot bool
-
-  (** [not] boolean negation *)
-
-  [@@ smt_theory_symbol]
-  assume
-  val op_Negation: bool -> Tot bool
-
-  (** Integer multiplication, no special symbol. See FStar.Mul *)
-
-  [@@ smt_theory_symbol]
-  assume
-  val op_Multiply: int -> int -> Tot int
-
-  (** [-] integer subtraction *)
-
-  [@@ smt_theory_symbol]
-  assume
-  val op_Subtraction: int -> int -> Tot int
-
-  (** [+] integer addition *)
-
-  [@@ smt_theory_symbol]
-  assume
-  val op_Addition: int -> int -> Tot int
-
-  (** [-] prefix unary integer negation *)
-
-  [@@ smt_theory_symbol]
-  assume
-  val op_Minus: int -> Tot int
-
-  (** [<=] integer comparison *)
-
-  [@@ smt_theory_symbol]
-  assume
-  val op_LessThanOrEqual: int -> int -> Tot bool
-
-  (** [>] integer comparison *)
-
-  [@@ smt_theory_symbol]
-  assume
-  val op_GreaterThan: int -> int -> Tot bool
-
-  (** [>=] integer comparison *)
-
-  [@@ smt_theory_symbol]
-  assume
-  val op_GreaterThanOrEqual: int -> int -> Tot bool
-
-  (** [<] integer comparison *)
-
-  [@@ smt_theory_symbol]
-  assume
-  val op_LessThan: int -> int -> Tot bool
-
-  (** [=] decidable equality on [eqtype] *)
-
-  [@@ smt_theory_symbol]
-  assume
-  val op_Equality: #[@@@unrefine]a: eqtype -> a -> a -> Tot bool
-
-  (** [<>] decidable dis-equality on [eqtype] *)
-
-  [@@ smt_theory_symbol]
-  assume
-  val op_disEquality: #[@@@unrefine]a: eqtype -> a -> a -> Tot bool
-
-  (** The extensible open inductive type of exceptions *)
-  assume new
-  type exn : Type0 
-
-  (** String concatenation and its abbreviation as [^].  TODO, both
-      should be removed in favor of what is present in FStar.String *)
-  assume
-  val strcat: string -> string -> Tot string
-  inline_for_extraction unfold
-  let op_Hat s1 s2 = strcat s1 s2
-
-  (** The inductive type of polymorphic lists *)
-  type list (a: Type) =
-    | Nil : list a
-    | Cons : hd: a -> tl: list a -> list a
-
-  (** The [M] marker is interpreted by the Dijkstra Monads for Free
-      construction. It has a "double meaning", either as an alias for
-      reasoning about the direct definitions, or as a marker for places
-      where a CPS transformation should happen. *)
-  effect M (a: Type) = Tot a (attributes cps)
-
-  (** Returning a value into the [M] effect *)
-  let returnM (a: Type) (x: a) : M a = x
-
-  (** [as_requires] turns a WP into a precondition, by applying it to
-      a trivial postcondition *)
-  unfold
-  let as_requires (#a: Type) (wp: pure_wp a) : pure_pre = wp (fun x -> True)
-
-  (** [as_ensures] turns a WP into a postcondition, relying on a kind of
-      double negation translation. *)
-  unfold
-  let as_ensures (#a: Type) (wp: pure_wp a) : pure_post a = fun (x:a) -> ~(wp (fun y -> (y =!= x)))
-
-  (** The keyword term-level keyword [assume] is desugared to [_assume].
-      It explicitly provides an escape hatch to assume a given property
-      [p]. *)
-  [@@ warn_on_use "Uses an axiom"]
-  assume
-  val _assume (p: Type) : Pure unit (requires (True)) (ensures (fun x -> p))
-
-  (** [admit] is another escape hatch: It discards the continuation and
-      returns a value of any type *)
-  [@@ warn_on_use "Uses an axiom"]
-  assume
-  val admit: #a: Type -> unit -> Admit a
-
-  (** [magic] is another escape hatch: It retains the continuation but
-      returns a value of any type *)
-  [@@ warn_on_use "Uses an axiom"]
-  assume
-  val magic: #a: Type -> unit -> Tot a
-
-  (** [unsafe_coerce] is another escape hatch: It coerces an [a] to a
-      [b].  *)
-  [@@ warn_on_use "Uses an axiom"]
-  irreducible
-  let unsafe_coerce (#a #b: Type) (x: a) : b =
-    admit ();
-    x
-
-  (** [admitP]: TODO: Unused ... remove? *)
-  [@@ warn_on_use "Uses an axiom"]
-  assume
-  val admitP (p: Type) : Pure unit True (fun x -> p)
-
-  (** The keyword term-level keyword [assert] is desugared to [_assert].
-      It force a proof of a property [p], then assuming [p] for the
-      continuation. *)
-  val _assert (p: Type) : Pure unit (requires p) (ensures (fun x -> p))
-  let _assert p = ()
-
-  (** Logically equivalent to assert; TODO remove? *)
-  val cut (p: Type) : Pure unit (requires p) (fun x -> p)
-  let cut p = ()
-
-  (** The type of non-negative integers *)
-  type nat = i: int{i >= 0}
-
-  (** The type of positive integers *)
-  type pos = i: int{i > 0}
-
-  (** The type of non-zero integers *)
-  type nonzero = i: int{i <> 0}
-
-  /// Arbitrary precision ints are compiled to zarith (big_ints) in
-  /// OCaml and to .NET BigInteger in F#. Both the modulus and division
-  /// operations are Euclidean and are mapped to the corresponding
-  /// theory symbols in the SMT encoding
-
-  (** Euclidean modulus *)
-
-  [@@ smt_theory_symbol]
-  assume
-  val op_Modulus: int -> nonzero -> Tot int
-
-  (** Euclidean division, written [/] *)
-
-  [@@ smt_theory_symbol]
-  assume
-  val op_Division: int -> nonzero -> Tot int
-
-  (** [pow2 x] is [2^x]:
-
-      TODO: maybe move this to FStar.Int *)
-  let rec pow2 (x: nat) : Tot pos =
-    match x with
-    | 0 -> 1
-    | _ -> 2 `op_Multiply` (pow2 (x - 1))
-
-  (** [min] computes the minimum of two [int]s *)
-  let min x y = if x <= y then x else y
-
-  (** [abs] computes the absolute value of an [int] *)
-  let abs (x: int) : Tot int = if x >= 0 then x else - x
-
-  (** A primitive printer for booleans:
-
-      TODO: unnecessary, this could easily be defined *)
-  assume
-  val string_of_bool: bool -> Tot string
-
-  (** A primitive printer for [int] *)
-  assume
-  val string_of_int: int -> Tot string
-
-  (** THIS IS MEANT TO BE KEPT IN SYNC WITH FStar.CheckedFiles.fs
-      Incrementing this forces all .checked files to be invalidated *)
-  irreducible
-  let __cache_version_number__ = 77
+    (** Introduces the PURE effect.
+        The definition of the PURE effect is fixed.
+        NO USER SHOULD EVER CHANGE THIS. *)
+    total
+    new_effect {
+        PURE : a: Type -> wp: pure_wp a -> Effect
+        with
+        return_wp    = pure_return0
+        ; bind_wp      = pure_bind_wp0
+        ; if_then_else = pure_if_then_else0
+        ; ite_wp       = pure_ite_wp0
+        ; stronger     = pure_stronger
+        ; close_wp     = pure_close_wp0
+        ; trivial      = pure_trivial
+    }
+
+    (** [Pure] is a Hoare-style counterpart of [PURE]
+        
+        Note the type of post, which allows to assume the precondition
+        for the well-formedness of the postcondition. c.f. #57 *)
+    effect Pure (a: Type) (pre: pure_pre) (post: pure_post' a pre) =
+        PURE a
+        (fun (p: pure_post a) -> pre /\ (forall (pure_result: a). post pure_result ==> p pure_result))
+
+    (** [Admit] is an effect abbreviation for a computation that
+        disregards the verification condition of its continuation *)
+    effect Admit (a: Type) = PURE a (fun (p: pure_post a) -> True)
 #endif
+
+    (** The primitive effect [Tot] is definitionally equal to an instance of [PURE] *)
+
+    (** Clients should not use it directly, instead use FStar.Pervasives.pure_null_wp *)
+    [<MeasureAnnotatedAbbreviation>]
+    [<unfold>]
+    type pure_null_wp0<'a,'p> = prop
+
+#if false
+    (** [Tot]: From here on, we have [Tot] as a defined symbol in F*. *)
+    effect Tot (a: Type) = PURE a (pure_null_wp0 a)
+#endif
+
+    (** Clients should not use it directly, instead use FStar.Pervasives.pure_assert_wp *)
+    [<MeasureAnnotatedAbbreviation>]
+    [<opaque_to_smt>]
+    [<unfold>]
+    type pure_assert_wp0<'p,'post> = prop
+
+    (** Clients should not use it directly, instead use FStar.Pervasives.pure_assume_wp *)
+    [<MeasureAnnotatedAbbreviation>]
+    [<opaque_to_smt>]
+    [<unfold>]
+    type pure_assume_wp0<'p, 'post> = prop
+
+    (**** The [GHOST] effect *)
+
+#if false
+    (** [GHOST] is logically equivalent to [PURE], but distinguished from
+        it nominally so that specific, computationally irrelevant
+        operations, are provided only in [GHOST] and are erased during
+        extraction *)
+    total
+    new_effect GHOST = PURE
+#endif
+
+    [<MeasureAnnotatedAbbreviation>]
+    [<unfold>]
+    type purewp_id<'a, 'wp> = 'wp
+
+#if false
+    (** [PURE] computations can be lifted to the [GHOST] effect (but not
+        vice versa) using just the identity lifting on pure wps *)
+    sub_effect PURE ~> GHOST { lift_wp = purewp_id }
+
+    (** [Ghost] is a the Hoare-style counterpart of [GHOST] *)
+    effect Ghost (a: Type) (pre: Type) (post: pure_post' a pre) =
+        GHOST a
+        (fun (p: pure_post a) -> pre /\ (forall (ghost_result: a). post ghost_result ==> p ghost_result)
+        )
+
+    (** As with [Tot], the primitive effect [GTot] is definitionally equal
+        to an instance of GHOST *)
+    effect GTot (a: Type) = GHOST a (pure_null_wp0 a)
+#endif
+
+    (***** End trusted primitives *****)
+
+    (** This point onward, F* fully verifies all the definitions *)
+
+    (** [===] heterogeneous equality *)
+    let ( === ) (x: 'a) (y: 'b) : bool = 
+        match 
+            RuntimeTheory.typeeq<'a, 'b> && (x = y)
+        with
+        | true -> bool.True.Singleton
+        | false -> bool.False.Singleton
+
+    (** Dependent pairs [dtuple2] in concrete syntax is [x:a & b x].
+        Its values can be constructed with the concrete syntax [(| x, y |)] *)
+    [<unopteq>]
+    type dtuple2<'a, 'b> =
+        | Mkdtuple2 of _1: 'a * _2: 'b
+
+    (** Squashed existential quantification, or dependent sums,
+        are written [exists (x:a). p x] : specialized to Type0 *)
+    [<tac_opaque; smt_theory_symbol>]
+    type l_Exists<'a, 'p when 'p : (member Invoke : elem<'a> -> Type0)> = squash<dtuple2<'a, App<'p, elem<'a>, Type0>>>
+
+    (** Primitive type of mathematical integers, mapped to zarith in OCaml
+        extraction and to the SMT sort of integers *)
+    type int = Nemonuri.FStarDotNet.FStarInt
+
+    (**** Basic operators on booleans and integers *)
+
+    (** [&&] boolean conjunction *)
+
+    [<smt_theory_symbol>]
+    let op_AmpAmp b1 b2 = fstarBoolLogicalAnd b1 b2
+
+    (** [||] boolean disjunction *)
+
+    [<smt_theory_symbol>]
+    let op_BarBar b1 b2 = fstarBoolLogicalOr b1 b2
+
+    (** [not] boolean negation *)
+
+    [<smt_theory_symbol>]
+    let op_Negation b = fstarBoolLogicalNot b
+
+    (** Integer multiplication, no special symbol. See FStar.Mul *)
+
+    [<smt_theory_symbol>]
+    let op_Multiply i1 i2 = fstarIntMultiply i1 i2
+
+    (** [-] integer subtraction *)
+
+    [<smt_theory_symbol>]
+    let op_Subtraction i1 i2 = fstarIntMultiply i1 i2
+
+    (** [+] integer addition *)
+
+    [<smt_theory_symbol>]
+    let op_Addition i1 i2 = _ i1 i2
+
+    (** [-] prefix unary integer negation *)
+
+    [<smt_theory_symbol>]
+    let op_Minus i = _ i
+
+    (** [<=] integer comparison *)
+
+    [<smt_theory_symbol>]
+    let op_LessThanOrEqual i1 i2 = _ i1 i2
+
+    (** [>] integer comparison *)
+
+    [<smt_theory_symbol>]
+    let op_GreaterThan i1 i2 = _ i1 i2
+
+    (** [>=] integer comparison *)
+
+    [<smt_theory_symbol>]
+    let op_GreaterThanOrEqual i1 i2 = _ i1 i2
+
+    (** [<] integer comparison *)
+
+    [<smt_theory_symbol>]
+    let op_LessThan i1 i2 = _ i1 i2
+
+    (** [=] decidable equality on [eqtype] *)
+
+    [<smt_theory_symbol>]
+    let op_Equality<[<unrefine>] 'a> a1 a2 = _ a1 a2
+
+    (** [<>] decidable dis-equality on [eqtype] *)
+
+    [<smt_theory_symbol>]
+    let op_disEquality: #[@@@unrefine]a: eqtype -> a -> a -> Tot bool
+
+    (** The extensible open inductive type of exceptions *)
+    assume new
+    type exn : Type0 
+
+    (** String concatenation and its abbreviation as [^].  TODO, both
+        should be removed in favor of what is present in FStar.String *)
+    let strcat: string -> string -> Tot string
+    inline_for_extraction unfold
+    let op_Hat s1 s2 = strcat s1 s2
+
+    (** The inductive type of polymorphic lists *)
+    type list (a: Type) =
+        | Nil : list a
+        | Cons : hd: a -> tl: list a -> list a
+
+    (** The [M] marker is interpreted by the Dijkstra Monads for Free
+        construction. It has a "double meaning", either as an alias for
+        reasoning about the direct definitions, or as a marker for places
+        where a CPS transformation should happen. *)
+    effect M (a: Type) = Tot a (attributes cps)
+
+    (** Returning a value into the [M] effect *)
+    let returnM (a: Type) (x: a) : M a = x
+
+    (** [as_requires] turns a WP into a precondition, by applying it to
+        a trivial postcondition *)
+    unfold
+    let as_requires (#a: Type) (wp: pure_wp a) : pure_pre = wp (fun x -> True)
+
+    (** [as_ensures] turns a WP into a postcondition, relying on a kind of
+        double negation translation. *)
+    unfold
+    let as_ensures (#a: Type) (wp: pure_wp a) : pure_post a = fun (x:a) -> ~(wp (fun y -> (y =!= x)))
+
+    (** The keyword term-level keyword [assume] is desugared to [_assume].
+        It explicitly provides an escape hatch to assume a given property
+        [p]. *)
+    [@@ warn_on_use "Uses an axiom"]
+    let _assume (p: Type) : Pure unit (requires (True)) (ensures (fun x -> p))
+
+    (** [admit] is another escape hatch: It discards the continuation and
+        returns a value of any type *)
+    [@@ warn_on_use "Uses an axiom"]
+    let admit: #a: Type -> unit -> Admit a
+
+    (** [magic] is another escape hatch: It retains the continuation but
+        returns a value of any type *)
+    [@@ warn_on_use "Uses an axiom"]
+    let magic: #a: Type -> unit -> Tot a
+
+    (** [unsafe_coerce] is another escape hatch: It coerces an [a] to a
+        [b].  *)
+    [@@ warn_on_use "Uses an axiom"]
+    irreducible
+    let unsafe_coerce (#a #b: Type) (x: a) : b =
+        admit ();
+        x
+
+    (** [admitP]: TODO: Unused ... remove? *)
+    [@@ warn_on_use "Uses an axiom"]
+    let admitP (p: Type) : Pure unit True (fun x -> p)
+
+    (** The keyword term-level keyword [assert] is desugared to [_assert].
+        It force a proof of a property [p], then assuming [p] for the
+        continuation. *)
+    val _assert (p: Type) : Pure unit (requires p) (ensures (fun x -> p))
+    let _assert p = ()
+
+    (** Logically equivalent to assert; TODO remove? *)
+    val cut (p: Type) : Pure unit (requires p) (fun x -> p)
+    let cut p = ()
+
+    (** The type of non-negative integers *)
+    type nat = i: int{i >= 0}
+
+    (** The type of positive integers *)
+    type pos = i: int{i > 0}
+
+    (** The type of non-zero integers *)
+    type nonzero = i: int{i <> 0}
+
+    /// Arbitrary precision ints are compiled to zarith (big_ints) in
+    /// OCaml and to .NET BigInteger in F#. Both the modulus and division
+    /// operations are Euclidean and are mapped to the corresponding
+    /// theory symbols in the SMT encoding
+
+    (** Euclidean modulus *)
+
+    [<smt_theory_symbol>]
+    let op_Modulus: int -> nonzero -> Tot int
+
+    (** Euclidean division, written [/] *)
+
+    [<smt_theory_symbol>]
+    let op_Division: int -> nonzero -> Tot int
+
+    (** [pow2 x] is [2^x]:
+
+        TODO: maybe move this to FStar.Int *)
+    let rec pow2 (x: nat) : Tot pos =
+        match x with
+        | 0 -> 1
+        | _ -> 2 `op_Multiply` (pow2 (x - 1))
+
+    (** [min] computes the minimum of two [int]s *)
+    let min x y = if x <= y then x else y
+
+    (** [abs] computes the absolute value of an [int] *)
+    let abs (x: int) : Tot int = if x >= 0 then x else - x
+
+    (** A primitive printer for booleans:
+
+        TODO: unnecessary, this could easily be defined *)
+    let string_of_bool: bool -> Tot string
+
+    (** A primitive printer for [int] *)
+    let string_of_int: int -> Tot string
+
+    (** THIS IS MEANT TO BE KEPT IN SYNC WITH FStar.CheckedFiles.fs
+        Incrementing this forces all .checked files to be invalidated *)
+    irreducible
+    let __cache_version_number__ = 77

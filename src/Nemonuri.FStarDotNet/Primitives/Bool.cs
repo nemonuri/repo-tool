@@ -1,6 +1,6 @@
 ﻿namespace Nemonuri.FStarDotNet.Primitives;
 
-public abstract class Bool : IEquatable<Bool>
+public abstract class Bool : IEquatable<Bool>, ILogical
 {
     public sealed class True : Bool
     {

@@ -1,12 +1,16 @@
 <Project Sdk="Microsoft.NET.Sdk">
-
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0;netstandard2.1</TargetFrameworks>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
-
   <ItemGroup>
     <ProjectReference Include="..\Primitives\Nemonuri.FStarDotNet.Primitives.csproj" />
+    <PackageReference Include="System.Runtime.CompilerServices.Unsafe" />
   </ItemGroup>
-
-<ItemGroup><Compile Include="Pervasive.fs" /><Compile Include="Prims.fs" /></ItemGroup></Project>
+  <ItemGroup>
+    <Compile Include="Pervasive.fs" />
+    <Compile Include="RuntimeTheory.fs" />
+    <Compile Include="Internal.fs" />
+    <Compile Include="Prims.fs" />
+  </ItemGroup>
+</Project>

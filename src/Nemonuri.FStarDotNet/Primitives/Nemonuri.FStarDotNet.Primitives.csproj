@@ -6,5 +6,16 @@
     <LangVersion>14</LangVersion>
     <Nullable>enable</Nullable>
   </PropertyGroup>
+  
+  <ItemGroup>
+    <PackageReference Include="PolySharp" PrivateAssets="all" />
+  </ItemGroup>
+  
+  <PropertyGroup>
+    <PolySharpIncludeGeneratedTypes>
+      <!-- https://github.com/Sergio0694/PolySharp/tree/main/src/PolySharp.SourceGenerators/EmbeddedResources -->
+      System.Diagnostics.CodeAnalysis.NotNullWhenAttribute;
+    </PolySharpIncludeGeneratedTypes>
+  </PropertyGroup>
 
 </Project>
