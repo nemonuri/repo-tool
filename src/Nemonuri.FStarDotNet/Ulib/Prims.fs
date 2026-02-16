@@ -80,11 +80,13 @@ module Prims =
     [<AttributeUsage(AttributeTargets.All)>]
     type do_not_unrefine() = inherit attribute()
 
-    type Type0 = System.Type
+    type Type = System.Type
+    type Type0 = System.ValueType
 
     (** A predicate to express when a type supports decidable equality
         The type-checker emits axioms for [hasEq] for each inductive type *)
-    type hasEq<'Type> = 'Type -> Type0 
+    let hasEq  
+    //type hasEq<'Type> = 'Type 
 
     [<MeasureAnnotatedAbbreviation>]
     type Type0<'p> = Type0
