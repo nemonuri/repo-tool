@@ -2,6 +2,7 @@ using CommunityToolkit.Diagnostics;
 
 namespace Nemonuri.FStarDotNet.Primitives;
 
+#if false
 public interface IFunction<in T1, out T2>
 {
     T2 Invoke(T1 t);
@@ -19,11 +20,13 @@ public class DotNetFunction<T1, T2> : IFunction<T1, T2>
 
     public T2 Invoke(T1 t) => _func.Invoke(t);
 }
+#endif
 
 public interface IFStarTypedValue<T>
 {
     T Value {get;}
 }
+
 
 public readonly struct DefaultFStarTypedValue<T> : IFStarTypedValue<T>
 {
@@ -50,7 +53,16 @@ public static class FStarKindTheory
 {
     public static DefaultFStarKind<EmptyTypeList> Empty => default;
 
-    public static DefaultFStarKind<TypeList<THead, TTail>> Cons<THead, TTail>(IFStarKind<TTail> kind) 
-        where TTail : unmanaged, ITypeList =>
-        default;        
+    public static DefaultFStarKind<TTypeList> Create<TTypeList>(TTypeList tl) 
+        where TTypeList : unmanaged, ITypeList
+        => new();
+
+    public readonly struct ConsPremise<THead>
+    {
+        public DefaultFStarKind<TypeList<THead, TTailTypeList>> Invoke<TTailTypeList>(IFStarKind<TTailTypeList> kind) 
+            where TTailTypeList : unmanaged, ITypeList
+        {
+            return Create(new TypeListTheory.ConsPremise<THead>().Invoke(kind.Value));
+        }
+    }
 }

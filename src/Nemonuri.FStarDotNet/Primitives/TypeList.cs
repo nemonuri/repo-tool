@@ -7,9 +7,10 @@ public interface ITypeList
 {
     Type? GetHead();
 
-    Type? GetTail();
+    ITypeList? GetTail();
 }
 
+/*
 internal readonly struct TypeList : ITypeList
 {
     private readonly Type? _first;
@@ -30,8 +31,10 @@ internal readonly struct TypeList : ITypeList
 
     public static TypeList Create<THead>() => new(typeof(THead), null);
 }
+*/
 
 public readonly struct TypeList<THead, TTail> : ITypeList
+    where TTail : unmanaged, ITypeList
 {
     //private readonly static TypeList s_typePair = TypeList.Create<THead, TTail>();
 
@@ -41,7 +44,7 @@ public readonly struct TypeList<THead, TTail> : ITypeList
 
     public Type? GetHead() => typeof(THead);
 
-    public Type? GetTail() => typeof(TTail);
+    public ITypeList? GetTail() => (typeof(TTail) == typeof(EmptyTypeList)) ? null : new TTail();
 }
 
 /*
@@ -59,11 +62,12 @@ public readonly struct EmptyTypeList : ITypeList
 {
     public Type? GetHead() => null;
 
-    public Type? GetTail() => null;
+    public ITypeList? GetTail() => null;
 }
 
 public static class TypeListTheory
 {
+/*
     public static bool TryGetTypeList(Type? type, [NotNullWhen(true)] out ITypeList? typeList)
     {
         if 
@@ -78,32 +82,31 @@ public static class TypeListTheory
 
         return typeList is not null;
     }
+*/
 
-    public static bool Contains<T>(ITypeList typeList) => Contains(typeList, typeof(T));
+    public static bool Contains<T>(ITypeList? typeList) => Contains(typeList, typeof(T));
 
-    public static bool Contains(ITypeList typeList, Type t)
+    public static bool Contains(ITypeList? typeList, Type? t)
     {
-        Guard.IsNotNull(typeList);
-        Guard.IsNotNull(t);
-        if (t == typeList.GetHead()) { return true; }
+        if (typeList is null || t is null) {return false;}
+        if (t.Equals(typeList.GetHead())) { return true; }
 
-        var tail = typeList.GetTail();
-        if (TryGetTypeList(typeList.GetTail(), out var tailAsTypePair))
-        {
-            return Contains(tailAsTypePair, t);
-        }
-
-        return t == tail;
+        return Contains(typeList.GetTail(), t);
     }
 
-    public static bool IsSingleton(ITypeList typeList)
+    public static bool IsSingleton(ITypeList? typeList)
     {
-        Guard.IsNotNull(typeList);
-        return typeList.GetHead() is not null && typeList.GetTail() is null;
+        return 
+            typeList is not null           &&
+            typeList.GetHead() is not null && 
+            typeList.GetTail() is null;
     }
 
-    public static EmptyTypeList Empty => default;
+    public static EmptyTypeList Empty => new();
 
-    public static TypeList
+    public readonly struct ConsPremise<THead>
+    {
+        public TypeList<THead, TTail> Invoke<TTail>(TTail tail) where TTail : unmanaged, ITypeList => new();
+    }
 }
 
