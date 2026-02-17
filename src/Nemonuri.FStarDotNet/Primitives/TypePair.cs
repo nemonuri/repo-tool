@@ -1,106 +1,86 @@
+using System.Diagnostics.CodeAnalysis;
+using CommunityToolkit.Diagnostics;
+
 namespace Nemonuri.FStarDotNet.Primitives;
 
-public interface ITypePair
+public interface ITypeList
 {
-    Type GetFirst();
+    Type GetHead();
 
-    Type GetSecond();
+    Type GetTail();
 }
 
-public readonly struct TypePair<T1, T2> : ITypePair
-{
-    private readonly static TypePair s_typePair = TypePair.Create<T1, T2>();
-
-    Type ITypePair.GetFirst() => s_typePair.GetFirst();
-
-    Type ITypePair.GetSecond() => s_typePair.GetSecond();
-}
-
-public readonly struct TypePair : ITypePair
+public readonly struct TypePair : ITypeList
 {
     private readonly Type? _first;
 
     private readonly Type? _second;
 
-    private static Type Return(Type? type) => type ?? TypeConstants.ValueUnit;
-
-    private static void ThrowIfVoid(Type? type)
-    {
-        if (type == null) {return;}
-        if (type == TypeConstants.Void)
-        {
-            throw new NotSupportedException();
-        }
-    }
 
     public TypePair(Type? first, Type? second)
     {
-        ThrowIfVoid(first);
-        ThrowIfVoid(second);
         _first = first;
         _second = second;
     }
 
-    public Type GetFirst() => Return(_first);
-    public Type GetSecond() => Return(_second);
+    public Type GetHead() => TypePairTheory.ReturnVoidIfNull(_first);
+    public Type GetTail() => TypePairTheory.ReturnVoidIfNull(_second);
 
     public static TypePair Create<T1, T2>() => new(typeof(T1), typeof(T2));
+
+    public static TypePair Create<T1>() => new(typeof(T1), TypeConstants.Void);
+}
+
+public readonly struct TypePair<T1, T2> : ITypeList
+{
+    private readonly static TypePair s_typePair = TypePair.Create<T1, T2>();
+
+    Type ITypeList.GetHead() => s_typePair.GetHead();
+
+    Type ITypeList.GetTail() => s_typePair.GetTail();
+}
+
+public readonly struct TypePair<T1> : ITypeList
+{
+    private readonly static TypePair s_typePair = TypePair.Create<T1>();
+
+    Type ITypeList.GetHead() => s_typePair.GetHead();
+
+    Type ITypeList.GetTail() => s_typePair.GetTail();
 }
 
 public static class TypePairTheory
 {
-    internal static Type GetFirst(Type type)
+    internal static Type ReturnVoidIfNull(Type? type) => type ?? TypeConstants.Void;
+
+    public static bool TryGetTypePair(Type type, [NotNullWhen(true)] out ITypeList? typePair)
     {
-        if 
-        (
-            type.IsValueType &&
-            Activator.CreateInstance(type) is ITypePair typePair
-        )
+        Guard.IsNotNull(type);
+        if (type != TypeConstants.Void && type.IsValueType && Activator.CreateInstance(type) is ITypeList v)
+            { typePair = v; }
+        else
+            { typePair = null; }
+        return typePair is not null;
+    }
+
+    public static Type GetFirstOrVoid(Type type) => TryGetTypePair(type, out var typePair) ? typePair.GetHead() : TypeConstants.Void;
+
+    public static Type GetSecondOrVoid(Type type) => TryGetTypePair(type, out var typePair) ? typePair.GetTail() : TypeConstants.Void;
+
+    public static bool Contains(ITypeList typePair, Type t)
+    {
+        Guard.IsNotNull(typePair);
+        Guard.IsNotNull(t);
+        if (t == TypeConstants.Void) { return false; }
+        if (typePair.GetHead() == t) { return true; }
+
+        var tail = typePair.GetTail();
+        if (!TryGetTypePair(typePair.GetTail(), out var tailAsTypePair))
         {
-            return typePair.GetFirst();
+            return tail == TypeConstants.Void;
         }
-        
-        return TypeConstants.ValueUnit;
-    }
 
-    public static bool IsTypePair(Type type)
-    {
-        return 
-            type.IsGenericType &&
-            (type.GetGenericTypeDefinition() == typeof(TypePair<,>));
-    }
-
-    public static bool IsTypePair<T>() => Per<T>.IsTypePair;
-
-    public static void GuardIsTypePair(Type type)
-    {
-        CommunityToolkit.Diagnostics.Guard.IsTrue(IsTypePair(type));
-    }
-
-    public static Type GetFirstElement(Type typePair)
-    {
-        GuardIsTypePair(typePair);
-        return typePair.GetGenericArguments()[0];
-    }
-
-    public static Type GetSecondElement(Type typePair)
-    {
-        GuardIsTypePair(typePair);
-        return typePair.GetGenericArguments()[1];
-    }
-
-    public static bool Contains(Type typePair, Type t)
-    {
-        GuardIsTypePair(typePair);
-        if (GetFirstElement(typePair).IsAssignableFrom(t))
-        {
-            return true;
-        }
-        var tail = 
-    }
-
-    private static class Per<T>
-    {
-        public static bool IsTypePair {get;} = IsTypePair(typeof(T));
+        return Contains(tailAsTypePair, t);
     }
 }
+
