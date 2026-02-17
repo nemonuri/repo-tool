@@ -104,9 +104,11 @@ public static class TypeListTheory
 
     public static EmptyTypeList Empty => new();
 
-    public readonly struct ConsPremise<THead>
+    public static HeadPremise<THead> IntroduceHead<THead>() => new();
+
+    public readonly struct HeadPremise<THead>
     {
-        public TypeList<THead, TTail> Invoke<TTail>(TTail tail) where TTail : unmanaged, ITypeList => new();
+        public TypeList<THead, TTail> Cons<TTail>(TTail tail) where TTail : unmanaged, ITypeList => new();
     }
 }
 
