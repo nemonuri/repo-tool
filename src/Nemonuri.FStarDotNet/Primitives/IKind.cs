@@ -20,16 +20,37 @@ public class DotNetFunction<T1, T2> : IFunction<T1, T2>
     public T2 Invoke(T1 t) => _func.Invoke(t);
 }
 
-public interface IFStarType<T>
+public interface IFStarTypedValue<T>
 {
-    T ReturnAs();
+    T Value {get;}
 }
 
-public interface IFStarKind<T2> : IFStarType<IFunction<T1, T2>>
+public readonly struct DefaultFStarTypedValue<T> : IFStarTypedValue<T>
 {
-/**
-- Second or higher order logic
-*/
-    
+    public T Value {get;}
+
+    public DefaultFStarTypedValue(T value)
+    {
+        Value = value;
+    }
 }
 
+public interface IFStarKind<TType> : IFStarTypedValue<TType>
+    where TType : unmanaged, ITypeList
+{
+}
+
+public readonly struct DefaultFStarKind<TType> : IFStarKind<TType>
+    where TType : unmanaged, ITypeList
+{
+    public TType Value => new();
+}
+
+public static class FStarKindTheory
+{
+    public static DefaultFStarKind<EmptyTypeList> Empty => default;
+
+    public static DefaultFStarKind<TypeList<THead, TTail>> Cons<THead, TTail>(IFStarKind<TTail> kind) 
+        where TTail : unmanaged, ITypeList =>
+        default;        
+}
