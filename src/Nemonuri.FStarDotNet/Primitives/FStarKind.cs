@@ -2,20 +2,22 @@
 namespace Nemonuri.FStarDotNet.Primitives;
 
 
-public interface IFStarKind : IFStarValue
+public interface IFStarKind
 {
-    IFStarValue? GetHead();
-
-    IFStarKind? GetTail();
+    
 }
 
-public readonly struct EmptyFStarKind : IFStarKind
+public interface IFStarKind<THead, TTail, TFStarType> : IFStarKind
+    where THead : IFStarValue?
+    where TFStarType : IFStarType
 {
-    public IFStarValue? GetHead() => null;
+    
+}
 
-    public IFStarKind? GetTail() => null;
+public readonly struct UnitFStarKind<TType> : IFStarKind<IFStarValue?, TType>
+    where TType : IFStarType?
+{
 
-    object? IFStarValue.Value => null;
 }
 
 public readonly struct FStarKindFunction<THead, TTail> : IFStarKind

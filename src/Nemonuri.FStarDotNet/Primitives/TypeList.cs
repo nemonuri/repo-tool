@@ -65,6 +65,20 @@ public readonly struct EmptyTypeList : ITypeList
     public ITypeList? GetTail() => null;
 }
 
+public readonly struct InefficientSingletonOrEmptyTypeList : ITypeList
+{
+    private readonly Type? _type;
+
+    public InefficientSingletonOrEmptyTypeList(Type? type)
+    {
+        _type = type;
+    }
+
+    public Type? GetHead() => _type;
+
+    public ITypeList? GetTail() => null;
+}
+
 public static class TypeListTheory
 {
 /*
@@ -104,11 +118,32 @@ public static class TypeListTheory
 
     public static EmptyTypeList Empty => new();
 
+    public static TypeList<THead, EmptyTypeList> CreateSingleton<THead>() => new();
+
+    public static ITypeList CreateSingletonOrEmpty(Type? type)
+    {
+        if (type is null) { return Empty; }
+        if (type == typeof(void)) { return Empty; }
+        return new InefficientSingletonOrEmptyTypeList(type);
+    }
+
     public static HeadPremise<THead> IntroduceHead<THead>() => new();
 
     public readonly struct HeadPremise<THead>
     {
         public TypeList<THead, TTail> Cons<TTail>(TTail tail) where TTail : unmanaged, ITypeList => new();
+    }
+
+    public static bool TrySpecialize<T>(ITypeList? typeList, out TypeList<T, EmptyTypeList> specialized)
+    {
+        if (Contains<T>(typeList))
+        {
+            specialized = new(); return true;
+        }
+        else
+        {
+            specialized = default; return false;
+        }
     }
 }
 
