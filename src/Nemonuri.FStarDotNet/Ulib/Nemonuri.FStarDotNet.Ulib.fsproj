@@ -5,12 +5,11 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\Primitives\Nemonuri.FStarDotNet.Primitives.csproj" />
-    <PackageReference Include="System.Runtime.CompilerServices.Unsafe" />
+    <PackageReference Include="TypeEquality" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Pervasive.fs" />
-    <Compile Include="RuntimeTheory.fs" />
-    <Compile Include="Internal.fs" />
+    <Compile Include="TypeListAliases.fs" />
     <Compile Include="Prims.fs" />
   </ItemGroup>
 </Project>

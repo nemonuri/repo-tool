@@ -30,6 +30,43 @@ public readonly struct FStarValue<T> : IFStarValue<T>
 #endregion FStarValue
 
 
+#region FStarEquatableValue
+
+public interface IFStarEquatableValue : IFStarValue
+{
+    IEqualityComparer GetEqualityComparer();
+}
+
+public interface IFStarEquatableValue<T, TEqualityComparer> : IFStarEquatableValue, IFStarValue<T>
+    where TEqualityComparer : IEqualityComparer
+{
+    new TEqualityComparer GetEqualityComparer();
+}
+
+public readonly struct FStarEquatableValue<T, TEqualityComparer> : IFStarEquatableValue<T, TEqualityComparer>
+    where TEqualityComparer : IEqualityComparer
+{
+    public T Value {get;}
+
+    private readonly TEqualityComparer _equalityComparer;
+
+    public FStarEquatableValue(T value, TEqualityComparer equalityComparer)
+    {
+        Value = value;
+        _equalityComparer = equalityComparer;
+    }
+
+    public TEqualityComparer GetEqualityComparer() => _equalityComparer;
+
+    IEqualityComparer IFStarEquatableValue.GetEqualityComparer() => GetEqualityComparer();
+
+
+    object? IFStarValue.Value => Value;
+}
+
+#endregion FStarEquatableType
+
+
 #region FStarType
 
 /**
@@ -64,21 +101,21 @@ public interface IFStarEquatableType : IFStarType
 {
     System.Type ToDotNetType();
 
-    IEqualityComparer GetEqualityComparer();
+    IEqualityComparer GetValueEqualityComparer();
 
-    IFStarValue? CreateFStarValue(object? value);
+    IFStarValue? CreateValue(object? value);
 }
 
 public interface IFStarEquatableType<TDotNetType, TEqualityComparer, TFStarValue> : IFStarEquatableType
     where TEqualityComparer : IEqualityComparer
     where TFStarValue : IFStarValue<TDotNetType>
 {
-    new TEqualityComparer GetEqualityComparer();
+    new TEqualityComparer GetValueEqualityComparer();
 
-    TFStarValue CreateFStarValue(TDotNetType value);
+    TFStarValue CreateValue(TDotNetType value);
 }
 
-public readonly struct FStarEquatableType<TDotNetType, TEqualityComparer> : IFStarEquatableType<TDotNetType, TEqualityComparer, FStarValue<TDotNetType>>
+public readonly struct FStarEquatableType<TDotNetType, TEqualityComparer> : IFStarEquatableType<TDotNetType, TEqualityComparer, FStarEquatableValue<TDotNetType, TEqualityComparer>>
     where TEqualityComparer : IEqualityComparer
 {
     private readonly TEqualityComparer _equalityComparer;
@@ -88,15 +125,15 @@ public readonly struct FStarEquatableType<TDotNetType, TEqualityComparer> : IFSt
         _equalityComparer = equalityComparer;
     }
 
-    public TEqualityComparer GetEqualityComparer() => _equalityComparer;
+    public TEqualityComparer GetValueEqualityComparer() => _equalityComparer;
 
-    public FStarValue<TDotNetType> CreateFStarValue(TDotNetType value) => new(value);
+    public FStarEquatableValue<TDotNetType, TEqualityComparer> CreateValue(TDotNetType value) => new(value, GetValueEqualityComparer());
 
     public Type ToDotNetType() => typeof(TDotNetType);
 
-    IEqualityComparer IFStarEquatableType.GetEqualityComparer() => GetEqualityComparer();
+    IEqualityComparer IFStarEquatableType.GetValueEqualityComparer() => GetValueEqualityComparer();
 
-    IFStarValue? IFStarEquatableType.CreateFStarValue(object? value) => value is TDotNetType v ? CreateFStarValue(v) : null;
+    IFStarValue? IFStarEquatableType.CreateValue(object? value) => value is TDotNetType v ? CreateValue(v) : null;
 
     ITypeList IFStarValue<ITypeList>.Value => new TypeList<TDotNetType, EmptyTypeList>();
 
@@ -104,6 +141,8 @@ public readonly struct FStarEquatableType<TDotNetType, TEqualityComparer> : IFSt
 }
 
 #endregion FStarEquatableType
+
+
 
 
 public static class FStarTypeTheory

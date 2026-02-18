@@ -45,7 +45,7 @@ public readonly struct EmptyFStarKindSpecializer : IFStarFunction<IFStarValue?, 
     object? IFStarValue.Value => ((IFStarValue<Func<IFStarValue?, IFStarValue?>>)this).Value;
 }
 
-public readonly struct SolvedFStarKind<TType> : IFStarKind<FStarUnit?, EmptyFStarKindSpecializer>
+public readonly struct SolvedFStarKind<TType> : IFStarKind<IFStarValue?, EmptyFStarKindSpecializer>
     where TType : unmanaged, IFStarType
 {
     public bool TryGetSpecializer([NotNullWhen(true)] out EmptyFStarKindSpecializer specializer)

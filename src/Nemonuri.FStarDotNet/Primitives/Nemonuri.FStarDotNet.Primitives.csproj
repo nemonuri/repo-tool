@@ -11,6 +11,7 @@
   <ItemGroup>
     <PackageReference Include="PolySharp" PrivateAssets="all" />
     <PackageReference Include="CommunityToolkit.Diagnostics" />
+    <PackageReference Include="FSharp.Core" />
   </ItemGroup>
   
   <PropertyGroup>

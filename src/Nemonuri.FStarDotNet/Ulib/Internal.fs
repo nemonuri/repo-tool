@@ -2,6 +2,7 @@
 
 namespace Nemonuri.FStarDotNet
 
+#if false
 module internal Internal =
 
     type has_type<'a, 'Type>() =
@@ -14,3 +15,4 @@ module internal Internal =
             | false -> typeof<FStarBool.False>
         
         static member Singleton = has_type<'a, 'Type>()
+#endif

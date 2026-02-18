@@ -1,17 +1,16 @@
+
 namespace Nemonuri.FStarDotNet.Primitives;
 
-public class FStarUnit : IFStarValue, IFStarType, IComparable
+public readonly struct FStarProposition<TFullFStarType> : IFStarUnit, IFStarType, IComparable
 {
-    public static FStarUnit Shared {get;} = new();
+    public Microsoft.FSharp.Core.Unit? Value => null;
 
-    public FStarUnit() {}
-
-    public object? Value => null;
+    object? IFStarValue.Value => Value;
 
     /// <summary>
     /// Get non-erased F* type.
     /// </summary>
-    public virtual IFStarType ToFullFStarType() => FStarTypeTheory.Empty;
+    public IFStarType ToFullFStarType() => FStarTypeTheory.CreateSingleton<TFullFStarType>();
 
     ITypeList IFStarValue<ITypeList>.Value => ToFullFStarType().Value;
 
@@ -23,14 +22,10 @@ public class FStarUnit : IFStarValue, IFStarType, IComparable
     public override bool Equals(object? obj) => obj switch
     {
         null => true,
-        FStarUnit => true,
+        Microsoft.FSharp.Core.Unit => true,
+        IFStarUnit => true,
         _ => false
     };
 
     public int CompareTo(object? obj) => 0;
-}
-
-public class FStarProposition<T> : FStarUnit
-{
-    public override IFStarType ToFullFStarType() => FStarTypeTheory.CreateSingleton<T>();
 }

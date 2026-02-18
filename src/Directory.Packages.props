@@ -42,5 +42,6 @@
     <PackageVersion Include="Microsoft.Bcl.Memory" Version="10.0.2" />
     <PackageVersion Include="System.Runtime.CompilerServices.Unsafe" Version="6.1.2" />
     <PackageVersion Include="Microsoft.Extensions.ObjectPool" Version="10.0.2" />
+    <PackageVersion Include="TypeEquality" Version="0.4.2" />
   </ItemGroup>
 </Project>

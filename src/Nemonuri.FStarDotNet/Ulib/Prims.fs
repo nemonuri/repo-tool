@@ -36,6 +36,10 @@ namespace Nemonuri.FStarDotNet
 module Prims =
 
     open System
+    open Nemonuri.FStarDotNet.Primitives
+    open Microsoft.FSharp.Quotations
+    module T = InternalTheory
+    module A = TypeListAliases
 
     (***** Begin trusted primitives *****)
 
@@ -80,32 +84,33 @@ module Prims =
     [<AttributeUsage(AttributeTargets.All)>]
     type do_not_unrefine() = inherit attribute()
 
-    type Type = System.Type
-    type Type0 = System.ValueType
+    type Type = IFStarType
+    type Type0 = IFStarValue
 
     (** A predicate to express when a type supports decidable equality
         The type-checker emits axioms for [hasEq] for each inductive type *)
-    let hasEq  
-    //type hasEq<'Type> = 'Type 
-
-    [<MeasureAnnotatedAbbreviation>]
-    type Type0<'p> = Type0
+    let hasEq (ty: Type) =
+        let inline hasEq' (ty: Type) =
+            match ty with
+            | :? IFStarEquatableType -> true
+            | _ -> false
+        hasEq' ty |> T.fret
 
     (** A convenient abbreviation, [eqtype] is the type of types in
         universe 0 which support decidable equality *)
-    type eqtype<'a> = Type0<hasEq<'a>>
+    type eqtype = IFStarEquatableType
 
     (** [bool] is a two element type with elements [true] and [false]. We
         assume it is primitive, for convenient interop with other
         languages, although it could easily be defined as an inductive type
         with two cases, [BTrue | BFalse] *)
-    type bool = Nemonuri.FStarDotNet.FStarBool
+    type bool = FStarBool
 
     (** [empty] is the empty inductive type. The type with no
         inhabitants represents logical falsehood. Note, [empty] is
         seldom used directly in F*. We instead use its "squashed" variant,
         [False], see below. *)
-    type empty = System.Void
+    type empty = A.Empty
 
     (** [trivial] is the singleton inductive type---it is trivially
         inhabited. Like [empty], [trivial] is seldom used. We instead use
@@ -114,7 +119,7 @@ module Prims =
 
     (** [unit]: another singleton type, with its only inhabitant written [()]
         we assume it is primitive, for convenient interop with other languages *)
-    type unit = Nemonuri.FStarDotNet.FStarUnit
+    type unit = FStarUnit
 
     (** [squash p] is a central type in F*---[squash p] is the proof
         irrelevant analog of [p] and is represented as a unit
@@ -135,8 +140,10 @@ module Prims =
         See FStar.Squash for various ways of manipulating squashed
         types. *)
     [<tac_opaque>]
-    [<MeasureAnnotatedAbbreviation>]
-    type squash<'p> = unit
+    [<Struct>]
+    type squash(p: Expr<unit -> bool>) =
+        member _.Value with get() = Refinement<unit>(p)
+
 
     (** [auto_squash] is equivalent to [squash]. However, F* will
         automatically insert `auto_squash` when simplifying terms,
@@ -149,7 +156,7 @@ module Prims =
         in rare circumstances when writing tactics to process proofs that
         have already been partially simplified by F*'s simplifier.
     *)
-    type auto_squash<'p> = squash<'p>
+    type auto_squash = squash
 
     (** The [logical] type is transitionary. It is just an abbreviation
         for [Type0], but is used to classify uses of the basic squashed
@@ -159,7 +166,7 @@ module Prims =
         The type is marked [private] to intentionally prevent user code
         from referencing this type, hopefully easing the removal of
         [logical] in the future. *)
-    type private logical = Nemonuri.FStarDotNet.logical
+    type private logical = Type0
 
     (** An attribute indicating that a symbol is an smt theory symbol and
         hence may not be used in smt patterns.  The typechecker warns if
