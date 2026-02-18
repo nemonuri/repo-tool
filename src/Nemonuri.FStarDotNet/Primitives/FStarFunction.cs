@@ -5,7 +5,7 @@ public interface IFStarFunction : IFStarValue<Func<IFStarValue?, IFStarValue?>>
     IFStarValue? Invoke(IFStarValue? source);
 }
 
-public interface IFStarFunction<TSource, TResult> : IFStarFunction
+public interface IFStarFunction<in TSource, out TResult> : IFStarFunction
     where TSource : IFStarValue?
     where TResult : IFStarValue?
 {

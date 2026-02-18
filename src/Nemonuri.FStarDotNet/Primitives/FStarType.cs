@@ -133,23 +133,40 @@ public static class FStarTypeTheory
         }
     }
 
-
-    public static DotNetTypePremise<TDotNetType> IntroduceDotNetType<TDotNetType>() => new();
-
-    public readonly struct DotNetTypePremise<TDotNetType>
+    public static bool TrySpecialize<T>(IFStarType? fstType, out FStarType<TypeList<T, EmptyTypeList>> specialized)
     {
-        public bool TrySpecialize(IFStarType? fstType, out FStarType<TypeList<TDotNetType, EmptyTypeList>> specialized)
+        if (TypeListTheory.TrySpecialize<T>(fstType?.Value, out _))
         {
-            if (TypeListTheory.TrySpecialize<TDotNetType>(fstType?.Value, out _))
-            {
-                specialized = new(); return true;
-            }
-            else
-            {
-                specialized = default; return false;
-            }
+            specialized = new(); return true;
         }
-
-        
+        else
+        {
+            specialized = default; return false;
+        }
     }
+
+
+    public static DotNetEquatablePremise<TDotNet> IntroduceDotNetEquatable<TDotNet>() where TDotNet : IEquatable<TDotNet>
+        => new();
+
+    public readonly struct DotNetEquatablePremise<TDotNet> where TDotNet : IEquatable<TDotNet>
+    {
+        public bool TrySpecialize(IFStarType? fstType, out FStarType<TypeList<TDotNet, EmptyTypeList>> specialized) => TrySpecialize<TDotNet>(fstType, out specialized);
+
+        public FStarEquatableType<TDotNet, EqualityComparer<TDotNet>> ToFStarEquatableType(FStarType<TypeList<TDotNet, EmptyTypeList>> specialized) => 
+            new(EqualityComparer<TDotNet>.Default);
+    }
+
+
+    public static DotNetStructuralEquatablePremise<TDotNet> IntroduceDotNetStructuralEquatable<TDotNet>() where TDotNet : IStructuralEquatable
+        => new();
+
+    public readonly struct DotNetStructuralEquatablePremise<TDotNet> where TDotNet : IStructuralEquatable
+    {
+        public bool TrySpecialize(IFStarType? fstType, out FStarType<TypeList<TDotNet, EmptyTypeList>> specialized) => TrySpecialize<TDotNet>(fstType, out specialized);
+
+        public FStarEquatableType<TDotNet, IEqualityComparer> ToFStarEquatableType(FStarType<TypeList<TDotNet, EmptyTypeList>> specialized) => 
+            new(StructuralComparisons.StructuralEqualityComparer);
+    }
+
 }
