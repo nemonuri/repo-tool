@@ -38,6 +38,7 @@ module Prims =
     open System
     open Nemonuri.FStarDotNet.Primitives
     open Microsoft.FSharp.Quotations
+    open FSharp.Linq.RuntimeHelpers
     module T = InternalTheory
     module A = TypeListAliases
 
@@ -98,7 +99,7 @@ module Prims =
 
     (** A convenient abbreviation, [eqtype] is the type of types in
         universe 0 which support decidable equality *)
-    type eqtype = IFStarEquatableType
+    type eqtype = IFStarEquatableValue
 
     (** [bool] is a two element type with elements [true] and [false]. We
         assume it is primitive, for convenient interop with other
@@ -110,7 +111,7 @@ module Prims =
         inhabitants represents logical falsehood. Note, [empty] is
         seldom used directly in F*. We instead use its "squashed" variant,
         [False], see below. *)
-    type empty = A.Empty
+    type empty = System.Void
 
     (** [trivial] is the singleton inductive type---it is trivially
         inhabited. Like [empty], [trivial] is seldom used. We instead use
@@ -141,8 +142,11 @@ module Prims =
         types. *)
     [<tac_opaque>]
     [<Struct>]
-    type squash(p: Expr<unit -> bool>) =
-        member _.Value with get() = Refinement<unit>(p)
+    type squash(p: Expr<Type>) =
+        member _.Value with get() = 
+            let expr' = Expr.Lambda(Var("_", typeof<unit>), Expr.Coerce(p, typeof<IFStarValue>)) |> Expr.Cast
+            Refinement<unit>(expr')
+        interface unit
 
 
     (** [auto_squash] is equivalent to [squash]. However, F* will
@@ -177,7 +181,7 @@ module Prims =
         as "True" and rendered in the ide as [True]. It is a squashed version
         of constructive truth, [trivial]. *)
     [<tac_opaque; smt_theory_symbol>]
-    type l_True = squash<trivial>
+    let l_True = squash <@ FStarTypeTheory.CreateSingleton<trivial>() :> IFStarType @> 
 
     (** [l_False] has a special bit of syntactic sugar. It is written just
         as "False" and rendered in the ide as [False]. It is a squashed version
