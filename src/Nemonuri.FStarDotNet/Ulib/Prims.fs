@@ -86,20 +86,21 @@ module Prims =
     type do_not_unrefine() = inherit attribute()
 
     type Type = IFStarType
-    type Type0 = IFStarValue
+    type Type0 = IFStarInstance
 
     (** A predicate to express when a type supports decidable equality
         The type-checker emits axioms for [hasEq] for each inductive type *)
     let hasEq (ty: Type) =
-        let inline hasEq' (ty: Type) =
+        let result =
             match ty with
             | :? IFStarEquatableType -> true
             | _ -> false
-        hasEq' ty |> T.fret
+        T.fret result
+
 
     (** A convenient abbreviation, [eqtype] is the type of types in
         universe 0 which support decidable equality *)
-    type eqtype = IFStarEquatableValue
+    type eqtype = IFStarEquatableType
 
     (** [bool] is a two element type with elements [true] and [false]. We
         assume it is primitive, for convenient interop with other
@@ -142,11 +143,9 @@ module Prims =
         types. *)
     [<tac_opaque>]
     [<Struct>]
-    type squash(p: Expr<Type>) =
-        member _.Value with get() = 
-            let expr' = Expr.Lambda(Var("_", typeof<unit>), Expr.Coerce(p, typeof<IFStarValue>)) |> Expr.Cast
-            Refinement<unit>(expr')
+    type squash<'p when 'p : unmanaged and 'p :> IFStarType and 'p : (new: Core.unit -> 'p) and 'p : struct and 'p :> System.ValueType> =
         interface unit
+        interface IFStarRefinement<'p>
 
 
     (** [auto_squash] is equivalent to [squash]. However, F* will
@@ -160,7 +159,7 @@ module Prims =
         in rare circumstances when writing tactics to process proofs that
         have already been partially simplified by F*'s simplifier.
     *)
-    type auto_squash = squash
+    type auto_squash<'p when 'p : unmanaged and 'p :> IFStarType and 'p : (new: Core.unit -> 'p) and 'p : struct and 'p :> System.ValueType> = squash<'p>
 
     (** The [logical] type is transitionary. It is just an abbreviation
         for [Type0], but is used to classify uses of the basic squashed
