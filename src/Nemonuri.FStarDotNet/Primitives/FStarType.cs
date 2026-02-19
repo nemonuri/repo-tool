@@ -2,70 +2,6 @@ using System.Collections;
 
 namespace Nemonuri.FStarDotNet.Primitives;
 
-#region FStarValue
-
-public interface IFStarValue
-{
-    object? Value {get;}
-}
-
-public interface IFStarValue<T> : IFStarValue
-{
-    new T Value {get;}
-}
-
-
-public readonly struct FStarValue<T> : IFStarValue<T>
-{
-    public T Value {get;}
-
-    public FStarValue(T value)
-    {
-        Value = value;
-    }
-
-    object? IFStarValue.Value => Value;
-}
-
-#endregion FStarValue
-
-
-#region FStarEquatableValue
-
-public interface IFStarEquatableValue : IFStarValue
-{
-    IEqualityComparer GetEqualityComparer();
-}
-
-public interface IFStarEquatableValue<T, TEqualityComparer> : IFStarEquatableValue, IFStarValue<T>
-    where TEqualityComparer : IEqualityComparer
-{
-    new TEqualityComparer GetEqualityComparer();
-}
-
-public readonly struct FStarEquatableValue<T, TEqualityComparer> : IFStarEquatableValue<T, TEqualityComparer>
-    where TEqualityComparer : IEqualityComparer
-{
-    public T Value {get;}
-
-    private readonly TEqualityComparer _equalityComparer;
-
-    public FStarEquatableValue(T value, TEqualityComparer equalityComparer)
-    {
-        Value = value;
-        _equalityComparer = equalityComparer;
-    }
-
-    public TEqualityComparer GetEqualityComparer() => _equalityComparer;
-
-    IEqualityComparer IFStarEquatableValue.GetEqualityComparer() => GetEqualityComparer();
-
-
-    object? IFStarValue.Value => Value;
-}
-
-#endregion FStarEquatableType
-
 
 #region FStarType
 
@@ -73,49 +9,108 @@ public readonly struct FStarEquatableValue<T, TEqualityComparer> : IFStarEquatab
 A F* type is union of some .NET types.
 */
 
-public interface IFStarType : IFStarValue<ITypeList>
-{}
+public interface IFStarType //: IFStarValue<ITypeList>
+{
+    ITypeList? GetDotNetTypes();
+}
 
 public interface IFStarType<TTypeList> : IFStarType
     where TTypeList : ITypeList
 {
-    new TTypeList Value {get;}
+    //new TTypeList Value {get;}
+    new TTypeList? GetDotNetTypes();
 }
 
-public readonly struct FStarType<TTypeList> : IFStarType<TTypeList>
+public readonly struct FStarType<TTypeList> : IFStarType<TTypeList>, ITypeList
     where TTypeList : unmanaged, ITypeList
 {
-    public TTypeList Value => new();
+    public TTypeList GetDotNetTypes() => new();
 
-    ITypeList IFStarValue<ITypeList>.Value => Value;
+    ITypeList? IFStarType.GetDotNetTypes() => GetDotNetTypes();
 
-    object? IFStarValue.Value => Value;
+    Type? ITypeList.GetHead() => GetDotNetTypes().GetHead();
+
+    ITypeList? ITypeList.GetTail() => GetDotNetTypes().GetTail();
+}
+
+public interface ISolvedFStarType : IFStarType
+{
+    System.Type GetSolvedDotNetType();
+}
+
+public interface ISolvedFStarType<TDotNet> : ISolvedFStarType, IFStarType<TypeList<TDotNet, EmptyTypeList>>
+{
+}
+
+public readonly struct SolvedFStarType<TDotNet> : ISolvedFStarType<TDotNet>, ITypeList
+{
+    public Type GetSolvedDotNetType() => FStarTypeTheory.GetSolvedDotNetType(this);
+
+    public TypeList<TDotNet, EmptyTypeList> GetDotNetTypes() => FStarTypeTheory.GetDotNetTypes(this);
+
+    ITypeList? IFStarType.GetDotNetTypes() => GetDotNetTypes();
+
+    Type? ITypeList.GetHead() => GetDotNetTypes().GetHead();
+
+    ITypeList? ITypeList.GetTail() => GetDotNetTypes().GetTail();
 }
 
 #endregion FStarType
 
 
+#region FStarInstance
+
+/** 
+- In PTS(Pure type system), 'instance(or value)' is subtype of 'type'
+*/
+
+public interface IFStarInstance : IFStarType, ISolvedFStarType
+{
+    object? Value {get;}
+}
+
+public interface IFStarInstance<T> : IFStarInstance, ISolvedFStarType<T>
+{
+    new T Value {get;}
+}
+
+
+public readonly struct FStarInstance<T> : IFStarInstance<T>
+{
+    public T Value {get;}
+
+    public FStarInstance(T value)
+    {
+        Value = value;
+    }
+
+    object? IFStarInstance.Value => Value;
+
+    public TypeList<T, EmptyTypeList> GetDotNetTypes() => FStarTypeTheory.GetDotNetTypes(this);
+
+    ITypeList? IFStarType.GetDotNetTypes() => GetDotNetTypes();
+
+    public Type GetSolvedDotNetType() => FStarTypeTheory.GetSolvedDotNetType(this);
+}
+
+#endregion FStarInstance
+
+
 #region FStarEquatableType
 
-public interface IFStarEquatableType : IFStarType
+
+public interface IFStarEquatableType : ISolvedFStarType
 {
-    System.Type ToDotNetType();
-
-    IEqualityComparer GetValueEqualityComparer();
-
-    IFStarValue? CreateValue(object? value);
+    IEqualityComparer GetInstanceEqualityComparer();
 }
 
-public interface IFStarEquatableType<TDotNetType, TEqualityComparer, TFStarValue> : IFStarEquatableType
+public interface IFStarEquatableType<TDotNetType, TEqualityComparer> : IFStarEquatableType, ISolvedFStarType<TDotNetType>
     where TEqualityComparer : IEqualityComparer
-    where TFStarValue : IFStarValue<TDotNetType>
 {
-    new TEqualityComparer GetValueEqualityComparer();
-
-    TFStarValue CreateValue(TDotNetType value);
+    new TEqualityComparer GetInstanceEqualityComparer();
 }
 
-public readonly struct FStarEquatableType<TDotNetType, TEqualityComparer> : IFStarEquatableType<TDotNetType, TEqualityComparer, FStarEquatableValue<TDotNetType, TEqualityComparer>>
+public readonly struct FStarEquatableType<TDotNetType, TEqualityComparer> : IFStarEquatableType<TDotNetType, TEqualityComparer>
     where TEqualityComparer : IEqualityComparer
 {
     private readonly TEqualityComparer _equalityComparer;
@@ -125,35 +120,97 @@ public readonly struct FStarEquatableType<TDotNetType, TEqualityComparer> : IFSt
         _equalityComparer = equalityComparer;
     }
 
-    public TEqualityComparer GetValueEqualityComparer() => _equalityComparer;
+    public TEqualityComparer GetInstanceEqualityComparer() => _equalityComparer;
 
-    public FStarEquatableValue<TDotNetType, TEqualityComparer> CreateValue(TDotNetType value) => new(value, GetValueEqualityComparer());
+    IEqualityComparer IFStarEquatableType.GetInstanceEqualityComparer() => GetInstanceEqualityComparer();
 
-    public Type ToDotNetType() => typeof(TDotNetType);
+    public Type GetSolvedDotNetType() => FStarTypeTheory.GetSolvedDotNetType(this);
 
-    IEqualityComparer IFStarEquatableType.GetValueEqualityComparer() => GetValueEqualityComparer();
+    public TypeList<TDotNetType, EmptyTypeList> GetDotNetTypes() => FStarTypeTheory.GetDotNetTypes(this);
 
-    IFStarValue? IFStarEquatableType.CreateValue(object? value) => value is TDotNetType v ? CreateValue(v) : null;
-
-    ITypeList IFStarValue<ITypeList>.Value => new TypeList<TDotNetType, EmptyTypeList>();
-
-    object? IFStarValue.Value => ((IFStarValue<ITypeList>)this).Value;
+    ITypeList? IFStarType.GetDotNetTypes() => GetDotNetTypes();
 }
 
 #endregion FStarEquatableType
 
 
+#region FStarEquatableInstance
+
+public interface IFStarEquatableInstance : IFStarInstance, IFStarEquatableType
+{
+}
+
+public interface IFStarEquatableInstance<T, TEqualityComparer> : IFStarEquatableInstance, IFStarInstance<T>, IFStarEquatableType<T, TEqualityComparer>
+    where TEqualityComparer : IEqualityComparer
+{
+}
+
+public readonly struct FStarEquatableInstance<T, TEqualityComparer> : IFStarEquatableInstance<T, TEqualityComparer>
+    where TEqualityComparer : IEqualityComparer
+{
+#if false
+    public T Value {get;}
+
+    private readonly TEqualityComparer _equalityComparer;
+
+    public FStarEquatableInstance(T value, TEqualityComparer equalityComparer)
+    {
+        Value = value;
+        _equalityComparer = equalityComparer;
+    }
+
+    public TEqualityComparer GetEqualityComparer() => _equalityComparer;
+
+    IEqualityComparer IFStarEquatableInstance.GetEqualityComparer() => GetEqualityComparer();
+
+
+    object? IFStarInstance.Value => Value;
+#endif
+    private readonly FStarEquatableType<T, TEqualityComparer> _fstarEquatableType;
+
+    private readonly FStarInstance<T> _fstarInstance;
+
+    public FStarEquatableInstance(T value, TEqualityComparer equalityComparer)
+    {
+        _fstarInstance = new(value);
+        _fstarEquatableType = new(equalityComparer);
+    }
+
+    public T Value => _fstarInstance.Value;
+
+    object? IFStarInstance.Value => Value;
+
+    public TEqualityComparer GetInstanceEqualityComparer() => _fstarEquatableType.GetInstanceEqualityComparer();
+
+    IEqualityComparer IFStarEquatableType.GetInstanceEqualityComparer() => GetInstanceEqualityComparer();
+
+    public Type GetSolvedDotNetType() => _fstarInstance.GetSolvedDotNetType();
+
+    public TypeList<T, EmptyTypeList> GetDotNetTypes() => _fstarInstance.GetDotNetTypes();
+
+    ITypeList? IFStarType.GetDotNetTypes() => _fstarInstance.GetDotNetTypes();
+}
+
+#endregion FStarEquatableInstance
+
 
 
 public static class FStarTypeTheory
 {
+    public static FStarInstance<T> CreateInstance<T>(ISolvedFStarType<T> solvedType, T dotNetInstance) => new(dotNetInstance);
+
+    public static System.Type GetSolvedDotNetType<T>(ISolvedFStarType<T> solvedType) => typeof(T);
+
+    public static TypeList<T, EmptyTypeList> GetDotNetTypes<T>(ISolvedFStarType<T> solvedType) => new();
+
+
     public static FStarType<EmptyTypeList> Empty => default;
 
-    public static FStarType<TTypeList> Create<TTypeList>(TTypeList tl) 
+    public static FStarType<TTypeList> CreateUnsolved<TTypeList>(TTypeList tl) 
         where TTypeList : unmanaged, ITypeList
         => new();
 
-    public static FStarType<TypeList<T, EmptyTypeList>> CreateSingleton<T>() => Create(TypeListTheory.CreateSingleton<T>());
+    public static SolvedFStarType<TDotNet> CreateSolved<TDotNet>() => new();
 
 
     public static HeadPremise<THead> IntroduceHead<THead>() => new();
@@ -167,20 +224,20 @@ public static class FStarTypeTheory
             public FStarType<TypeList<THead, TTailTypeList>> Cons<TFStarKind>(TFStarKind kind)
                 where TFStarKind : unmanaged, IFStarType<TTailTypeList>
             {
-                return Create(TypeListTheory.IntroduceHead<THead>().Cons(kind.Value));
+                return CreateUnsolved(TypeListTheory.IntroduceHead<THead>().Cons(kind.GetDotNetTypes()));
             }
         }
     }
 
-    public static bool TrySpecialize<T>(IFStarType? fstType, out FStarType<TypeList<T, EmptyTypeList>> specialized)
+    public static bool TrySolve<TDotNet>(IFStarType? fstType, out SolvedFStarType<TDotNet> solved)
     {
-        if (TypeListTheory.TrySpecialize<T>(fstType?.Value, out _))
+        if (TypeListTheory.TrySpecialize<TDotNet>(fstType?.GetDotNetTypes(), out _))
         {
-            specialized = new(); return true;
+            solved = new(); return true;
         }
         else
         {
-            specialized = default; return false;
+            solved = default; return false;
         }
     }
 
@@ -190,9 +247,9 @@ public static class FStarTypeTheory
 
     public readonly struct DotNetEquatablePremise<TDotNet> where TDotNet : IEquatable<TDotNet>
     {
-        public bool TrySpecialize(IFStarType? fstType, out FStarType<TypeList<TDotNet, EmptyTypeList>> specialized) => TrySpecialize<TDotNet>(fstType, out specialized);
+        public bool TrySolve(IFStarType? fstType, out SolvedFStarType<TDotNet> solved) => TrySolve<TDotNet>(fstType, out solved);
 
-        public FStarEquatableType<TDotNet, EqualityComparer<TDotNet>> ToFStarEquatableType(FStarType<TypeList<TDotNet, EmptyTypeList>> specialized) => 
+        public FStarEquatableType<TDotNet, EqualityComparer<TDotNet>> ToFStarEquatableType(ISolvedFStarType<TDotNet> solved) => 
             new(EqualityComparer<TDotNet>.Default);
     }
 
@@ -202,9 +259,9 @@ public static class FStarTypeTheory
 
     public readonly struct DotNetStructuralEquatablePremise<TDotNet> where TDotNet : IStructuralEquatable
     {
-        public bool TrySpecialize(IFStarType? fstType, out FStarType<TypeList<TDotNet, EmptyTypeList>> specialized) => TrySpecialize<TDotNet>(fstType, out specialized);
+        public bool TrySolve(IFStarType? fstType, out SolvedFStarType<TDotNet> solved) => TrySolve<TDotNet>(fstType, out solved);
 
-        public FStarEquatableType<TDotNet, IEqualityComparer> ToFStarEquatableType(FStarType<TypeList<TDotNet, EmptyTypeList>> specialized) => 
+        public FStarEquatableType<TDotNet, IEqualityComparer> ToFStarEquatableType(ISolvedFStarType<TDotNet> solved) => 
             new(StructuralComparisons.StructuralEqualityComparer);
     }
 
