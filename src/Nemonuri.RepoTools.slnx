@@ -13,6 +13,7 @@
   </Folder>
   <Folder Name="/Nemonuri.OCamlDotNet/">
     <Project Path="Nemonuri.OCamlDotNet/Core/Nemonuri.OCamlDotNet.Core.fsproj" />
+    <Project Path="Nemonuri.OCamlDotNet/Stdlib/Nemonuri.OCamlDotNet.Stdlib.fsproj" />
     <Project Path="Nemonuri.OCamlDotNet/Primitives/Nemonuri.OCamlDotNet.Primitives.csproj" />
     <Project Path="Nemonuri.OCamlDotNet/Xunit/Nemonuri.OCamlDotNet.Xunit.csproj" />
     <Project Path="Nemonuri.OCamlDotNet/Zarith/Nemonuri.OCamlDotNet.Zarith.fsproj" />
