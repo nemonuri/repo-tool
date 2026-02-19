@@ -9,6 +9,11 @@ public interface IFStarFunction : IFStarInstance<Func<IFStarType?, IFStarType?>>
     IFStarType? Invoke(IFStarType? source);
 }
 
+public interface IFStarFunctionInvocation<TFunc, TAux> : IFStarType
+    where TFunc : IFStarFunction
+{
+}
+
 public interface IFStarFunction<in TSource, out TResult> : IFStarFunction
     where TSource : IFStarType?
     where TResult : IFStarType?

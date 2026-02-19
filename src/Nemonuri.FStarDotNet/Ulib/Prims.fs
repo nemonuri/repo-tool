@@ -36,11 +36,14 @@ namespace Nemonuri.FStarDotNet
 module Prims =
 
     open System
+    open TypeEquality
     open Nemonuri.FStarDotNet.Primitives
-    open Microsoft.FSharp.Quotations
-    open FSharp.Linq.RuntimeHelpers
+    open Nemonuri.FStarDotNet.Primitives.Abbreviations
+    open System.Collections.Generic
     module T = InternalTheory
     module A = TypeListAliases
+    module Ev = EmptyValues
+    type private Tt = Nemonuri.FStarDotNet.Primitives.FStarTypeTheory
 
     (***** Begin trusted primitives *****)
 
@@ -112,12 +115,18 @@ module Prims =
         inhabitants represents logical falsehood. Note, [empty] is
         seldom used directly in F*. We instead use its "squashed" variant,
         [False], see below. *)
-    type empty = System.Void
+    [<Interface>]
+    type empty = 
+        inherit Type
 
     (** [trivial] is the singleton inductive type---it is trivially
         inhabited. Like [empty], [trivial] is seldom used. We instead use
         its "squashed" variants, [True] *)
-    type trivial = | T
+    type trivial = | T 
+        with
+            interface Type with
+                member this.GetDotNetTypes () = Ev.typeList
+        end
 
     (** [unit]: another singleton type, with its only inhabitant written [()]
         we assume it is primitive, for convenient interop with other languages *)
@@ -143,7 +152,7 @@ module Prims =
         types. *)
     [<tac_opaque>]
     [<Struct>]
-    type squash<'p when 'p : unmanaged and 'p :> IFStarType and 'p : (new: Core.unit -> 'p) and 'p : struct and 'p :> System.ValueType> =
+    type squash<'p when 'p :> IFStarType> =
         interface unit
         interface IFStarRefinement<'p>
 
@@ -159,7 +168,7 @@ module Prims =
         in rare circumstances when writing tactics to process proofs that
         have already been partially simplified by F*'s simplifier.
     *)
-    type auto_squash<'p when 'p : unmanaged and 'p :> IFStarType and 'p : (new: Core.unit -> 'p) and 'p : struct and 'p :> System.ValueType> = squash<'p>
+    type auto_squash<'p when 'p :> IFStarType> = squash<'p>
 
     (** The [logical] type is transitionary. It is just an abbreviation
         for [Type0], but is used to classify uses of the basic squashed
@@ -180,7 +189,7 @@ module Prims =
         as "True" and rendered in the ide as [True]. It is a squashed version
         of constructive truth, [trivial]. *)
     [<tac_opaque; smt_theory_symbol>]
-    let l_True = squash <@ FStarTypeTheory.CreateSingleton<trivial>() :> IFStarType @> 
+    type l_True = squash<trivial>
 
     (** [l_False] has a special bit of syntactic sugar. It is written just
         as "False" and rendered in the ide as [False]. It is a squashed version
@@ -192,13 +201,11 @@ module Prims =
         type with a single constructor for reflexivity.  As with the other
         connectives, we often work instead with the squashed version of
         equality, below. *)
-    [<MeasureAnnotatedAbbreviation>]
-    [<RequireQualifiedAccess>]
-    type equals<'a, 'x, '_0 when 'x :> elem<'a> and '_0 :> elem<'a>> = | _0_Refl
-
-    let (|Refl|) (e: equals<'a, 'x, 'x>) = e
+    type equals<'a, 'x, '_0 when 'x :> inst<'a> and '_0 :> inst<'a>> = | Refl of Teq<'x, '_0>
+        with
+            interface unit
+        end
     
-
     (** [eq2] is the squashed version of [equals]. It's a proof
         irrelevant, homogeneous equality in Type#0 and is written with
         an infix binary [==].
@@ -207,16 +214,33 @@ module Prims =
             we should just rename eq2 to op_Equals_Equals
     *)
     [<tac_opaque; smt_theory_symbol>]
-    type eq2<[<unrefine>] 'a, 'x, 'y when 'x :> elem<'a> and 'y :> elem<'a>> = squash<equals<'a, 'x, 'y>>
+    type eq2<[<unrefine>] 'a, 'x, 'y when 'x :> inst<'a> and 'y :> inst<'a>> = squash<equals<'a, 'x, 'y>>
 
     (** bool-to-type coercion: This is often automatically inserted type,
         when using a boolean in context expecting a type. But,
         occasionally, one may have to write [b2t] explicitly *)
-    type b2t<'b when 'b :> elem<bool>> = eq2<bool, 'b , bool.True>
+    [<Struct>]
+    type b2t (b: bool) =
+        member _.Value with get (): unit = 
+            match b.Value with
+            | true -> l_True()
+            | false -> l_False()
+
+        interface unit with
+            member this.Value with get () = this.Value
+            member this.GetDotNetTypes () = dnTypes this
+            member this.GetSolvedDotNetType () = sdnType this
 
 
     (** constructive conjunction *)
     type pair<'p, 'q> = | Pair of _1: 'p * _2: 'q
+        with
+            interface seqInst<pair<'p, 'q>> with
+                member this.Value with get () = this
+                member this.GetDotNetTypes () = dnTypes this
+                member this.GetSolvedDotNetType () = sdnType this
+                member this.GetInstanceEqualityComparer () = seqComparer
+        end
 
 
     (** squashed conjunction, specialized to [Type0], written with an
@@ -228,17 +252,27 @@ module Prims =
     type sum<'p,'q> =
         | Left of v: 'p
         | Right of v: 'q
+        with
+            interface seqInst<sum<'p,'q>> with
+                member this.Value with get () = this
+                member this.GetDotNetTypes () = dnTypes this
+                member this.GetSolvedDotNetType () = sdnType this
+                member this.GetInstanceEqualityComparer () = seqComparer
+        end
 
     (** squashed disjunction, specialized to [Type0], written with an
         infix binary [\/] *)
     [<tac_opaque; smt_theory_symbol>]
     type l_or<'p, 'q when 'p :> logical and 'q :> logical> = squash<sum<'p, 'q>>
 
+
+    type ``->``<'a, 'b when 'a :> Type and 'b :> Type> = IFStarFunction<'a, 'b>
+
     (** squashed (non-dependent) implication, specialized to [Type0],
         written with an infix binary [==>]. Note, [==>] binds weaker than
         [/\] and [\/] *)
     [<tac_opaque; smt_theory_symbol>]
-    type l_imp<'p, 'q when 'p :> logical and 'q :> logical> = squash<'p -> 'q>
+    type l_imp<'p, 'q when 'p :> logical and 'q :> logical> = squash<``->``<'p, 'q>>
     (* ^^^ NB: The GTot effect is primitive;            *)
     (*         elaborated using GHOST a few lines below *)
 
@@ -266,9 +300,14 @@ module Prims =
             * The subterm ordering on inductive types
             * [f x << D f] for data constructors D of an inductive t whose
                 arguments include a ghost or total function returning a t *)
-
-    [<MeasureAnnotatedAbbreviation>]
-    type precedes<'a, 'b, '_2, '_3 when '_2 :> elem<'a> and '_3 :> elem<'a>> = unit
+    [<Struct>]
+    type precedes<'a, 'b, '_2, '_3 when '_2 :> inst<'a> and '_3 :> inst<'b>> =
+        struct
+            interface unit with
+                member this.Value with get () = ()
+                member this.GetDotNetTypes () = Tt.GetDotNetTypes(this)
+                member this.GetSolvedDotNetType () = Tt.GetSolvedDotNetType(this)
+        end
 
     (** The type of primitive strings of characters; See FStar.String *)
     type string = Core.string
@@ -312,25 +351,33 @@ module Prims =
         does not internalize its own typing judgment *)
     [<deprecated "'has_type' is intended for internal use and debugging purposes only; \
                     do not rely on it for your proofs">]
-    type has_type<'a, '_1, 'Type when '_1 :> elem<'a>>() = 
-        let inner = Internal.has_type<'a, 'Type>.Singleton
-        member _.Invoke(o: '_1) = inner.Invoke(o)
+    [<Struct>]
+    type has_type<'a, '_1, 'Type when '_1 :> inst<'a>> =
+        struct
+            interface ``->``<inst<'a>, Type0> with
+                member this.Invoke (source: '_1): Type0 = 
+                    typeof<'Type>.IsAssignableFrom(source.Value.GetType()) |> T.fret |> b2t |> _.Value
+        end
 
+    /// [De Bruijn index](https://en.wikipedia.org/wiki/De_Bruijn_index)
+    [<Struct>]
+    type _0 =
+        interface Type
+
+    [<Struct>]
+    type _1 =
+        interface Type
+    
+    type app<'f, 'x when 'f :> IFStarFunction> = IFStarFunctionInvocation<'f, 'x>
 
     (** Squashed universal quantification, or dependent products, written
         [forall (x:a). p x], specialized to Type0 *)
     [<smt_theory_symbol>]
-    [<RequireQualifiedAccess>]
-    type l_Forall<'a, 'p when 'p : (member Invoke : elem<'a> -> Type0)> = 
-        | l_Forall of squash<'a -> App<'p, elem<'a>, Type0>> * 'p
-
-        member inline this.Invoke(e: elem<'a>) : Type0 = 
-            match this with 
-            | l_Forall (_0, _1) -> _1.Invoke(e)
+    type l_Forall<'a, 'p when 'p :> ``->``<inst<'a>, Type0>> = squash<``->``<inst<'a>, app<'p, _1>>>
 
     (** [p1 `subtype_of` p2] when every element of [p1] is also an element
         of [p2]. *)
-    type subtype_of<'p1, 'p2> = l_Forall<'p1, has_type<'p1, elem<'p1>, 'p2>>
+    type subtype_of<'p1, 'p2> = l_Forall<'p1, has_type<'p1, inst<'p1>, 'p2>>
 
     (** The type of squashed types.
 
@@ -342,20 +389,22 @@ module Prims =
         See https://github.com/FStarLang/FStar/issues/1048 for more
         details and the current status of the work.
         *)
-    type prop = unit
+    [<Interface>]
+    type prop =
+        inherit unit
+        inherit IFStarRefinement<subtype_of<_0, unit>>
 
     (**** The PURE effect *)
 
     (** The type of pure preconditions *)
-    type pure_pre = prop
+    type pure_pre = Type0
 
     (** Pure postconditions, predicates on [a], on which the precondition
         [pre] is also valid. This provides a way for postcondition formula
         to be typed in a context where they can assume the validity of the
         precondition. This is discussed extensively in Issue #57 *)
-    [<MeasureAnnotatedAbbreviation>]
-    type pure_post'<'a, 'pre> = prop
-    type pure_post<'a> = pure_post'<'a, l_True>
+    type pure_post'<'a, 'pre when 'pre :> Type and 'a :> Type and 'a :> IFStarRefinement<'pre>> = ``->``<'a, Type0>
+    type pure_post<'a when 'a :> Type and 'a :> IFStarRefinement<l_True>> = pure_post'<'a, l_True>
 
     (** A pure weakest precondition transforms postconditions on [a]-typed
         results to pure preconditions
@@ -364,7 +413,7 @@ module Prims =
         property over the postconditions
         To enforce it, we first define a vanilla wp type,
         and then refine it with the monotonicity condition *)
-    type pure_wp'<'a> = pure_post<'a> -> pure_pre
+    type pure_wp'<'a when 'a :> Type and 'a :> IFStarRefinement<l_True>> = ``->``<pure_post<'a>, pure_pre>
 
     (** The monotonicity predicate is marked opaque_to_smt,
         meaning that its definition is hidden from the SMT solver,

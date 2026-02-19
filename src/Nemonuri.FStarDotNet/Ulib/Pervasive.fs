@@ -9,8 +9,6 @@ namespace Nemonuri.FStarDotNet
 
     type FStarInt = IFStarInstance<bigint>
 
-    type logical = Nemonuri.FStarDotNet.Primitives.ILogical
-
     type typeFunc<'a> = Nemonuri.FStarDotNet.Primitives.IDependentTypePremise<'a>
 
     type elem<'a> = IEquatable<'a>

@@ -8,6 +8,7 @@
     <PackageReference Include="TypeEquality" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Primitives.fs" />
     <Compile Include="Pervasive.fs" />
     <Compile Include="TypeListAliases.fs" />
     <Compile Include="Prims.fs" />
