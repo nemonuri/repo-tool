@@ -64,28 +64,28 @@ module Operations =
 
         let [<Literal>] StackAllocThreshold = 256
 
-        let inline length (s: rbs) = s.Length
+        let length (s: rbs) = s.Length
 
-        let inline get (s: rbs) (n: OCamlInt) : OCamlChar = s[n]
+        let get (s: rbs) (n: OCamlInt) : OCamlChar = s[n]
 
-        let inline set (s: bs) (n: OCamlInt) (c: OCamlChar) = s[n] <- c
+        let set (s: bs) (n: OCamlInt) (c: OCamlChar) = s[n] <- c
 
-        //let inline toSource (s: rbs) = OCamlByteSequenceSources.ofArray (s.ToArray())
+        //let toSource (s: rbs) = OCamlByteSequenceSources.ofArray (s.ToArray())
 
-        let inline extend (s: rbs) left right =
+        let extend (s: rbs) left right =
             let ary = DotNetArrays.createUninitialized<OCamlChar>(left + length s + right)
             s.CopyTo(ary.AsSpan().Slice(left))
             ary
         
-        let inline fill (src: bs) pos len c = 
+        let fill (src: bs) pos len c = 
             src.Slice(pos, len).Fill(c)
         
-        let inline blit (src: rbs) src_pos (dst: bs) dst_pos len =
+        let blit (src: rbs) src_pos (dst: bs) dst_pos len =
             src.Slice(src_pos, len).CopyTo(dst.Slice(dst_pos))
         
         let inline private toPinnedSpan (s: rbs) = Nemonuri.ByteChars.UnsafePinnedSpanPointerTheory.FromPinnedSpan s
 
-        let inline concat (sep: #trbs) (sl: #seq<#trbs>) =
+        let concat (sep: #trbs) (sl: #seq<#trbs>) =
             ((bd(0), false), sl)
             ||> Seq.fold 
                     (fun (builder, looped) elem -> 
@@ -94,7 +94,7 @@ module Operations =
                         (builder, true))
             |> Core.Operators.fst |> _.DrainToArraySemgent()
         
-        let inline cat<'t1, 't2 when 't1 :> trbs and 't2 :> trbs> (s1: 't1) (s2: 't2) = 
+        let cat<'t1, 't2 when 't1 :> trbs and 't2 :> trbs> (s1: 't1) (s2: 't2) = 
             let builder = bd(2)
             builder.Append(s1.AsTemporarySpan())
             builder.Append(s2.AsTemporarySpan())
@@ -105,42 +105,42 @@ module Operations =
         [<Sealed; AbstractClass; AutoOpen>]
         type OverloadTheory =
 
-            static member inline Cat<'a when 'a :> trbs> (s1: ps) = s1 |> OCamlByteSequenceSource.PinnedPointer |> cat<_, 'a>
-            static member inline Cat<'a when 'a :> trbs> (pinned: rbs) = toPinnedSpan pinned |> Cat<'a>
-            static member inline Cat<'a when 'a :> trbs> (pinned: bs) = Cat<'a> (bsToRbs pinned)
+            static member Cat<'a when 'a :> trbs> (s1: ps) = s1 |> OCamlByteSequenceSource.PinnedPointer |> cat<_, 'a>
+            static member Cat<'a when 'a :> trbs> (pinned: rbs) = toPinnedSpan pinned |> Cat<'a>
+            static member Cat<'a when 'a :> trbs> (pinned: bs) = Cat<'a> (bsToRbs pinned)
         
-        let inline iter (f: OCamlChar -> unit) (s: rbs) = for c in s do f c
+        let iter (f: OCamlChar -> unit) (s: rbs) = for c in s do f c
 
-        let inline iteri (f: OCamlInt -> OCamlChar -> unit) (s: rbs) =
+        let iteri (f: OCamlInt -> OCamlChar -> unit) (s: rbs) =
             for i = 0 to s.Length-1 do f i (s[i])
         
-        let inline map (f: OCamlChar -> OCamlChar) (s: rbs) =
+        let map (f: OCamlChar -> OCamlChar) (s: rbs) =
             let result = DotNetArrays.createUninitialized s.Length
             for i = 0 to s.Length-1 do result[i] <- f s[i]
             result
         
-        let inline mapi (f: OCamlInt -> OCamlChar -> OCamlChar) (s: rbs) =
+        let mapi (f: OCamlInt -> OCamlChar -> OCamlChar) (s: rbs) =
             let result = DotNetArrays.createUninitialized s.Length
             for i = 0 to s.Length-1 do result[i] <- f i s[i]
             result
 
-        let inline fold_left (f: 'acc -> OCamlChar -> 'acc) (x: 'acc) (s: rbs) =
+        let fold_left (f: 'acc -> OCamlChar -> 'acc) (x: 'acc) (s: rbs) =
             let mutable result = x
             for c in s do result <- f result c
             result
         
-        let inline fold_right (f: OCamlChar -> 'acc -> 'acc) (s: rbs) (x: 'acc) =
+        let fold_right (f: OCamlChar -> 'acc -> 'acc) (s: rbs) (x: 'acc) =
             let mutable result = x
             for i = s.Length-1 downto 0 do result <- f s[i] result
             result
         
-        let inline for_all (p: OCamlChar -> bool) (s: rbs) =
+        let for_all (p: OCamlChar -> bool) (s: rbs) =
             let mutable result = true
             let mutable e = s.GetEnumerator()
             while result && e.MoveNext() do result <- p e.Current
             result
         
-        let inline exists (p: OCamlChar -> bool) (s: rbs) =
+        let exists (p: OCamlChar -> bool) (s: rbs) =
             let mutable result = false
             let mutable e = s.GetEnumerator()
             while not result && e.MoveNext() do result <- p e.Current
@@ -148,7 +148,7 @@ module Operations =
         
         let AsciiWhitespaces = ImmutableArray.Create(' 'B, '\012'B, '\n'B, '\r'B, '\t'B)
 
-        let inline trim (s: rbs) =
+        let trim (s: rbs) =
             let trimElems = AsciiWhitespaces.AsSpan()
 #if NET8_0_OR_GREATER
             s.Trim(trimElems)
