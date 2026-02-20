@@ -9,9 +9,9 @@ module String =
 
     module Unsafe =
 
-        let ofSource (source: OCamlByteSequenceSource) = Unsafe.sourceToString source
+        let internal ofSource (source: OCamlByteSequenceSource) = Unsafe.sourceToString source
 
-        let toSource (s: OCamlString) = Unsafe.sourceOfString s
+        let internal toSource (s: OCamlString) = Unsafe.sourceOfString s
 
         let ofArray (source: OCamlChar array) =
             source
@@ -34,9 +34,9 @@ module String =
 
     let get (s: OCamlString) (i: OCamlInt) : OCamlChar = Bs.get (toSpan s) i
 
-    let ofSource (source: OCamlByteSequenceSource) = Obs.clone source |> U.ofSource
+    //let ofSource (source: OCamlByteSequenceSource) = Obs.clone source |> U.ofSource
 
-    let toSource (s: OCamlString) = s |> U.toSource |> Obs.clone
+    //let toSource (s: OCamlString) = s |> U.toSource |> Obs.clone
 
 
 

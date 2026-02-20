@@ -1,6 +1,7 @@
 namespace Nemonuri.OCamlDotNet.Primitives
 
 open System
+open System.Diagnostics
 open Nemonuri.ByteChars
 open type System.MemoryExtensions
 open type Nemonuri.ByteChars.Extensions.UnsafePinnedSpanPointerExtensions
@@ -23,7 +24,8 @@ open type Nemonuri.ByteChars.Extensions.UnsafePinnedSpanPointerExtensions
     [<RequireQualifiedAccess>]
     [<Struct>]
     [<CustomEquality; CustomComparison>]
-    type OCamlByteSequenceSource =
+    [<DebuggerDisplay("DebuggerDisplay,nq")>]
+    type internal OCamlByteSequenceSource = 
     | None
     | Array of array: ArraySegment<byte>
     | ImmutableArray of immutableArray: ImmutableArraySegment<byte>
@@ -71,6 +73,8 @@ open type Nemonuri.ByteChars.Extensions.UnsafePinnedSpanPointerExtensions
 
             interface ITemporaryReadOnlySpanSource<byte> with
                 member this.AsTemporarySpan (): ReadOnlySpan<byte> = this.AsReadOnlySpan()
+                
+            override this.ToString (): System.String = ByteStringTheory.ByteStringToDotNetString(this.AsReadOnlySpan())
         end
 
     [<RequireQualifiedAccess>]

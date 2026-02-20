@@ -190,7 +190,7 @@ public static unsafe partial class ByteStringTheory
         return UnsafeCreateFixedLength(dotNetString.Length, dotNetString, &Updater);
     }
 
-    public static string ByteStringToDotNetString(ImmutableArray<byte> byteString)
+    public static string ByteStringToDotNetString(ReadOnlySpan<byte> byteString)
     {
         var sb = StringBuilderPoolTheory.Shared.Get();
         foreach (byte byteChar in byteString)

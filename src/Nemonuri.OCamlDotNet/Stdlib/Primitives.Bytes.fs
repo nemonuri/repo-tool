@@ -11,9 +11,9 @@ module Bytes =
 
     module Unsafe =
 
-        let ofSource (source: OCamlByteSequenceSource) = Unsafe.sourceToBytes source
+        let internal ofSource (source: OCamlByteSequenceSource) = Unsafe.sourceToBytes source
 
-        let toSource (s: OCamlBytes) = Unsafe.sourceOfBytes s
+        let internal toSource (s: OCamlBytes) = Unsafe.sourceOfBytes s
 
         let ofArraySegemnt (source: ArraySegment<OCamlChar>) =
             source
@@ -72,6 +72,31 @@ module Bytes =
     let concat (sep: OCamlBytes) (sl: OCamlBytes list) = ByteSpans.concat sep sl |> U.ofArraySegemnt
 
     let cat (s1: OCamlBytes) (s2: OCamlBytes) = ByteSpans.cat s1 s2 |> U.ofArraySegemnt
-        
+
+    let iter f (s: OCamlBytes) = ByteSpans.iter f (toSpan s)
+
+    let iteri f (s: OCamlBytes) = ByteSpans.iteri f (toSpan s)
+
+    let map f (s: OCamlBytes) = ByteSpans.map f (toSpan s)
+
+    let mapi f (s: OCamlBytes) = ByteSpans.mapi f (toSpan s)
     
-        
+    let fold_left f (x: 'acc) (s: OCamlBytes) = ByteSpans.fold_left f x (toSpan s)
+
+    let fold_right f (s: OCamlBytes) (x: 'acc) = ByteSpans.fold_right f (toSpan s) x
+
+    let for_all f (s: OCamlBytes) = ByteSpans.for_all f (toSpan s)
+
+    let exists  p (s: OCamlBytes) = ByteSpans.exists p (toSpan s)
+
+    let trim (s: OCamlBytes) = ByteSpans.trim (toSpan s)
+
+    let escaped (s: OCamlBytes) = ByteSpans.escaped (toSpan s)
+
+    let index (s: OCamlBytes) c = ByteSpans.checked_index (toSpan s) c
+
+    let index_opt (s: OCamlBytes) c = ByteSpans.index_opt (toSpan s) c
+
+    let rindex (s: OCamlBytes) c = ByteSpans.checked_rindex (toSpan s) c
+
+    let rindex_opt (s: OCamlBytes) c = ByteSpans.rindex_opt (toSpan s) c
