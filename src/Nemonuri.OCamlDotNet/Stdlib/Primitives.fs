@@ -8,6 +8,18 @@ open type Nemonuri.ByteChars.Extensions.UnsafePinnedSpanPointerExtensions
     type OCamlChar = Microsoft.FSharp.Core.byte
     type OCamlInt = Microsoft.FSharp.Core.int
 
+    [<Interface>]
+    type ITemporaryReadOnlySpanSource<'T> =
+        abstract member AsTemporarySpan: unit -> ReadOnlySpan<'T>
+
+#if false
+    [<Struct>]
+    type EmptyTemporaryReadOnlySpanSource<'T> =
+        member this.AsTemporarySpan() = ReadOnlySpan<'T>.Empty
+        interface ITemporaryReadOnlySpanSource<'T> with
+            member this.AsTemporarySpan (): ReadOnlySpan<'T> = this.AsTemporarySpan()
+#endif
+
     [<RequireQualifiedAccess>]
     [<Struct>]
     [<CustomEquality; CustomComparison>]
@@ -56,12 +68,19 @@ open type Nemonuri.ByteChars.Extensions.UnsafePinnedSpanPointerExtensions
                 | Array v -> ArraySegment<_>(v.Array, v.Offset + offset, length) |> Array
                 | ImmutableArray v -> ImmutableArraySegment<_>(v.Array, v.Offset + offset, length) |> ImmutableArray
                 | PinnedPointer v -> v.Slice(offset, length) |> PinnedPointer
+
+            interface ITemporaryReadOnlySpanSource<byte> with
+                member this.AsTemporarySpan (): ReadOnlySpan<byte> = this.AsReadOnlySpan()
         end
 
     [<RequireQualifiedAccess>]
     [<Struct>]
-    type OCamlBytes = internal { Source: OCamlByteSequenceSource }
+    type OCamlBytes = internal { Source: OCamlByteSequenceSource } with
+        interface ITemporaryReadOnlySpanSource<byte> with
+            member this.AsTemporarySpan () = this.Source.AsReadOnlySpan()
 
     [<RequireQualifiedAccess>]
     [<Struct>]
-    type OCamlString = internal { Source: OCamlByteSequenceSource }
+    type OCamlString = internal { Source: OCamlByteSequenceSource } with
+        interface ITemporaryReadOnlySpanSource<byte> with
+            member this.AsTemporarySpan () = this.Source.AsReadOnlySpan()

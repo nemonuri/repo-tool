@@ -1,5 +1,6 @@
 namespace Nemonuri.OCamlDotNet.Primitives
 
+open System;
 open Nemonuri.OCamlDotNet.Primitives.Operations
 open type System.MemoryExtensions
 module Obs = OCamlByteSequenceSources
@@ -13,6 +14,11 @@ module Bytes =
         let ofSource (source: OCamlByteSequenceSource) = Unsafe.sourceToBytes source
 
         let toSource (s: OCamlBytes) = Unsafe.sourceOfBytes s
+
+        let ofArraySegemnt (source: ArraySegment<OCamlChar>) =
+            source
+            |> Obs.ofArraySegemnt
+            |> ofSource
 
         let ofArray (source: OCamlChar array) =
             source
@@ -63,5 +69,9 @@ module Bytes =
         let rbs = Obs.toSpan (Unsafe.sourceOfString src)
         ByteSpans.blit rbs src_pos dst dst_pos len
     
+    let concat (sep: OCamlBytes) (sl: OCamlBytes list) = ByteSpans.concat sep sl |> U.ofArraySegemnt
+
+    let cat (s1: OCamlBytes) (s2: OCamlBytes) = ByteSpans.cat s1 s2 |> U.ofArraySegemnt
+        
     
         

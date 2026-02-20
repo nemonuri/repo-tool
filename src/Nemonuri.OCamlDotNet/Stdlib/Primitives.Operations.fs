@@ -28,10 +28,9 @@ module Operations =
 
         let empty = OCamlByteSequenceSource.None
 
-        let ofArray (source: OCamlChar array) = 
-            source
-            |> ArraySegment<_>
-            |> OCamlByteSequenceSource.Array
+        let ofArraySegemnt (source: ArraySegment<OCamlChar>) = source |> OCamlByteSequenceSource.Array
+
+        let ofArray (source: OCamlChar array) = source |> ArraySegment<_> |> ofArraySegemnt
         
         let inline toSpan (source: OCamlByteSequenceSource) = source.AsReadOnlySpan()
 
@@ -45,6 +44,7 @@ module Operations =
         type private bs = Span<OCamlChar>
         type private rbs = ReadOnlySpan<OCamlChar>
         type private ps = Nemonuri.ByteChars.UnsafePinnedSpanPointer<OCamlChar>
+        type private trbs = ITemporaryReadOnlySpanSource<OCamlChar>
         type private bd = Nemonuri.ByteChars.ArrayBuilder<OCamlChar>
 
         let inline length (s: rbs) = s.Length
@@ -66,21 +66,34 @@ module Operations =
         let inline blit (src: rbs) src_pos (dst: bs) dst_pos len =
             src.Slice(src_pos, len).CopyTo(dst.Slice(dst_pos))
         
-        let inline concat (sep: rbs) (sl: #seq<ps>) =
-            use _ = fixed sep
-            let pp = Nemonuri.ByteChars.UnsafePinnedSpanPointerTheory.FromPinnedSpan(sep)
+        let inline private toPinnedSpan (s: rbs) = Nemonuri.ByteChars.UnsafePinnedSpanPointerTheory.FromPinnedSpan s
 
+        let inline concat (sep: #trbs) (sl: #seq<#trbs>) =
             ((bd(), false), sl)
             ||> Seq.fold 
                     (fun (builder, looped) elem -> 
-                        if looped then builder.Append(pp.LoadReadOnlySpan()) else ()
-                        builder.Append(elem.LoadReadOnlySpan())
+                        if looped then builder.Append(sep.AsTemporarySpan()) else ()
+                        builder.Append(elem.AsTemporarySpan())
                         (builder, true))
             |> Core.Operators.fst |> _.DrainToArraySemgent()
         
-        let inline cat (s1: ps) (s2: ps) = concat (rbs()) (seq { s1; s2 })
+        let inline cat<'t1, 't2 when 't1 :> trbs and 't2 :> trbs> (s1: 't1) (s2: 't2) = 
+            let builder = bd()
+            builder.Append(s1.AsTemporarySpan())
+            builder.Append(s2.AsTemporarySpan())
+            builder.DrainToArraySemgent()
+
+        let inline private bsToRbs (s: bs) : rbs = s
             
-        //let inline iter 
+        [<Sealed; AbstractClass; AutoOpen>]
+        type OverloadTheory =
+
+            static member inline Cat<'a when 'a :> trbs> (s1: ps) = s1 |> OCamlByteSequenceSource.PinnedPointer |> cat<_, 'a>
+            static member inline Cat<'a when 'a :> trbs> (pinned: rbs) = toPinnedSpan pinned |> Cat<'a>
+            static member inline Cat<'a when 'a :> trbs> (pinned: bs) = Cat<'a> (bsToRbs pinned)
+            
+
+
             
         
 
