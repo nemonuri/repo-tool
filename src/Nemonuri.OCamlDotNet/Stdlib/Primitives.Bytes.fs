@@ -1,6 +1,7 @@
 namespace Nemonuri.OCamlDotNet.Primitives
 
 open Nemonuri.OCamlDotNet.Primitives.Operations
+open type System.MemoryExtensions
 module Obs = OCamlByteSequenceSources
 module Bs = ByteSpans
 
@@ -30,11 +31,7 @@ module Bytes =
     let set (s: OCamlBytes) n c = Bs.set (toSpan s) n c
 
     let create (n: OCamlInt) : OCamlBytes = 
-#if NET8_0_OR_GREATER
-        System.GC.AllocateUninitializedArray(length = n, pinned = false)
-#else
-        Array.create n 0uy 
-#endif
+        DotNetArrays.createUninitialized<OCamlChar> n
         |> U.ofArray
     
     let make (n: OCamlInt) (c: OCamlChar) = Array.create n c |> U.ofArray
@@ -49,3 +46,22 @@ module Bytes =
 
     let to_string (s: OCamlBytes) : OCamlString = U.toSource s |> Obs.clone |> Unsafe.sourceToString
 
+    let sub (s: OCamlBytes) pos len = U.toSource s |> _.Slice(pos, len) |> U.ofSource
+
+    let sub_string (s: OCamlBytes) pos len = U.toSource s |> _.Slice(pos, len) |> U.sourceToString
+
+    let extend (s: OCamlBytes) (left: OCamlInt) (right: OCamlInt) =
+        ByteSpans.extend (toSpan s) left right
+        |> U.ofArray
+    
+    let fill (s: OCamlBytes) pos len c = ByteSpans.fill (toSpan s) pos len c
+
+    let blit (src: OCamlBytes) src_pos dst dst_pos len =
+        ByteSpans.blit (toSpan src) src_pos dst dst_pos len
+
+    let blit_string (src: OCamlString) src_pos dst dst_pos len =
+        let rbs = Obs.toSpan (Unsafe.sourceOfString src)
+        ByteSpans.blit rbs src_pos dst dst_pos len
+    
+    
+        

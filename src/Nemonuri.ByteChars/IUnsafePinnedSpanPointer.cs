@@ -36,4 +36,11 @@ public static unsafe class UnsafePinnedSpanPointerTheory
     {
         return LoadReadOnlySpan(pointer.PinnedPointer, pointer.SpanLength);
     }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static UnsafePinnedSpanPointer<T> FromPinnedSpan<T>(ReadOnlySpan<T> pinnedSpan)
+         where T : unmanaged
+    {
+        return new((T*)Unsafe.AsPointer(ref MemoryMarshal.GetReference(pinnedSpan)), pinnedSpan.Length);
+    }
 }

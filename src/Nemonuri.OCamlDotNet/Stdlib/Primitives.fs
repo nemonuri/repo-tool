@@ -46,6 +46,16 @@ open type Nemonuri.ByteChars.Extensions.UnsafePinnedSpanPointerExtensions
             
             override this.GetHashCode (): int = 
                 CommunityToolkit.HighPerformance.ReadOnlySpanExtensions.GetDjb2HashCode(this.AsReadOnlySpan())
+
+            member this.Length with get() = this.AsReadOnlySpan().Length
+
+            member this.Slice (offset: int, length: int) : OCamlByteSequenceSource =
+                Nemonuri.ByteChars.Diagnostics.Guard.GuardSliceArgumentsAreInValidRange(this.Length, offset, length)
+                match this with
+                | None -> None
+                | Array v -> ArraySegment<_>(v.Array, v.Offset + offset, length) |> Array
+                | ImmutableArray v -> ImmutableArraySegment<_>(v.Array, v.Offset + offset, length) |> ImmutableArray
+                | PinnedPointer v -> v.Slice(offset, length) |> PinnedPointer
         end
 
     [<RequireQualifiedAccess>]

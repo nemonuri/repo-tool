@@ -3,7 +3,7 @@
     <TargetFrameworks>netstandard2.0;netstandard2.1;net8.0;net10.0</TargetFrameworks>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <!-- Type-directed conversion by an op_Implicit conversion at non-method-argument. -->
-    <NoWarn>$(NoWarn);FS3391</NoWarn>
+    <NoWarn>$(NoWarn);FS0009;FS3391</NoWarn>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Primitives.fs" />

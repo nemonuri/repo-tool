@@ -115,8 +115,10 @@ public readonly struct ImmutableArraySegment<T> : IReadOnlyList<T>
 }
 
 #if !NETSTANDARD2_1_OR_GREATER
+#pragma warning disable CS0649
 internal struct ImmutableArrayLikeLayout<T>
 {
     internal readonly T[]? array;
 }
+#pragma warning restore CS0649
 #endif
