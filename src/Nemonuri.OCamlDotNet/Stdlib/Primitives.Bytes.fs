@@ -77,9 +77,9 @@ module Bytes =
 
     let iteri f (s: OCamlBytes) = ByteSpans.iteri f (toSpan s)
 
-    let map f (s: OCamlBytes) = ByteSpans.map f (toSpan s)
+    let map f (s: OCamlBytes) = ByteSpans.map f (toSpan s) |> U.ofArray
 
-    let mapi f (s: OCamlBytes) = ByteSpans.mapi f (toSpan s)
+    let mapi f (s: OCamlBytes) = ByteSpans.mapi f (toSpan s) |> U.ofArray
     
     let fold_left f (x: 'acc) (s: OCamlBytes) = ByteSpans.fold_left f x (toSpan s)
 
@@ -89,9 +89,9 @@ module Bytes =
 
     let exists  p (s: OCamlBytes) = ByteSpans.exists p (toSpan s)
 
-    let trim (s: OCamlBytes) = ByteSpans.trim (toSpan s)
+    let trim (s: OCamlBytes) = (ByteSpans.trim (toSpan s)).ToArray() |> U.ofArray
 
-    let escaped (s: OCamlBytes) = ByteSpans.escaped (toSpan s)
+    let escaped (s: OCamlBytes) = ByteSpans.escaped (toSpan s) |> U.ofArraySegemnt
 
     let index (s: OCamlBytes) c = ByteSpans.checked_index (toSpan s) c
 
@@ -100,3 +100,11 @@ module Bytes =
     let rindex (s: OCamlBytes) c = ByteSpans.checked_rindex (toSpan s) c
 
     let rindex_opt (s: OCamlBytes) c = ByteSpans.rindex_opt (toSpan s) c
+
+    let index_from (s: OCamlBytes) i c = ByteSpans.checked_index_from (toSpan s) i c
+
+    let index_from_opt (s: OCamlBytes) i c = ByteSpans.index_from_opt (toSpan s) i c
+
+    let rindex_from (s: OCamlBytes) i c = ByteSpans.checked_rindex_from (toSpan s) i c
+
+    let rindex_from_opt (s: OCamlBytes) i c = ByteSpans.rindex_from_opt (toSpan s) i c

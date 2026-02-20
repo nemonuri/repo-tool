@@ -1,6 +1,7 @@
 namespace Nemonuri.OCamlDotNet.Primitives
 
 open System
+open Nemonuri.ByteChars
 open System.Collections.Immutable
 open type System.MemoryExtensions
 open Microsoft.FSharp.NativeInterop
@@ -53,6 +54,7 @@ module Operations =
     module ByteSpans =
 
         open type Nemonuri.ByteChars.Extensions.UnsafePinnedSpanPointerExtensions
+        open type Nemonuri.ByteChars.ByteCharTheory
         type private bs = Span<OCamlChar>
         type private rbs = ReadOnlySpan<OCamlChar>
         type private ps = Nemonuri.ByteChars.UnsafePinnedSpanPointer<OCamlChar>
@@ -182,31 +184,72 @@ module Operations =
                 builder.Append(tempStore.Slice(0, stepCount))
             builder.DrainToArraySemgent()
         
-        let index (s: rbs) (c: OCamlChar) = s.IndexOf(c)
+        let inline internal (|GreaterThanOrEqualToZero|_|) (v: int) = if v >= 0 then ValueSome v else ValueNone
 
-        let inline internal (|GreaterThanOrEqualToZero|_|) (v: int) = if v >= 0 then Some v else None
-            
-        let checked_index s c =
-            match index s c with
+        let index_from (s: rbs) (i: OCamlInt) (c: OCamlChar) = 
+            match s.Slice(i).IndexOf(c) with
+            | GreaterThanOrEqualToZero v -> v + i
+            | _ -> -1
+
+        let checked_index_from s i c =
+            match index_from s i c with
             | GreaterThanOrEqualToZero v -> v
             | _ -> raise Exceptions.Not_found
 
-        let index_opt s c = 
-            match index s c with
+        let index_from_opt s i c = 
+            match index_from s i c with
             | GreaterThanOrEqualToZero v -> Some v
             | _ -> None
+
+        let index (s: rbs) (c: OCamlChar) = index_from s 0 c
+
+        let checked_index s c = checked_index_from s 0 c
+
+        let index_opt s c = index_from_opt s 0 c
         
-        let rindex (s: rbs) (c: OCamlChar) = s.LastIndexOf(c)
+        let inline private lengthMinus1 (s: rbs) = s.Length - 1
 
-        let checked_rindex s c =
-            match rindex s c with
+        let rindex_from (s: rbs) (i: OCamlInt) (c: OCamlChar) = s.Slice(0,i+1).LastIndexOf(c)
+
+        let checked_rindex_from s i c =
+            match rindex_from s i c with
             | GreaterThanOrEqualToZero v -> v
             | _ -> raise Exceptions.Not_found
 
-        let rindex_opt s c = 
-            match rindex s c with
+        let rindex_from_opt s i c = 
+            match rindex_from s i c with
             | GreaterThanOrEqualToZero v -> Some v
             | _ -> None
+
+        let rindex (s: rbs) (c: OCamlChar) = rindex_from s (lengthMinus1 s) c
+
+        let checked_rindex s c = checked_rindex_from s (lengthMinus1 s) c
+
+        let rindex_opt s c = rindex_from_opt s (lengthMinus1 s) c
+        
+        let contains_from (s: rbs) (start: OCamlInt) (c: OCamlChar) = 
+            match index_from s start c with
+            | GreaterThanOrEqualToZero _ -> true
+            | _ -> false
+        
+        let contains (s: rbs) c = contains_from s 0 c
+
+        let rcontains_from (s: rbs) stop c = 
+            match rindex_from s stop c with
+            | GreaterThanOrEqualToZero _ -> true
+            | _ -> false
+
+        let inline private spanToArraySegement (s: rbs) = s.ToArray() |> ArraySegment<_>
+
+        let uppercase_ascii (s: rbs) = 
+            let mutable result = spanToArraySegement s
+            UpdateToUpperCase<ByteArraySegmentPremise,_>(&result)
+            result
+
+        let lowercase_ascii  (s: rbs) = 
+            let mutable result = spanToArraySegement s
+            UpdateToLowerCase<ByteArraySegmentPremise,_>(&result)
+            result
             
         
 
