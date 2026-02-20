@@ -47,7 +47,7 @@ open type Nemonuri.ByteChars.Extensions.UnsafePinnedSpanPointerExtensions
             override this.GetHashCode (): int = 
                 CommunityToolkit.HighPerformance.ReadOnlySpanExtensions.GetDjb2HashCode(this.AsReadOnlySpan())
         end
-    
+
     [<RequireQualifiedAccess>]
     [<Struct>]
     type OCamlBytes = internal { Source: OCamlByteSequenceSource }

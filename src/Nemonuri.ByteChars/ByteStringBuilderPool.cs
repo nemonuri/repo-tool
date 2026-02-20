@@ -56,6 +56,13 @@ public class ByteStringBuilderPool
             return ref InnerBuilder.GetPinnableReference();
         }
 
+        public readonly RentedBuilder AddByte(byte @byte)
+        {
+            ThrowIfDisposed();
+            InnerBuilder.Add(@byte);
+            return this;
+        }
+
         public readonly RentedBuilder AddByteSpan(ReadOnlySpan<byte> byteSpan)
         {
             ThrowIfDisposed();
