@@ -3,7 +3,7 @@ using CommunityToolkit.Diagnostics;
 
 namespace Nemonuri.FStarDotNet.Primitives;
 
-public interface ITypeList
+public partial interface ITypeList
 {
     Type? GetHead();
 
@@ -33,7 +33,7 @@ internal readonly struct TypeList : ITypeList
 }
 */
 
-public readonly struct TypeList<THead, TTail> : ITypeList
+public readonly partial struct TypeList<THead, TTail> : ITypeList
     where TTail : unmanaged, ITypeList
 {
     //private readonly static TypeList s_typePair = TypeList.Create<THead, TTail>();
@@ -45,6 +45,11 @@ public readonly struct TypeList<THead, TTail> : ITypeList
     public Type? GetHead() => typeof(THead);
 
     public ITypeList? GetTail() => (typeof(TTail) == typeof(EmptyTypeList)) ? null : new TTail();
+
+    public interface IDelayedValue
+    {
+        void GetValueAndTail(out THead? value, out TTail tail);
+    }
 }
 
 /*
@@ -58,7 +63,7 @@ public readonly struct TypeList<THead> : ITypeList
 }
 */
 
-public readonly struct EmptyTypeList : ITypeList
+public readonly partial struct EmptyTypeList : ITypeList
 {
     public Type? GetHead() => null;
 
