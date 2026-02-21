@@ -122,40 +122,32 @@ module Experimental =
     let elemWitness<'tc, 'w when 'tc :> tc>(tcw: tc<'tc, 'w>) = 
         struct (tcw.GetWitness(), tcw.GetTailTypeContext())
 
-    let introForall<'tc, 'p, 'q, 'pt, 'imp 
+    let introForall<'tc, 'p, 'q, 'imp 
                         when 'tc :> tc 
-                        and 'pt :> term<'tc, 'p>
-                        and 'pt : struct
-                        and 'imp :> imp<'tc, 'pt, 'q>
+                        and 'imp :> imp<'tc, 'p, 'q>
                         and 'imp : unmanaged>
         (prev: 'tc) = 
         introAxiom<_, 'imp> prev
 
-    let elemForall<'tc, 'p, 'q, 'pt, 'imp 
+    let elemForall<'tc, 'p, 'q, 'imp 
                         when 'tc :> tc 
-                        and 'pt :> term<'tc, 'p>
-                        and 'pt : struct
-                        and 'imp :> imp<'tc, 'pt, 'q>
+                        and 'imp :> imp<'tc, 'p, 'q>
                         and 'imp : unmanaged>
         (tcimp: tc<'tc, 'imp>) = 
         elemAxiom<_, 'imp> tcimp
 
-    let introExists<'tc, 'p, 'q, 'pt, 'imp 
+    let introExists<'tc, 'p, 'q, 'imp
                         when 'tc :> tc 
-                        and 'pt :> term<'tc, 'p>
-                        and 'pt : struct
-                        and 'imp :> imp<'tc, 'pt, 'q voption>
+                        and 'imp :> imp<'tc, 'p, 'q voption>
                         and 'imp : unmanaged>
-        (witness: 'pt) (prev: 'tc) = 
+        (witness: 'p) (prev: 'tc) = 
         introAxiom<_, 'imp> prev
         |> introWitness witness 
 
-    let elemExists<'tc, 'p, 'q, 'pt, 'imp 
+    let elemExists<'tc, 'p, 'q, 'imp 
                         when 'tc :> tc 
-                        and 'pt :> term<'tc, 'p>
-                        and 'pt : struct
-                        and 'imp :> imp<'tc, 'pt, 'q voption>
+                        and 'imp :> imp<'tc, 'p, 'q voption>
                         and 'imp : unmanaged>
-        (tcimpPt: tc<FStarTypeContext<'tc, 'imp>,'pt>) = 
+        (tcimpPt: tc<FStarTypeContext<'tc, 'imp>,'p>) = 
         let struct (witness, tcimp) = elemWitness<_, _> tcimpPt
         struct (witness, elemAxiom<_,_> tcimp)
