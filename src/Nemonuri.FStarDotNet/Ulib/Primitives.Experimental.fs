@@ -2,6 +2,7 @@ namespace Nemonuri.FStarDotNet.Primitives
 
 module Experimental =
 
+(*
     [<Interface>]
     type ITypeHead<'THead> =
         interface end
@@ -13,7 +14,7 @@ module Experimental =
     let tyHead (_: ITypeHead<'THead>) = typeof<'THead>
 
     let tyTail (_: ITypeTailAndHead<'TTail, 'THead>) = typeof<'TTail>
-
+*)
 
     [<Interface>]
     [<CompiledName("IFStarTypeContext")>]
@@ -34,11 +35,21 @@ module Experimental =
     [<CompiledName("IFStarTypeContext`2")>]
     type tc<'t, 'h when 't :> tc> =
         inherit tc
-        inherit ITypeTailAndHead<'t, 'h>
         abstract member GetWitness: outref<'h> -> unit
         abstract member GetTailTypeContext: outref<'t> -> unit
     
     type tc<'h> = tc<FStarEmptyTypeContext, 'h>
+
+    [<Interface>]
+    [<CompiledName("IFStarType`1")>]
+    type ty<'tc when 'tc :> tc> =
+        abstract member GetTypeContext: outref<'tc> -> unit
+
+    [<Interface>]
+    [<CompiledName("IFStarValue`2")>]
+    type term<'tc, 'v when 'tc :> tc> =
+        inherit ty<'tc>
+        abstract member GetValue: outref<'v> -> unit
 
     [<Struct>]
     type FStarTypeContext<'h>(witness: 'h) = 
@@ -51,17 +62,6 @@ module Experimental =
         interface tc<'t, 'h> with
             member _.GetWitness (dest: outref<'h>): unit = dest <- witness
             member _.GetTailTypeContext (dest: outref<'t>): unit = dest <- tailTc
-
-    [<Interface>]
-    [<CompiledName("IFStarType`1")>]
-    type ty<'tc when 'tc :> tc> =
-        abstract member GetTypeContext: outref<'tc> -> unit
-
-    [<Interface>]
-    [<CompiledName("IFStarValue`2")>]
-    type term<'tc, 'v when 'tc :> tc> =
-        inherit ty<'tc>
-        abstract member GetValue: outref<'v> -> unit
 
     [<Struct>]
     type FStarValue<'tc, 'v when 'tc :> tc>(tc: 'tc, value: 'v) =
@@ -80,6 +80,22 @@ module Experimental =
     type imp<'tc, 'p, 'q when 'tc :> tc> =
         inherit ty<'tc>
         abstract member Invoke: 'p * outref<'q> -> unit
+
+(*
+    [<Struct>]
+    type FStarEnsuredResult<'tc, 'p, 'q, 'pt, 'imp 
+                        when 'tc :> tc 
+                        and 'pt :> term<'tc, 'p>
+                        and 'pt : struct
+                        and 'imp :> imp<'tc, 'pt, 'q voption>
+                        and 'imp : unmanaged>
+        (source: 'pt) =
+        interface term<'tc, 'q> with
+            member _.GetTypeContext (d: outref<'tc>): unit = d <- source.GetTypeContext()
+            member _.GetValue (d: outref<'q>): unit = 
+                let result = Unchecked.defaultof<'imp>.Invoke(source)
+                d <- ValueOption.get result
+*)
 
     [<Struct>]
     type FStarFunction<'tc, 'p, 'q when 'tc :> tc>(tc: 'tc, impl: 'p -> 'q) =
@@ -106,44 +122,40 @@ module Experimental =
     let elemWitness<'tc, 'w when 'tc :> tc>(tcw: tc<'tc, 'w>) = 
         struct (tcw.GetWitness(), tcw.GetTailTypeContext())
 
-    let introForall<'tc, 'p, 'q, 'pt, 'qt, 'imp 
+    let introForall<'tc, 'p, 'q, 'pt, 'imp 
                         when 'tc :> tc 
                         and 'pt :> term<'tc, 'p>
                         and 'pt : struct
-                        and 'qt :> term<'tc, 'q>
-                        and 'qt : struct
-                        and 'imp :> imp<'tc, 'pt, 'qt>
+                        and 'imp :> imp<'tc, 'pt, 'q>
                         and 'imp : unmanaged>
         (prev: 'tc) = 
         introAxiom<_, 'imp> prev
 
-    let elemForall<'tc, 'p, 'q, 'pt, 'qt, 'imp 
+    let elemForall<'tc, 'p, 'q, 'pt, 'imp 
                         when 'tc :> tc 
                         and 'pt :> term<'tc, 'p>
                         and 'pt : struct
-                        and 'qt :> term<'tc, 'q>
-                        and 'qt : struct
-                        and 'imp :> imp<'tc, 'pt, 'qt>
+                        and 'imp :> imp<'tc, 'pt, 'q>
                         and 'imp : unmanaged>
         (tcimp: tc<'tc, 'imp>) = 
         elemAxiom<_, 'imp> tcimp
 
-    let introExists<'tc, 'p, 'q, 'pt, 'qt, 'imp 
+    let introExists<'tc, 'p, 'q, 'pt, 'imp 
                         when 'tc :> tc 
                         and 'pt :> term<'tc, 'p>
                         and 'pt : struct
-                        and 'qt :> term<'tc, 'q>
-                        and 'qt : struct
-                        and 'imp :> imp<'tc, 'p, 'q>>
-        (witness: 'imp) (prev: 'tc) = 
-        introWitness<_, 'imp> witness prev
+                        and 'imp :> imp<'tc, 'pt, 'q voption>
+                        and 'imp : unmanaged>
+        (witness: 'pt) (prev: 'tc) = 
+        introAxiom<_, 'imp> prev
+        |> introWitness witness 
 
-    let elemExists<'tc, 'p, 'q, 'pt, 'qt, 'imp 
+    let elemExists<'tc, 'p, 'q, 'pt, 'imp 
                         when 'tc :> tc 
                         and 'pt :> term<'tc, 'p>
                         and 'pt : struct
-                        and 'qt :> term<'tc, 'q>
-                        and 'qt : struct
-                        and 'imp :> imp<'tc, 'p, 'q>>
-        (tcimp: tc<'tc, 'imp>) = 
-        elemWitness<_, 'imp> tcimp
+                        and 'imp :> imp<'tc, 'pt, 'q voption>
+                        and 'imp : unmanaged>
+        (tcimpPt: tc<FStarTypeContext<'tc, 'imp>,'pt>) = 
+        let struct (witness, tcimp) = elemWitness<_, _> tcimpPt
+        struct (witness, elemAxiom<_,_> tcimp)
