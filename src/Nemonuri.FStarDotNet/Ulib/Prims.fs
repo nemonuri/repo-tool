@@ -110,17 +110,17 @@ module Prims =
 
     (** A convenient abbreviation, [eqtype] is the type of types in
         universe 0 which support decidable equality *)
-    [<FStarRefinementProxy(typeof<eqtypeRefinementProxy>)>]
+    [<FStarRefinementProxy(typeof<eqtypeRefinement>)>]
     type eqtype =
         interface
             inherit Type0
             inherit IStructuralEquatable
         end
         
-    and eqtypeRefinementProxy = 
+    and eqtypeRefinement = 
         struct
             interface eqtype
-            interface refine<hasEq<eqtypeRefinementProxy>>
+            interface refine<hasEq<eqtypeRefinement>>
         end
 
 
@@ -380,7 +380,7 @@ module Prims =
     (** Squashed universal quantification, or dependent products, written
         [forall (x:a). p x], specialized to Type0 *)
     [<smt_theory_symbol>]
-    [<FStarGenericTypeArgumentProxy(typedefof<l_Forall_x<_,_>>, 2)>]
+    [<FStarTypeParameterProxyAttribute(typedefof<l_Forall_x<_,_>>, 3)>]
     type l_Forall<'a, 'p
                     when 'a :> Type 
                     and 'p :> ``->``<'a, Type0>> = 
@@ -395,7 +395,13 @@ module Prims =
 
     (** [p1 `subtype_of` p2] when every element of [p1] is also an element
         of [p2]. *)
-    type subtype_of<'p1, 'p2 when 'p1 :> Type> = l_Forall<'p1, has_type<'p1, tcWithTail<'p1>, 'p2>, tcWithTail<'p1>>
+    [<FStarTypeParameterProxyAttribute(typedefof<subtype_of_x<_,_>>, 3)>]
+    type subtype_of<'p1, 'p2 when 'p1 :> Type and 'p2 :> Type> = 
+        l_Forall<'p1, has_type<'p1, tcWithTail<'p1>, 'p2>>
+
+    and subtype_of_x<'p1, 'p2 when 'p1 :> Type and 'p2 :> Type> =
+        interface
+        end
 
     (** The type of squashed types.
 

@@ -206,15 +206,15 @@ module Experimental =
     [<CompiledName("IFStarRefinement`1")>]
     type refine<'T when 'T :> tc> = interface end
 
+(*
     /// Proxy type should implement target interface
     [<AttributeUsage(AttributeTargets.Interface)>]
     type FStarRefinementProxyAttribute(proxyType: System.Type) = inherit Attribute()
+*)
 
-    [<AttributeUsage(AttributeTargets.Struct)>]
-    type FStarDependentTypeProxyAttribute(proxyType: System.Type) = inherit Attribute()
-
-    [<AttributeUsage(AttributeTargets.Struct)>]
-    type FStarGenericTypeArgumentProxyAttribute(proxyType: System.Type, position: int) = inherit Attribute()
+    /// position 0 means 'self'
+    [<AttributeUsage(AttributeTargets.Interface ||| AttributeTargets.Struct)>]
+    type FStarTypeParameterProxyAttribute(proxyType: System.Type, position: int) = inherit Attribute()
 
     module Aliases =
 
