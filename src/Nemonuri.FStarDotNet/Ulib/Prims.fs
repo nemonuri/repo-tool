@@ -110,17 +110,17 @@ module Prims =
 
     (** A convenient abbreviation, [eqtype] is the type of types in
         universe 0 which support decidable equality *)
-    [<FStarRefinementProxy(typeof<eqtypeRefinement>)>]
+    [<TypeParameterExtension(typeof<IFStarEqtypeRefinement>, 0)>]
     type eqtype =
         interface
             inherit Type0
             inherit IStructuralEquatable
         end
         
-    and eqtypeRefinement = 
-        struct
-            interface eqtype
-            interface refine<hasEq<eqtypeRefinement>>
+    and IFStarEqtypeRefinement = 
+        interface
+            inherit eqtype
+            inherit refine<hasEq<IFStarEqtypeRefinement>>
         end
 
 
@@ -130,9 +130,29 @@ module Prims =
         with two cases, [BTrue | BFalse] *)
     [<RequireQualifiedAccess>]
     [<Struct>]
-    type bool = { Value: Core.bool } with
-        interface eqtype
-        interface pureType<bool>
+    type bool = { Value: Core.bool } 
+        with
+            interface eqtype
+            interface pureType<bool>
+
+            static member create (v: Core.bool) = { Value = v }
+        end
+    
+    let private ptWit (pt: pureTerm<bool>) = let v: bool = pt.GetValue() in v
+
+    type BTrue = 
+        struct
+            interface pureTerm<bool> with
+                member _.GetValue (d: outref<bool>): unit = d <- bool.create true
+                member this.GetWitness (d: outref<bool>): unit = d <- ptWit this
+        end
+
+    type BFalse = 
+        struct
+            interface pureTerm<bool> with
+                member _.GetValue (d: outref<bool>): unit = d <- bool.create false
+                member this.GetWitness (d: outref<bool>): unit = d <- ptWit this
+        end
 
     (** [empty] is the empty inductive type. The type with no
         inhabitants represents logical falsehood. Note, [empty] is
@@ -232,20 +252,20 @@ module Prims =
         equality, below. *)
 
     [<Struct>]
-    type equals<'a, 'x, '_0 when 'a :> Type and 'x :> pureTerm<'a> and '_0 :> pureTerm<'a>> =
-        interface Type
+    [<TypeConstraintExtension(typedefof<FStarEqualsTypeChecker<_,_,_>>)>]
+    type equals<'a, 'x, '_0 when 'a :> Type and 'x :> tc<'a> and '_0 :> tc<'a>> = | Refl 
+        with
+            interface Type    
+        end
 
-    let (|Refl|_|) (_: equals<'a, 'x, '_0>) = //equals<'a, 'x, 'x>()
-        let inline getResult() = equals<'a, 'x, 'x>()
-        match Teq.tryRefl<'x, '_0> with
-        | Some v -> ValueSome (getResult())
-        | None ->
-        if typeof<IEquatable<'x>>.IsAssignableFrom(typeof<'_0>) then 
-            ValueSome (getResult())
-        else
-            ValueNone
-        
-    
+    and FStarEqualsTypeChecker<'a, 'x, '_0 when 'a :> Type and 'x :> tc<'a> and '_0 :> tc<'a>>() =
+        class
+            do
+                match Teq.tryRefl<'x, '_0> with
+                | Some _ -> ()
+                | None -> raise (System.TypeLoadException(typeof<equals<'a,'x,'_0>>.ToString()))
+        end
+
     (** [eq2] is the squashed version of [equals]. It's a proof
         irrelevant, homogeneous equality in Type#0 and is written with
         an infix binary [==].
@@ -254,19 +274,25 @@ module Prims =
             we should just rename eq2 to op_Equals_Equals
     *)
     [<tac_opaque; smt_theory_symbol>]
-    type eq2<[<unrefine>] 'a, 'x, 'y when 'a :> Type and 'x :> pureTerm<'a> and 'y :> pureTerm<'a>> = squash<equals<'a, 'x, 'y>>
+    type eq2<[<unrefine>] 'a, 'x, 'y when 'a :> Type and 'x :> tc<'a> and 'y :> tc<'a>> = squash<equals<'a, 'x, 'y>>
 
     (** bool-to-type coercion: This is often automatically inserted type,
         when using a boolean in context expecting a type. But,
         occasionally, one may have to write [b2t] explicitly *)
-    [<Struct>]
-    type b2t(b: bool) =
-        interface logical with
-            member this.GetWitness (d: outref<objnull>): Core.unit =
-                match b.Value with
-                | true -> d <- true
-                | false -> d <- null
+    [<TypeConstraintExtension(typedefof<FStarB2tTypeChecker<_>>)>]
+    type b2t<'b when 'b :> pureTerm<bool> and 'b : unmanaged> = squash<eq2<bool, 'b, BTrue>>
 
+    and FStarB2tTypeChecker<'b when 'b :> pureTerm<bool> and 'b : unmanaged>() =
+        class
+            do
+                match
+                    let wit1: bool = getWitness Unchecked.defaultof<'b> in
+                    let wit2: bool = getWitness Unchecked.defaultof<BTrue> in
+                    wit1.Value = wit2.Value
+                with
+                | true -> ()
+                | false -> raise (System.TypeLoadException(typeof<b2t<'b>>.ToString()))
+        end
 
     (** constructive conjunction *)
     [<Struct>]
@@ -283,7 +309,7 @@ module Prims =
     type sum<'p,'q> =
         | Left of v: 'p
         | Right of v: 'q
-        interface pureType<pair<'p, 'q>>
+        interface pureType<sum<'p, 'q>>
 
     (** squashed disjunction, specialized to [Type0], written with an
         infix binary [\/] *)
@@ -327,7 +353,7 @@ module Prims =
             * [f x << D f] for data constructors D of an inductive t whose
                 arguments include a ghost or total function returning a t *)
     [<Struct>]
-    type precedes<'a, 'b, '_0, '_1 when 'a :> Type and 'b :> Type and '_0 :> term<'a, '_0> and '_1 :> term<'b, '_1>> =
+    type precedes<'a, 'b, '_0, '_1 when 'a :> Type and 'b :> Type and '_0 :> tc<'a> and '_1 :> tc<'b>> =
         interface Type0
 
     (** The type of primitive strings of characters; See FStar.String *)
@@ -373,14 +399,14 @@ module Prims =
     [<deprecated "'has_type' is intended for internal use and debugging purposes only; \
                     do not rely on it for your proofs">]
     [<Struct>]
-    type has_type<'a, '_0, 'Type when 'a :> Type and '_0 :> pureTerm<'a>> =
+    type has_type<'a, '_0, 'Type when 'a :> Type and '_0 :> tc<'a>> =
         interface ``->``<'a, Type0>
 
 
     (** Squashed universal quantification, or dependent products, written
         [forall (x:a). p x], specialized to Type0 *)
     [<smt_theory_symbol>]
-    [<FStarTypeParameterProxyAttribute(typedefof<l_Forall_x<_,_>>, 3)>]
+    [<TypeParameterExtension(typedefof<l_Forall_x<_,_>>, 3)>]
     type l_Forall<'a, 'p
                     when 'a :> Type 
                     and 'p :> ``->``<'a, Type0>> = 
@@ -390,17 +416,18 @@ module Prims =
                     when 'a :> Type 
                     and 'p :> ``->``<'a, Type0>> =
         interface
-            inherit pureTerm<'a>
+            inherit tc<'a>
         end
 
     (** [p1 `subtype_of` p2] when every element of [p1] is also an element
         of [p2]. *)
-    [<FStarTypeParameterProxyAttribute(typedefof<subtype_of_x<_,_>>, 3)>]
+    [<TypeParameterExtension(typedefof<subtype_of_x<_,_>>, 3)>]
     type subtype_of<'p1, 'p2 when 'p1 :> Type and 'p2 :> Type> = 
-        l_Forall<'p1, has_type<'p1, tcWithTail<'p1>, 'p2>>
+        l_Forall<'p1, has_type<'p1, subtype_of_x<'p1, 'p2>, 'p2>>
 
     and subtype_of_x<'p1, 'p2 when 'p1 :> Type and 'p2 :> Type> =
         interface
+            inherit tc<'p1>
         end
 
     (** The type of squashed types.
@@ -413,10 +440,17 @@ module Prims =
         See https://github.com/FStarLang/FStar/issues/1048 for more
         details and the current status of the work.
         *)
-    [<Interface>]
+    [<TypeParameterExtension(typeof<IPropRefinement>, 0)>]
     type prop = 
-        inherit eqtype<unit>
-        inherit refine<subtype_of<prop, unit>>
+        interface
+            inherit tc<unit>
+        end
+        
+    and IPropRefinement =
+        interface
+            inherit prop
+            inherit refine<subtype_of<IPropRefinement, unit>>
+        end
 
     (**** The PURE effect *)
 
@@ -620,28 +654,46 @@ module Prims =
         match 
             Teq.tryRefl<'a, 'b>.IsSome && x.Equals(y)
         with
-        | true -> { bool.Value = true }
-        | false -> { bool.Value = false }
+        | true -> bool.create true
+        | false -> bool.create false
 
     (** Dependent pairs [dtuple2] in concrete syntax is [x:a & b x].
         Its values can be constructed with the concrete syntax [(| x, y |)] *)
     [<unopteq>]
-    type dtuple2<'a, 'b when 'b :> Type and 'b :> IFStarTypeFunction<'b, 'a>> =
-        | Mkdtuple2 of _1: 'a * _2: DependentTypeProxy<'b, 'a>
+    [<Struct>]
+    [<TypeParameterExtension(typedefof<dtuple2_x<_,_>>, 3)>]
+    type dtuple2<'a, 'b when 'a :> Type and 'b :> ``->``<'a, Type>> =
+        | Mkdtuple2 of _1: dtuple2_x<'a, 'b> * _2: DType<'a, dtuple2_x<'a, 'b>, Type, 'b>
+        interface pureType<dtuple2<'a, 'b>>
+
+    and dtuple2_x<'a, 'b when 'a :> Type and 'b :> ``->``<'a, Type>> =
+        interface
+            inherit tc<'a>
+        end
 
     (** Squashed existential quantification, or dependent sums,
         are written [exists (x:a). p x] : specialized to Type0 *)
     [<tac_opaque; smt_theory_symbol>]
-    type l_Exists<'a, 'p, 'x when 'a :> Type and 'p :> ``->``<'a, Type0> and 'x :> tcWithTail<'a>> = 
-        squash<dtuple2<'x, DependentTypeProxy<'p, 'x>>>
+    type l_Exists<'a, 'p when 'a :> Type and 'p :> ``->``<'a, Type0>> = squash<dtuple2<'a, l_Exists_p<'a, 'p>>>
+
+    and 
+        [<Struct>]
+        [<RequireQualifiedAccess>]
+        l_Exists_p<'a, 'p when 'a :> Type and 'p :> ``->``<'a, Type0>> = { Value: 'p }
+            with
+                interface ``->``<'a, Type> with
+                    member this.Invoke (a: 'a, d: outref<Type>): Core.unit = d <- let ty0: Type0 = this.Value.Invoke(a) in ty0
+            end
+        
 
     (** Primitive type of mathematical integers, mapped to zarith in OCaml
         extraction and to the SMT sort of integers *)
     [<RequireQualifiedAccess>]
     [<Struct>]
-    type int = { Value: Core.int } with
-        interface eqtype<int>
+    type int = { Value: Core.bigint } with
+        interface pureType<int>
 
+#if false
     (**** Basic operators on booleans and integers *)
 
     (** [&&] boolean conjunction *)
@@ -831,3 +883,4 @@ module Prims =
         Incrementing this forces all .checked files to be invalidated *)
     irreducible
     let __cache_version_number__ = 77
+#endif

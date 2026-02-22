@@ -213,16 +213,21 @@ module Experimental =
 *)
 
     /// position 0 means 'self'
-    [<AttributeUsage(AttributeTargets.Interface ||| AttributeTargets.Struct)>]
-    type FStarTypeParameterProxyAttribute(proxyType: System.Type, position: int) = inherit Attribute()
+    [<AttributeUsage(AttributeTargets.Interface ||| AttributeTargets.Struct ||| AttributeTargets.Class, AllowMultiple = true)>]
+    type TypeParameterExtensionAttribute(proxy: System.Type, position: int) = inherit Attribute()
+
+    [<AttributeUsage(AttributeTargets.Interface ||| AttributeTargets.Struct ||| AttributeTargets.Class, AllowMultiple = false)>]
+    type TypeConstraintExtensionAttribute(checker: System.Type) = inherit Attribute()
 
     module Aliases =
 
         type EmptyTc = FStarEmptyTypeContext
 
+        type pureType<'a when 'a :> tc<'a>> = tc<'a>
+
         type pureTerm<'a> = term<FStarEmptyTypeContext, 'a>
 
-        type pureType<'a when 'a :> tc<'a>> = tc<'a>
+        type pureValue<'a, 'c when 'a :> pureType<'a> and 'c :> pureTerm<'a> and 'c : unmanaged> = 'c
 
         type pureFuncType<'p, 'q> = imp<FStarEmptyTypeContext, 'p, 'q>
 
