@@ -1,12 +1,18 @@
 namespace Nemonuri.FStarDotNet.Primitives
 
+open System
+
 module Experimental =
 
-(*
+
     [<Interface>]
     type ITypeHead<'THead> =
         interface end
 
+    [<Interface>]
+    type ITypeTail<'TTail> =
+        interface end
+(*
     [<Interface>]
     type ITypeTailAndHead<'TTail, 'THead> =
         inherit ITypeHead<'THead>
@@ -19,7 +25,8 @@ module Experimental =
     [<Interface>]
     [<CompiledName("IFStarTypeContext")>]
     type tc =
-        interface end
+        abstract member GetWitness: outref<objnull> -> unit
+        abstract member GetTailTypeContext: outref<objnull> -> unit
     
     [<Interface>]
     [<CompiledName("IFStarEmptyTypeContext")>]
@@ -27,100 +34,119 @@ module Experimental =
         inherit tc
 
     [<Struct>]
-    type FStarEmptyTypeContext = interface etc
+    type FStarEmptyTypeContext = 
+        interface etc with
+            member _.GetTailTypeContext (d: outref<objnull>): unit = d <- null
+            member _.GetWitness (d: outref<objnull>): unit = d <- null
 
     let emptyTc = FStarEmptyTypeContext()
 
     [<Interface>]
+    type IFStarTypeContextWithTail<'t> =
+        inherit tc
+        inherit ITypeTail<'t>
+
+    [<Interface>]
     [<CompiledName("IFStarTypeContext`2")>]
     type tc<'t, 'h when 't :> tc> =
-        inherit tc
+        inherit ITypeHead<'h>
+        inherit IFStarTypeContextWithTail<'t>
         abstract member GetWitness: outref<'h> -> unit
         abstract member GetTailTypeContext: outref<'t> -> unit
     
+    let inline getWitness<'t, 'h when 't :> tc> (tc: tc<'t, 'h>) : 'h = tc.GetWitness()
+    let inline getTailTypeContext<'t, 'h when 't :> tc> (tc: tc<'t, 'h>) : 't = tc.GetTailTypeContext()
+    
     type tc<'h> = tc<FStarEmptyTypeContext, 'h>
 
+(*
     [<Interface>]
     [<CompiledName("IFStarType`1")>]
     type ty<'tc when 'tc :> tc> =
         abstract member GetTypeContext: outref<'tc> -> unit
-
-    [<Interface>]
-    [<CompiledName("IFStarValue`2")>]
-    type term<'tc, 'v when 'tc :> tc> =
-        inherit ty<'tc>
-        abstract member GetValue: outref<'v> -> unit
+*)
 
     [<Struct>]
     type FStarTypeContext<'h>(witness: 'h) = 
         interface tc<'h> with
             member _.GetWitness (dest: outref<'h>): unit = dest <- witness
             member _.GetTailTypeContext (dest: outref<FStarEmptyTypeContext>): unit = dest <- emptyTc
+        interface tc with
+            member this.GetWitness (d: outref<objnull>): unit = d <- getWitness this
+            member this.GetTailTypeContext (d: outref<objnull>): unit = d <- getTailTypeContext this
 
     [<Struct>]
     type FStarTypeContext<'t, 'h when 't :> tc>(witness: 'h, tailTc: 't) = 
         interface tc<'t, 'h> with
             member _.GetWitness (dest: outref<'h>): unit = dest <- witness
             member _.GetTailTypeContext (dest: outref<'t>): unit = dest <- tailTc
+        interface tc with
+            member this.GetWitness (d: outref<objnull>): unit = d <- getWitness this
+            member this.GetTailTypeContext (d: outref<objnull>): unit = d <- getTailTypeContext this
+
+    [<Interface>]
+    [<CompiledName("IFStarValue`2")>]
+    type term<'tc, 'v when 'tc :> tc> =
+        inherit tc<'tc, 'v>
+        abstract member GetValue: outref<'v> -> unit
 
     [<Struct>]
     type FStarValue<'tc, 'v when 'tc :> tc>(tc: 'tc, value: 'v) =
         interface term<'tc, 'v> with
-            member _.GetTypeContext (dest: outref<'tc>): unit = dest <- tc
             member _.GetValue (dest: outref<'v>): unit = dest <- value
+            member _.GetTailTypeContext (d: outref<'tc>): unit = d <- tc
+            member this.GetWitness(d: outref<'v>) = d <- (this :> term<'tc, 'v>).GetValue()
+        interface tc with
+            member this.GetWitness (d: outref<objnull>): unit = d <- getWitness this
+            member this.GetTailTypeContext (d: outref<objnull>): unit = d <- getTailTypeContext this
 
     [<Struct>]
     type FStarDelayedValue<'tc, 'v when 'tc :> tc>(tc: 'tc, delayed: 'tc -> 'v) =
         interface term<'tc, 'v> with
-            member _.GetTypeContext (dest: outref<'tc>): unit = dest <- tc
             member _.GetValue (dest: outref<'v>): unit = dest <- delayed tc
+            member _.GetTailTypeContext (d: outref<'tc>): unit = d <- tc
+            member this.GetWitness(d: outref<'v>) = d <- (this :> term<'tc, 'v>).GetValue()
+        interface tc with
+            member this.GetWitness (d: outref<objnull>): unit = d <- getWitness this
+            member this.GetTailTypeContext (d: outref<objnull>): unit = d <- getTailTypeContext this
 
     [<Interface>]
     [<CompiledName("IFStarFunction`3")>]
     type imp<'tc, 'p, 'q when 'tc :> tc> =
-        inherit ty<'tc>
+        inherit tc<'tc, 'p -> 'q>
         abstract member Invoke: 'p * outref<'q> -> unit
 
-(*
-    [<Struct>]
-    type FStarEnsuredResult<'tc, 'p, 'q, 'pt, 'imp 
-                        when 'tc :> tc 
-                        and 'pt :> term<'tc, 'p>
-                        and 'pt : struct
-                        and 'imp :> imp<'tc, 'pt, 'q voption>
-                        and 'imp : unmanaged>
-        (source: 'pt) =
-        interface term<'tc, 'q> with
-            member _.GetTypeContext (d: outref<'tc>): unit = d <- source.GetTypeContext()
-            member _.GetValue (d: outref<'q>): unit = 
-                let result = Unchecked.defaultof<'imp>.Invoke(source)
-                d <- ValueOption.get result
-*)
+
+    [<Interface>]
+    type IFStarFunctionGroup<'tc, 'p when 'tc :> tc> =
+        abstract member TrySpecialize<'q>: 'p -> imp<'tc, 'p, 'q> option
+    
+    let inline impToArrow (imp: imp<'tc, 'p, 'q>) (p: 'p) : 'q = let q = imp.Invoke(p) in q
+
+    let impToTerm<'tc, 'p, 'q when 'tc :> tc>(imp : imp<'tc, 'p, 'q>) : FStarValue<'tc, 'p -> 'q> =
+        FStarValue<_,_>(imp.GetTailTypeContext(), impToArrow imp)
 
     [<Struct>]
     type FStarFunction<'tc, 'p, 'q when 'tc :> tc>(tc: 'tc, impl: 'p -> 'q) =
         interface imp<'tc, 'p, 'q> with
-            member _.Invoke (p: 'p, qDest: outref<'q>): unit = 
-                qDest <- impl p
-            member _.GetTypeContext (dest: outref<'tc>): unit = dest <- tc
+            member _.Invoke (p: 'p, qDest: outref<'q>): unit = qDest <- impl p
+        interface tc<'tc, 'p -> 'q> with
+            member this.GetTailTypeContext (d: outref<'tc>): unit = d <- impToTerm this |> getTailTypeContext
+            member this.GetWitness (d: outref<('p -> 'q)>): unit = d <- impToTerm this |> getWitness
+        interface tc with
+            member this.GetTailTypeContext (d: outref<objnull>): unit = d <- getTailTypeContext this
+            member this.GetWitness (d: outref<objnull>): unit = d <- getWitness this
 
-    /// modus ponens
-    let apply<'tc, 'p, 'q when 'tc :> tc>
-        (imp: imp<'tc, 'p, 'q>) (p: 'p) : term<'tc, 'q>
-        =
-        let qValue = imp.Invoke(p)
-        FStarValue<'tc,_>(imp.GetTypeContext(), qValue)
 
     let introAxiom<'tc, 'p when 'tc :> tc and 'p : unmanaged>(prev: 'tc) = FStarTypeContext<_,_>(Unchecked.defaultof<'p>, prev)
 
-    let elemAxiom<'tc, 'p when 'tc :> tc and 'p : unmanaged>(tcp: tc<'tc, 'p>) = 
-        tcp.GetTailTypeContext()
+    let elemAxiom<'tc, 'p when 'tc :> tc and 'p : unmanaged>(tcp: tc<'tc, 'p>) = getTailTypeContext tcp
 
     let introWitness<'tc, 'w when 'tc :> tc> (witness: 'w) (prev: 'tc) =
         FStarTypeContext<_,_>(witness, prev)
 
-    let elemWitness<'tc, 'w when 'tc :> tc>(tcw: tc<'tc, 'w>) = 
-        struct (tcw.GetWitness(), tcw.GetTailTypeContext())
+    let elemWitness<'tc, 'w when 'tc :> tc>(tcw: tc<'tc, 'w>) = struct (getWitness tcw, getTailTypeContext tcw)
+        
 
     let introForall<'tc, 'p, 'q, 'imp 
                         when 'tc :> tc 
@@ -148,6 +174,64 @@ module Experimental =
                         when 'tc :> tc 
                         and 'imp :> imp<'tc, 'p, 'q voption>
                         and 'imp : unmanaged>
-        (tcimpPt: tc<FStarTypeContext<'tc, 'imp>,'p>) = 
-        let struct (witness, tcimp) = elemWitness<_, _> tcimpPt
+        (tcimpP: tc<FStarTypeContext<'tc, 'imp>,'p>) = 
+        let struct (witness, tcimp) = elemWitness<_, _> tcimpP
         struct (witness, elemAxiom<_,_> tcimp)
+
+
+    [<Struct>]
+    [<RequireQualifiedAccess>]
+    type DependentTypeProxy<'sourceTc, 'source, 'targetTc, 'imp
+                                when 'sourceTc :> tc
+                                and 'source :> tc<'sourceTc>
+                                and 'targetTc :> tc
+                                and 'imp :> imp<FStarEmptyTypeContext, 'sourceTc, 'targetTc>> = 
+        { SourceTypeContext: 'sourceTc; 
+          Source: 'source;
+          TargetTypeContext: 'targetTc;
+          Implication: 'imp } with
+        interface tc with
+            member this.GetTailTypeContext (d: outref<objnull>): unit = d <- this.SourceTypeContext.GetTailTypeContext()
+            member this.GetWitness (d: outref<objnull>): unit = d <- null
+
+(*
+    [<Interface>]
+    type IFStarTypeFunction<'tc, 'p when 'tc :> tc> =
+        inherit tc<'tc, 'p -> DependentTypeProxy<'tc, 'p>>
+        abstract member Invoke: 'p * outref<DependentTypeProxy<'tc, 'p>> -> unit
+*)
+
+
+    [<Interface>]
+    [<CompiledName("IFStarRefinement`1")>]
+    type refine<'T when 'T :> tc> = interface end
+
+    /// Proxy type should implement target interface
+    [<AttributeUsage(AttributeTargets.Interface)>]
+    type FStarRefinementProxyAttribute(proxyType: System.Type) = inherit Attribute()
+
+    [<AttributeUsage(AttributeTargets.Struct)>]
+    type FStarDependentTypeProxyAttribute(proxyType: System.Type) = inherit Attribute()
+
+    [<AttributeUsage(AttributeTargets.Struct)>]
+    type FStarGenericTypeArgumentProxyAttribute(proxyType: System.Type, position: int) = inherit Attribute()
+
+    module Aliases =
+
+        type EmptyTc = FStarEmptyTypeContext
+
+        type pureTerm<'a> = term<FStarEmptyTypeContext, 'a>
+
+        type pureType<'a when 'a :> tc<'a>> = tc<'a>
+
+        type pureFuncType<'p, 'q> = imp<FStarEmptyTypeContext, 'p, 'q>
+
+        type Ftc<'t, 'h when 't :> tc> = FStarTypeContext<'t, 'h>
+
+        type tcWithTail<'t> = IFStarTypeContextWithTail<'t>
+
+        type DType<'st, 's, 'tt, 'imp
+                    when 'st :> tc
+                    and 's :> tc<'st>
+                    and 'tt :> tc
+                    and 'imp :> imp<EmptyTc, 'st, 'tt>> = DependentTypeProxy<'st, 's, 'tt, 'imp>
