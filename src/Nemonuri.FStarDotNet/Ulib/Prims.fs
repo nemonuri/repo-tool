@@ -41,8 +41,8 @@ module Prims =
     open Nemonuri.FStarDotNet.Primitives.Abbreviations
     open System.Collections
     open System.Collections.Generic
-    open Nemonuri.FStarDotNet.Primitives.Experimental
-    open Nemonuri.FStarDotNet.Primitives.Experimental.Aliases
+    open Nemonuri.FStarDotNet.Primitives.Prelude
+    open Nemonuri.FStarDotNet.Primitives.Prelude.Aliases
     module T = InternalTheory
     module A = TypeListAliases
     module Ev = EmptyValues

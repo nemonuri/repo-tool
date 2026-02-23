@@ -8,10 +8,10 @@
     <PackageReference Include="TypeEquality" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Primitives.Experimental.fs" />
-    <Compile Include="Primitives.fs" />
+    <Compile Include="Functionals.fs" />
+    <Compile Include="Abstractions.fs" />
+    <Compile Include="Prelude.fs" />
     <Compile Include="Pervasive.fs" />
-    <Compile Include="TypeListAliases.fs" />
     <Compile Include="Prims.fs" />
   </ItemGroup>
 </Project>
