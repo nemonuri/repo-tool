@@ -175,5 +175,22 @@ module Tests =
                 return add4 a2 b2 c2 d2 
             }
 
+module Tests2 =
 
+    type BindReturn =
+        struct
+            member this.Bind(x: System.ValueTuple<'a>, f: 'a -> 'b) = x.Item1 |> f //|> System.ValueTuple.Create
+            member this.Return(x: 'a) : System.ValueTuple<'a> = System.ValueTuple.Create(x)
+        end
+    
+    let add4 a b c d = a + b + c + d
+
+    let add4M a b c d =
+        BindReturn() {
+                let! a2 = a in
+                let! b2 = b in
+                let! c2 = c in
+                let! d2 = d in
+                return add4 a2 b2 c2 d2
+            }
 
