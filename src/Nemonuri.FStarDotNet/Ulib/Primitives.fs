@@ -251,6 +251,8 @@ module Abbreviations =
 
     type EqType<'a when 'a : equality> = FStarLiftedValue<'a>
 
+    type Fv<'a> = FStarLiftedValue<'a>
+
 
 (*
 module Prelude =

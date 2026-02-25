@@ -196,7 +196,6 @@ module Prims =
         we assume it is primitive, for convenient interop with other languages *)
     type unit = EqType<Core.unit>
 
-
     (** [squash p] is a central type in F*---[squash p] is the proof
         irrelevant analog of [p] and is represented as a unit
         refinement. Squashed proofs are typically discharged using an SMT
@@ -447,7 +446,7 @@ module Prims =
     [<deprecated "'has_type' is intended for internal use and debugging purposes only; \
                     do not rely on it for your proofs">]
     [<Interface>]
-    [<FStarTypeProxy(typeof<FStarHasTypeProxy<'a, '_0, 'Type>>)>]
+    [<FStarTypeProxy(typedefof<FStarHasTypeProxy<_,_,_>>)>]
     type has_type<'a, '_0, 'Type when 'a :> Type and '_0 :> thunk<'a>> = inherit ``->``<'a, Type0>
         
     and [<AbstractClass>]
@@ -459,7 +458,15 @@ module Prims =
                 | true -> ()
                 | false -> Fty.raiseInvalid typeof<has_type<'a, '_0, 'Type>>
             
-            interface has_type<'a, '_0, 'Type>
+            abstract member GetTailTypeContext: outref<'a> -> Core.unit
+            abstract member GetTailTypeContext: outref<objnull> -> Core.unit
+
+            interface has_type<'a, '_0, 'Type> with
+                member this.GetTailTypeContext (d: outref<'a>) = d <- Ftc.tail this
+                member this.GetTailTypeContext (d: outref<objnull>) = d <- Ftc.Boxed.tail this
+                member this.GetWitness (d: outref<(thunk<'a> -> Type0)>) = d <- Unchecked.defaultof<_>
+                member this.GetWitness (d: outref<objnull>) = d <- Unchecked.defaultof<_>
+                member this.Invoke (s: thunk<'a>, d: outref<Type0>) = d <- Unchecked.defaultof<_>
             
 
     (** Squashed universal quantification, or dependent products, written
@@ -714,20 +721,24 @@ module Prims =
     (** Dependent pairs [dtuple2] in concrete syntax is [x:a & b x].
         Its values can be constructed with the concrete syntax [(| x, y |)] *)
     [<unopteq>]
-    [<Struct>]
+    [<RequireQualifiedAccess>]
     [<FStarTypeProxy(typedefof<FStarDTuple2Proxy<_,_,_,_>>)>]
-    type dtuple2<'a, '_2> = 
-        | Mkdtuple2 of _1: 'a * _2: '_2
+    type dtuple2<'a, 'b 
+                    when 'a :> Type 
+                    and 'b :> ``->``<'a, Type>> = { b: 'b; _1: thunk<'a> }
         with
-            interface eterm<Type0, dtuple2<'a, '_2>, ('a * '_2)>
-        end    
+            member this._2 = let r: Type = this.b.Invoke(this._1) in r
+        end
 
-    and FStarDTuple2Proxy<'a, '_2, 'b, '_1
+    and FStarDTuple2Proxy<'a, 'b, '_1, '_2
                             when 'a :> Type
                             and 'b :> ``->``<'a, Type>
                             and '_1 :> thunk<'a>
                             and '_2 :> dvalue<'a, '_1, Type, 'b, '_2>> =
-        dtuple2<'a, '_2>
+        pair<'_1, '_2>
+
+    let (|Mkdtuple2|) (dt: dtuple2<'a, 'b>) = Pair (dt._1, dt._2)
+
 
     (** Squashed existential quantification, or dependent sums,
         are written [exists (x:a). p x] : specialized to Type0 *)
@@ -742,7 +753,7 @@ module Prims =
                             and 'p :> ``->``<'a, Type0>
                             and 'x :> thunk<'a>
                             and '``p x`` :> dvalue<'a, 'x, Type, ``->0``<'a,'p>, '``p x``>> =
-        squash<FStarDTuple2Proxy<'a, '``p x``, ``->0``<'a,'p>, 'x>>
+        squash<FStarDTuple2Proxy<'a, ``->0``<'a,'p>, 'x, '``p x``>>
  
 
     (** Primitive type of mathematical integers, mapped to zarith in OCaml
@@ -839,7 +850,7 @@ module Prims =
     let (|Nil|Cons|) (l: list<'a>) =
         match Fv.embed l with
         | [] -> Nil l
-        | hd::tl -> Cons (Flv.create hd, Flv.create tl)
+        | hd::tl -> Cons (Flv.lift hd, Flv.lift tl)
 
 #if false
     (** The [M] marker is interpreted by the Dijkstra Monads for Free
