@@ -10,6 +10,12 @@ type ITypeTail<'TTail> =
     interface end
 
 [<Interface>]
+type IEmbeddable =
+    interface 
+        abstract member Embed: d:outref<objnull> -> unit
+    end
+
+[<Interface>]
 type IEmbeddable<'TTarget> =
     interface 
         abstract member Embed: d:outref<'TTarget> -> unit
@@ -30,6 +36,9 @@ type IFStarEmptyTypeContext<'TFix when 'TFix :> IFStarEmptyTypeContext<'TFix>> =
     inherit IFStarTypeContextWithTail<'TFix>
 
 [<Interface>]
+type IFStarObjectType = inherit IFStarEmptyTypeContext<IFStarObjectType>
+
+[<Interface>]
 type IFStarTypeContext<'TTail, 'THead when 'TTail :> IFStarTypeContext> =
     inherit ITypeHead<'THead>
     inherit IFStarTypeContextWithTail<'TTail>
@@ -45,11 +54,20 @@ type IFStarValue<'TTail, 'TValue when 'TTail :> IFStarTypeContext> =
 type IFStarTerm<'TTail, 'TTerm when 'TTail :> IFStarTypeContext and 'TTerm :> IFStarTerm<'TTail, 'TTerm>> =
     inherit IFStarValue<'TTail, 'TTerm>
 
+
+
+[<Interface>]
+type IFStarEmbeddableTerm<'TTail, 'TTerm
+                            when 'TTail :> IFStarTypeContext 
+                            and 'TTerm :> IFStarTerm<'TTail, 'TTerm>> =
+    inherit IFStarTerm<'TTail, 'TTerm>
+    inherit IEmbeddable
+
 [<Interface>]
 type IFStarEmbeddableTerm<'TTail, 'TTerm, 'TValue 
                             when 'TTail :> IFStarTypeContext 
                             and 'TTerm :> IFStarTerm<'TTail, 'TTerm>> =
-    inherit IFStarTerm<'TTail, 'TTerm>
+    inherit IFStarEmbeddableTerm<'TTail, 'TTerm>
     inherit IEmbeddable<'TValue>
 
 [<Interface>]
@@ -62,11 +80,11 @@ type IFStarRefinement<'T when 'T :> IFStarTypeContext> = interface end
 
 [<Interface>]
 type IFStarDependentValue<'TSourceTypeContext, 'TSource, 'TTargetTypeContext, 'TImplication, 'TTarget
-                                when 'TSourceTypeContext :> IFStarTypeContext
-                                and 'TSource :> IFStarTypeContextWithTail<'TSourceTypeContext>
-                                and 'TTargetTypeContext :> IFStarTypeContext
-                                and 'TImplication :> IFStarFunction<'TSourceTypeContext, IFStarTypeContextWithTail<'TSourceTypeContext>, 'TTargetTypeContext>
-                                and 'TTarget :> IFStarTypeContextWithTail<'TTargetTypeContext>> = 
+                            when 'TSourceTypeContext :> IFStarTypeContext
+                            and 'TSource :> IFStarTypeContextWithTail<'TSourceTypeContext>
+                            and 'TTargetTypeContext :> IFStarTypeContext
+                            and 'TImplication :> IFStarFunction<'TSourceTypeContext, IFStarTypeContextWithTail<'TSourceTypeContext>, 'TTargetTypeContext>
+                            and 'TTarget :> IFStarTypeContextWithTail<'TTargetTypeContext>> = 
     inherit IFStarValue<'TTargetTypeContext, 'TTarget>
 
 
@@ -88,6 +106,10 @@ module Abbreviations =
 
     type refine<'t when 't :> tc> = IFStarRefinement<'t>
 
+    type eterm<'t, 'term 
+                when 't :> tc 
+                and 'term :> term<'t, 'term>> = IFStarEmbeddableTerm<'t, 'term>
+
     type eterm<'t, 'term, 'v 
                 when 't :> tc 
                 and 'term :> term<'t, 'term>> = IFStarEmbeddableTerm<'t, 'term, 'v>
@@ -98,6 +120,7 @@ module Abbreviations =
                     and 'tt :> tc
                     and 'imp :> imp<'st, thunk<'st>, 'tt>
                     and 't :> thunk<'tt>> = IFStarDependentValue<'st, 's, 'tt, 'imp, 't>
+    
 
 module A = Abbreviations
 
@@ -114,6 +137,10 @@ module FStarTypeContexts =
     let tail (tc: A.tc<'t,_>) = let r: 't = tc.GetTailTypeContext() in r
     
 module FStarValues =
+
+    module Boxed =
+
+        let embed (term: A.eterm<_,_>) = let r: objnull = term.Embed() in r    
 
     let value (term: A.value<_,'v>) = let r: 'v = term.GetValue() in r
 

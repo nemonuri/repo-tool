@@ -43,8 +43,10 @@ module Prims =
     open System.Collections.Generic 
     module Fv = Nemonuri.FStarDotNet.Primitives.Abstractions.FStarValues
     module Ftc = Nemonuri.FStarDotNet.Primitives.Abstractions.FStarTypeContexts
+    module Ff = Nemonuri.FStarDotNet.Primitives.Abstractions.FStarFunctions
     module Uc = Microsoft.FSharp.Core.Operators.Unchecked
     module Fty = Nemonuri.FStarDotNet.Primitives.FStarTypes
+    type private Fot = Nemonuri.FStarDotNet.Primitives.FStarObjectType
 
 
     (***** Begin trusted primitives *****)
@@ -92,91 +94,49 @@ module Prims =
 
     type Type = tc
 
-    [<Interface>]
-    type Type0 = inherit etc<Type0>
-        
-        
-    type FStarType0 =
-        struct
-            interface Type0 with
-                member this.GetTailTypeContext (d: outref<objnull>) = d <- FStarType0() |> box
-                member this.GetWitness (d: outref<objnull>) = d <- ()
-        end
+    type Type0 = Abstractions.IFStarObjectType
+
 
     (** A predicate to express when a type supports decidable equality
         The type-checker emits axioms for [hasEq] for each inductive type *)
     [<AbstractClass>]
     type hasEq<'Type 
-                when 'Type :> Type 
-                and 'Type :> IEquatable<'Type>
-                and 'Type :> term<Type0, 'Type>> =
+                when 'Type :> eterm<Type0, 'Type>
+                and 'Type : equality> =
         class
-            member private this.Base = FStarType0()
-
             interface Type0 with
-                member this.GetTailTypeContext (d: outref<objnull>) = d <- Ftc.Boxed.tail this.Base
-                member this.GetWitness (d: outref<objnull>) = d <- Ftc.Boxed.witness this.Base
+                member this.GetTailTypeContext (d: outref<objnull>) = d <- Fot.Tail
+                member this.GetWitness (d: outref<objnull>) = d <- Fot.Witness
         end
 
 
     (** A convenient abbreviation, [eqtype] is the type of types in
         universe 0 which support decidable equality *)
-    [<FStarTypeProxy(typedefof<IFStarEquatable<_>>)>]
+    [<FStarTypeProxy(typedefof<eqtype<_>>)>]
     [<Interface>]
     type eqtype = inherit Type0
     
-    and IFStarEquatable<'TTerm when 'TTerm :> IFStarEquatable<'TTerm>> =
+    and [<FStarTypeProxy(typedefof<IFStarEquatableProxy<_>>)>]
+        eqtype<'TTerm 
+                when 'TTerm :> eqtype<'TTerm> 
+                and 'TTerm : equality> =
+        eterm<Type0, 'TTerm>
+
+    and IFStarEquatableProxy<'TTerm 
+                                when 'TTerm :> IFStarEquatableProxy<'TTerm> 
+                                and 'TTerm : equality> =
         interface
-            inherit eqtype
-            inherit IEquatable<'TTerm>
-            inherit term<Type0, 'TTerm>
+            inherit eqtype<'TTerm>
             inherit refine<hasEq<'TTerm>>
         end
 
-    [<Interface>]
-    type IFStarLiftedEquatable<'TTerm, 'TValue when 'TTerm :> IFStarLiftedEquatable<'TTerm, 'TValue>> =
-        interface
-            inherit IFStarEquatable<'TTerm>
-            inherit eterm<Type0, 'TTerm, 'TValue>
-        end
-    
-    [<RequireQualifiedAccess>]
-    [<Struct>]
-    type FStarLiftedValue<'T> =
-        private { Value: 'T }
-        with
-            member private this.Tail = FStarType0()
-
-            interface eterm<Type0, FStarLiftedValue<'T>, 'T>
-
-            static member inline create (v: 'T) = { Value = v }
-        end
-
-    [<RequireQualifiedAccess>]
-    [<Struct>]
-    type FStarLiftedEquatable<'T when 'T :> IEquatable<'T>> = 
-        private { Value: 'T }
-        with
-            member private this.Tail = FStarType0()
-
-            interface IFStarLiftedEquatable<FStarLiftedEquatable<'T>, 'T> with
-                member this.GetValue (d: outref<FStarLiftedEquatable<'T>>) = d <- this
-                member this.Embed (d: outref<'T>) = d <- this.Value
-                member this.GetTailTypeContext (d: outref<Type0>) = d <- this.Tail
-                member this.GetWitness (d: outref<FStarLiftedEquatable<'T>>) = d <- Fv.value this
-            interface Type with
-                member this.GetTailTypeContext (d: outref<objnull>) = d <- Ftc.tail this |> box
-                member this.GetWitness (d: outref<objnull>) = d <- Ftc.witness this |> box
-            
-            static member inline create (v: 'T) = { Value = v }
-        end
 
 
     (** [bool] is a two element type with elements [true] and [false]. We
         assume it is primitive, for convenient interop with other
         languages, although it could easily be defined as an inductive type
         with two cases, [BTrue | BFalse] *)
-    type bool = FStarLiftedEquatable<Core.bool>
+    type bool = EqType<Core.bool>
 
     type BTrue = 
         struct
@@ -188,6 +148,8 @@ module Prims =
             interface Type with
                 member this.GetTailTypeContext (d: outref<objnull>) = d <- Ftc.tail this |> box
                 member this.GetWitness (d: outref<objnull>) = d <- Ftc.witness this |> box
+            interface Abstractions.IEmbeddable with
+                member this.Embed (d: outref<objnull>) = d <- Fv.embed this |> box
         end
 
     type BFalse = 
@@ -197,9 +159,11 @@ module Prims =
                 member this.Embed (d: outref<bool>) = d <- bool.create true
                 member this.GetTailTypeContext (d: outref<Type0>) = d <- Ftc.tail this
                 member this.GetWitness (d: outref<BFalse>) = d <- Fv.value this
-            interface Abstractions.IFStarTypeContext with
+            interface Type with
                 member this.GetTailTypeContext (d: outref<objnull>) = d <- Ftc.tail this |> box
                 member this.GetWitness (d: outref<objnull>) = d <- Ftc.witness this |> box
+            interface Abstractions.IEmbeddable with
+                member this.Embed (d: outref<objnull>) = d <- Fv.embed this |> box
         end
 
     (** [empty] is the empty inductive type. The type with no
@@ -223,16 +187,14 @@ module Prims =
     [<RequireQualifiedAccess>]
     [<Struct>]
     type trivial = | T with
-        member private this.Base = FStarType0()
-
         interface Type with
-            member this.GetTailTypeContext (d: outref<objnull>): unit = d <- Ftc.Boxed.tail this.Base
-            member this.GetWitness (d: outref<objnull>): unit = d <- Ftc.Boxed.witness this.Base
+            member this.GetTailTypeContext (d: outref<objnull>): unit = d <- Fot.Tail
+            member this.GetWitness (d: outref<objnull>): unit = d <- Fot.Witness
 
 
     (** [unit]: another singleton type, with its only inhabitant written [()]
         we assume it is primitive, for convenient interop with other languages *)
-    type unit = FStarLiftedEquatable<Core.uint>
+    type unit = EqType<Core.unit>
 
 
     (** [squash p] is a central type in F*---[squash p] is the proof
@@ -254,15 +216,10 @@ module Prims =
         See FStar.Squash for various ways of manipulating squashed
         types. *)
     [<tac_opaque>]
-    [<AbstractClass>]
+    [<Interface>]
     type squash<'p when 'p :> Type> =
-        abstract member GetTailTypeContext: outref<objnull> -> unit
-        abstract member GetWitness: outref<objnull> -> unit
-
-        interface refine<'p>
-        interface Type0 with
-            member this.GetTailTypeContext (d: outref<objnull>) = d <- this.GetTailTypeContext()
-            member this.GetWitness (d: outref<objnull>) = d <- this.GetWitness()
+        inherit refine<'p>
+        inherit Type0
 
     (** [auto_squash] is equivalent to [squash]. However, F* will
         automatically insert `auto_squash` when simplifying terms,
@@ -314,11 +271,9 @@ module Prims =
     [<FStarTypeProxy(typedefof<FStarEqualsProxy<_,_>>)>]
     type equals<'a, 'x, '_0 when 'a :> Type and 'x :> thunk<'a> and '_0 :> thunk<'a>> = | Refl 
         with
-            member private this.Base = FStarType0()
-
             interface Type with
-                member this.GetTailTypeContext (d: outref<objnull>) = d <- Ftc.Boxed.tail this.Base
-                member this.GetWitness (d: outref<objnull>) = d <- Ftc.Boxed.witness this.Base
+                member this.GetTailTypeContext (d: outref<objnull>) = d <- Fot.Tail
+                member this.GetWitness (d: outref<objnull>) = d <- Fot.Witness
         end
 
     and FStarEqualsProxy<'a, 'x when 'a :> Type and 'x :> thunk<'a>> = equals<'a, 'x, 'x>
@@ -354,10 +309,20 @@ module Prims =
 
     (** constructive conjunction *)
     [<Struct>]
-    type pair<'p, 'q> = | Pair of _1: 'p * _2: 'q with
-        interface IFStarEquatable<pair<'p, 'q>>
-
-
+    type pair<'p, 'q> = | Pair of _1: 'p * _2: 'q 
+        with
+            interface eterm<Type0, pair<'p, 'q>, ('p * 'q)> with
+                member this.Embed (d: outref<'p * 'q>) = d <- match this with | Pair(_1, _2) -> _1, _2
+                member this.GetTailTypeContext (d: outref<Type0>) = d <- Fot()
+                member this.GetValue (d: outref<pair<'p,'q>>) = d <- this
+                member this.GetWitness (d: outref<pair<'p,'q>>) = d <- Fv.value this
+            interface Type with
+                member this.GetTailTypeContext (d: outref<objnull>) = d <- Ftc.tail this |> box
+                member this.GetWitness (d: outref<objnull>) = d <- Ftc.witness this |> box
+            interface Abstractions.IEmbeddable with
+                member this.Embed (d: outref<objnull>) = d <- Fv.embed this |> box
+        end
+            
     (** squashed conjunction, specialized to [Type0], written with an
         infix binary [/\] *)
     [<tac_opaque; smt_theory_symbol>]
@@ -368,7 +333,18 @@ module Prims =
     type sum<'p,'q> =
         | Left of vl: 'p
         | Right of vr: 'q
-        interface IFStarEquatable<sum<'p, 'q>>
+        with
+            interface eterm<Type0, sum<'p,'q>, sum<'p,'q>> with
+                member this.Embed (d: outref<sum<'p,'q>>) = d <- this
+                member this.GetTailTypeContext (d: outref<Type0>) = d <- Fot()
+                member this.GetValue (d: outref<sum<'p,'q>>) = d <- this
+                member this.GetWitness (d: outref<sum<'p,'q>>) = d <- Fv.value this
+            interface Type with
+                member this.GetTailTypeContext (d: outref<objnull>) = d <- Ftc.tail this |> box
+                member this.GetWitness (d: outref<objnull>) = d <- Ftc.witness this |> box
+            interface Abstractions.IEmbeddable with
+                member this.Embed (d: outref<objnull>) = d <- Fv.embed this |> box
+        end
 
     (** squashed disjunction, specialized to [Type0], written with an
         infix binary [\/] *)
@@ -385,6 +361,11 @@ module Prims =
         with
             interface ``->``<'a, Type> with
                 member this.Invoke (s: thunk<'a>, d: outref<Type>): Core.unit = d <- let ty0: Type0 = this.Value.Invoke(s) in ty0
+                member this.GetTailTypeContext (d: outref<'a>) = d <- Ftc.tail this.Value
+                member this.GetWitness (d: outref<(thunk<'a> -> Type)>) = d <- Ff.toArrow (this :> ``->``<'a, Type>)
+            interface Type with
+                member this.GetTailTypeContext (d: outref<objnull>) = d <- Ftc.tail this |> box
+                member this.GetWitness (d: outref<objnull>) = d <- Ftc.witness this |> box
         end
 
     (** squashed (non-dependent) implication, specialized to [Type0],
@@ -419,12 +400,12 @@ module Prims =
             * The subterm ordering on inductive types
             * [f x << D f] for data constructors D of an inductive t whose
                 arguments include a ghost or total function returning a t *)
-    [<AbstractClass>]
-    type precedes<'a, 'b, '_0, '_1 when 'a :> Type and 'b :> Type and '_0 :> thunk<'a> and '_1 :> thunk<'b>> =
-        interface Type0
+    [<Interface>]
+    type precedes<'a, 'b, '_0, '_1 when 'a :> Type and 'b :> Type and '_0 :> thunk<'a> and '_1 :> thunk<'b>> = inherit Type0
+        
 
     (** The type of primitive strings of characters; See FStar.String *)
-    type string = Core.string
+    type string = EqType<Core.string>
 
     (** This attribute can be added to the declaration or definition of
         any top-level symbol. It causes F* to report a warning on any
@@ -465,14 +446,12 @@ module Prims =
         does not internalize its own typing judgment *)
     [<deprecated "'has_type' is intended for internal use and debugging purposes only; \
                     do not rely on it for your proofs">]
-    [<AbstractClass>]
+    [<Interface>]
     [<FStarTypeProxy(typeof<FStarHasTypeProxy<'a, '_0, 'Type>>)>]
-    type has_type<'a, '_0, 'Type when 'a :> Type and '_0 :> thunk<'a>>() =
-        interface ``->``<'a, Type0>
-    
+    type has_type<'a, '_0, 'Type when 'a :> Type and '_0 :> thunk<'a>> = inherit ``->``<'a, Type0>
+        
     and [<AbstractClass>]
         FStarHasTypeProxy<'a, '_0, 'Type when 'a :> Type and '_0 :> thunk<'a>>() =
-            inherit has_type<'a, '_0, 'Type>()
             do
                 match
                     typeof<'Type>.IsAssignableFrom typeof<'_0>
@@ -480,16 +459,18 @@ module Prims =
                 | true -> ()
                 | false -> Fty.raiseInvalid typeof<has_type<'a, '_0, 'Type>>
             
+            interface has_type<'a, '_0, 'Type>
+            
 
     (** Squashed universal quantification, or dependent products, written
         [forall (x:a). p x], specialized to Type0 *)
     [<tac_opaque; smt_theory_symbol>]
-    [<AbstractClass>]
+    [<Interface>]
     [<FStarTypeProxy(typedefof<FStarForallProxy<_,_,_>>)>]
     type l_Forall<'a, 'p
                     when 'a :> Type 
                     and 'p :> ``->``<'a, Type0>> = 
-        interface logical
+        inherit logical
     
     and FStarForallProxy<'a, 'p, 'x
                     when 'a :> Type 
@@ -499,10 +480,10 @@ module Prims =
 
     (** [p1 `subtype_of` p2] when every element of [p1] is also an element
         of [p2]. *)
-    [<AbstractClass>]
+    [<Interface>]
     [<FStarTypeProxy(typedefof<FStarSubtypeOfProxy<_,_,_>>)>]
     type subtype_of<'p1, 'p2 when 'p1 :> Type and 'p2 :> Type> = 
-        interface logical
+        inherit logical
 
     and FStarSubtypeOfProxy<'p1, 'p2, 'x when 'p1 :> Type and 'p2 :> Type and 'x :> thunk<'p1>> =
             FStarForallProxy<'p1, has_type<'p1, 'x, 'p2>, 'x>
@@ -517,14 +498,13 @@ module Prims =
         See https://github.com/FStarLang/FStar/issues/1048 for more
         details and the current status of the work.
         *)
-    [<AbstractClass>]
-    [<FStarTypeProxy(typedefof<FStarProp<_>>)>]
-    type prop = interface IFStarEquatable<unit>
+    [<FStarTypeProxy(typedefof<IFStarPropProxy<_>>)>]
+    [<Interface>]
+    type prop = inherit term<Type0, unit>
         
-    and [<AbstractClass>]
-        FStarProp<'a when 'a :> FStarProp<'a>> =
-            inherit prop
-            interface refine<subtype_of<'a, unit>>
+    and IFStarPropProxy<'a when 'a :> IFStarPropProxy<'a>> =
+        inherit prop
+        inherit refine<subtype_of<'a, unit>>
 
     (**** The PURE effect *)
 
@@ -739,7 +719,7 @@ module Prims =
     type dtuple2<'a, '_2> = 
         | Mkdtuple2 of _1: 'a * _2: '_2
         with
-            interface IFStarEquatable<dtuple2<'a, '_2>>
+            interface eterm<Type0, dtuple2<'a, '_2>, ('a * '_2)>
         end    
 
     and FStarDTuple2Proxy<'a, '_2, 'b, '_1
@@ -752,10 +732,10 @@ module Prims =
     (** Squashed existential quantification, or dependent sums,
         are written [exists (x:a). p x] : specialized to Type0 *)
     [<tac_opaque; smt_theory_symbol>]
-    [<AbstractClass>]
+    [<Interface>]
     [<FStarTypeProxy(typedefof<FStarExistsProxy<_,_,_,_>>)>]
-    type l_Exists<'a, 'p when 'a :> Type and 'p :> ``->``<'a, Type0>> = // squash<dtuple2<'a, l_Exists_p<'a, 'p>>>
-        interface logical
+    type l_Exists<'a, 'p when 'a :> Type and 'p :> ``->``<'a, Type0>> = inherit logical
+        
 
     and FStarExistsProxy<'a, 'p, 'x, '``p x``
                             when 'a :> Type 
@@ -767,21 +747,9 @@ module Prims =
 
     (** Primitive type of mathematical integers, mapped to zarith in OCaml
         extraction and to the SMT sort of integers *)
-    type int = FStarLiftedEquatable<Core.bigint>
+    type int = EqType<Core.bigint>
 
-    type FunctorBuilder =
-        struct
-            member inline this.Bind(x: FStarLiftedEquatable<'a>, f: 'a -> 'b) = Fv.embed x |> f
-            member inline this.Return(x: 'a) = FStarLiftedEquatable<'a>.create x
-
-            static member inline map1 tf s1 = FunctorBuilder() { let! t1 = s1 in return tf t1 }
-            static member inline map2 tf s1 s2 = FunctorBuilder() { let! t1 = s1 in let! t2 = s2 in return tf t1 t2 }
-            static member inline map3 tf s1 s2 s3 = FunctorBuilder() { let! t1 = s1 in let! t2 = s2 in let! t3 = s3 in return tf t1 t2 t3 }
-
-            static member inline curryMap2 tf s1 s2 = (tf |> Functions.curry |> FunctorBuilder.map2) s1 s2
-        end
-
-    type private Fb = FunctorBuilder
+    module Flv = Nemonuri.FStarDotNet.Primitives.FStarLiftedValues
     module Intr = Microsoft.FSharp.Core.LanguagePrimitives.IntrinsicOperators
 
     (**** Basic operators on booleans and integers *)
@@ -789,94 +757,105 @@ module Prims =
     (** [&&] boolean conjunction *)
 
     [<smt_theory_symbol>]
-    let op_AmpAmp x y = (Intr.(&&) |> Fb.map2) x y
+    let op_AmpAmp x y = (Intr.(&&) |> Flv.map2) x y
 
     (** [||] boolean disjunction *)
 
     [<smt_theory_symbol>]
-    let op_BarBar x y = (Intr.(||) |> Fb.map2) x y
+    let op_BarBar x y = (Intr.(||) |> Flv.map2) x y
 
     (** [not] boolean negation *)
 
     [<smt_theory_symbol>]
-    let op_Negation x = (not |> Fb.map1) x
+    let op_Negation x = (not |> Flv.map1) x
 
     (** Integer multiplication, no special symbol. See FStar.Mul *)
 
     [<smt_theory_symbol>]
-    let op_Multiply x y = (bigint.Multiply |> Fb.curryMap2) x y
+    let op_Multiply x y = (bigint.Multiply |> Flv.curryMap2) x y
 
     (** [-] integer subtraction *)
 
     [<smt_theory_symbol>]
-    let op_Subtraction x y = (bigint.Subtract |> Fb.curryMap2) x y
+    let op_Subtraction x y = (bigint.Subtract |> Flv.curryMap2) x y
 
     (** [+] integer addition *)
 
     [<smt_theory_symbol>]
-    let op_Addition x y = (bigint.Add |> Fb.curryMap2) x y
+    let op_Addition x y = (bigint.Add |> Flv.curryMap2) x y
 
     (** [-] prefix unary integer negation *)
 
     [<smt_theory_symbol>]
-    let op_Minus i = (bigint.Negate |> Fb.map1) i
+    let op_Minus i = (bigint.Negate |> Flv.map1) i
 
     (** [<=] integer comparison *)
 
+    let inline private tyFix (f: bigint -> bigint -> Core.bool) = f
+
     [<smt_theory_symbol>]
-    let op_LessThanOrEqual x y = ((<=) |> Fb.map2<bigint,_,_>) x y
+    let op_LessThanOrEqual x y = ((<=) |> tyFix |> Flv.map2) x y
 
     (** [>] integer comparison *)
 
     [<smt_theory_symbol>]
-    let op_GreaterThan x y = ((>) |> Fb.map2<bigint,_,_>) x y
+    let op_GreaterThan x y = ((>) |> tyFix |> Flv.map2) x y
 
     (** [>=] integer comparison *)
 
     [<smt_theory_symbol>]
-    let op_GreaterThanOrEqual x y = ((>=) |> Fb.map2<bigint,_,_>) x y
+    let op_GreaterThanOrEqual x y = ((>=) |> tyFix |> Flv.map2) x y
 
     (** [<] integer comparison *)
 
     [<smt_theory_symbol>]
-    let op_LessThan x y = ((<) |> Fb.map2<bigint,_,_>) x y
+    let op_LessThan x y = ((<) |> tyFix |> Flv.map2) x y
 
     (** [=] decidable equality on [eqtype] *)
 
+    let inline private eq' (x: 'a) (y: 'a) = x = y
+
     [<smt_theory_symbol>]
-    let inline op_Equality<[<unrefine>] 'a when 'a :> IFStarEquatable<'a> and 'a : equality> (x: 'a) (y: 'a) = (=) x y |> bool.create
+    let inline op_Equality<[<unrefine>] 'a when 'a :> eqtype<'a> and 'a : equality> (x: 'a) (y: 'a) = (=) x y |> bool.create
 
     (** [<>] decidable dis-equality on [eqtype] *)
 
     [<smt_theory_symbol>]
-    let op_disEquality<[<unrefine>] 'a when 'a :> IFStarEquatable<'a> and 'a : equality> (x: 'a) (y: 'a) = (<>) x y |> bool.create
+    let op_disEquality<[<unrefine>] 'a when 'a :> eqtype<'a> and 'a : equality> (x: 'a) (y: 'a) = (<>) x y |> bool.create
 
     (** The extensible open inductive type of exceptions *)
     type exn = FStarLiftedValue<Core.exn>
 
     (** String concatenation and its abbreviation as [^].  TODO, both
         should be removed in favor of what is present in FStar.String *)
-    let strcat: string -> string -> Tot string
-    inline_for_extraction unfold
+    let strcat (s1: string) (s2: string) : string = Flv.map2 (fun (t1: Core.string) (t2: Core.string) -> System.String.Concat(t1, t2)) s1 s2
+    
+    [<inline_for_extraction; unfold>]
     let op_Hat s1 s2 = strcat s1 s2
 
     (** The inductive type of polymorphic lists *)
-    type list (a: Type) =
-        | Nil : list a
-        | Cons : hd: a -> tl: list a -> list a
+    type list<'a> = FStarLiftedValue<Microsoft.FSharp.Collections.list<'a>>
 
+    let (|Nil|Cons|) (l: list<'a>) =
+        match Fv.embed l with
+        | [] -> Nil l
+        | hd::tl -> Cons (Flv.create hd, Flv.create tl)
+
+#if false
     (** The [M] marker is interpreted by the Dijkstra Monads for Free
         construction. It has a "double meaning", either as an alias for
         reasoning about the direct definitions, or as a marker for places
         where a CPS transformation should happen. *)
     effect M (a: Type) = Tot a (attributes cps)
+#endif
 
     (** Returning a value into the [M] effect *)
-    let returnM (a: Type) (x: a) : M a = x
+    let returnM<'a> (x: 'a) : 'a = x
 
+#if false
     (** [as_requires] turns a WP into a precondition, by applying it to
         a trivial postcondition *)
-    unfold
+    [<unfold>]
     let as_requires (#a: Type) (wp: pure_wp a) : pure_pre = wp (fun x -> True)
 
     (** [as_ensures] turns a WP into a postcondition, relying on a kind of
@@ -972,3 +951,4 @@ module Prims =
         Incrementing this forces all .checked files to be invalidated *)
     irreducible
     let __cache_version_number__ = 77
+#endif
