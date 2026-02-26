@@ -203,11 +203,6 @@ and [<Struct>]
     | Box of box: obj
     | Pointer of pointer: nativeint
 
-type IFStarDependentTypedValueSolver<'TSourceTypeContext, 'TTypeImplication, 'TTarget
-                                        when 'TTypeImplication :> A.imp<IFStarObjectType, 'TSourceTypeContext, IFStarTypeContext>
-                                        and 'TTypeImplication : unmanaged> =
-    abstract member Box: 'TTarget -> FStarDependentTypedValue<'TSourceTypeContext, 'TTypeImplication>
-    abstract member Unbox: FStarDependentTypedValue<'TSourceTypeContext, 'TTypeImplication> -> 'TTarget
 
 [<Struct>]
 [<RequireQualifiedAccess>]
@@ -216,13 +211,6 @@ type FStarDependentTypedValueSolver<'TSourceTypeContext, 'TTypeImplication, 'TTa
                                         and 'TTypeImplication : unmanaged> =
     {   Boxer: 'TTarget -> FStarDependentTypedValue<'TSourceTypeContext, 'TTypeImplication>
         Unboxer: FStarDependentTypedValue<'TSourceTypeContext, 'TTypeImplication> -> 'TTarget   }
-    with
-        interface IFStarDependentTypedValueSolver<'TSourceTypeContext, 'TTypeImplication, 'TTarget> with
-            member this.Box (arg: 'TTarget): FStarDependentTypedValue<'TSourceTypeContext,'TTypeImplication> = this.Boxer arg
-            member this.Unbox (arg: FStarDependentTypedValue<'TSourceTypeContext,'TTypeImplication>): 'TTarget = this.Unboxer arg
-    end
-
-
 
 
 (*

@@ -354,6 +354,11 @@ module Prims =
 
             interface ``->``<'a, Type> with
                 member this.Invoke (s: 'a, d: outref<Type>) = d <- this.Base.Invoke(s)
+                member this.GetTailTypeContext (d: outref<Type0>) = d <- Ftc.tail this.Base
+                member this.GetWitness (d: outref<('a -> Type)>) = d <- Ff.toArrow this
+            interface Type with
+                member this.GetTailTypeContext (d: outref<objnull>) = d <- Ftc.tail this |> box
+                member this.GetWitness (d: outref<objnull>) = d <- Ftc.witness this |> box
         end
 
     (** squashed (non-dependent) implication, specialized to [Type0],
@@ -437,28 +442,21 @@ module Prims =
     // [<FStarTypeProxy(typedefof<FStarHasTypeProxy<_,_,_>>)>]
     type has_type<'a, '_0, 'Type when 'a :> Type and '_0 :> thunk<'a>> = 
         struct
-            interface ``->``<'a, Type0>
-        end
-
-(*
-    and [<AbstractClass>]
-        FStarHasTypeProxy<'a, '_0, 'Type when 'a :> Type and '_0 :> thunk<'a>>() =
-            do
-                match
-                    typeof<'Type>.IsAssignableFrom typeof<'_0>
-                with
-                | true -> ()
-                | false -> Fty.raiseInvalid typeof<has_type<'a, '_0, 'Type>>
-            
-            abstract member GetTailTypeContext: outref<Type0> -> Core.unit
-
-            interface has_type<'a, '_0, 'Type> with
-                member this.GetTailTypeContext (d: outref<Type0>) = d <- this.GetTailTypeContext()
+            interface ``->``<'a, Type0> with
+                member this.GetTailTypeContext (d: outref<Type0>) = d <- Fot()
+                member this.Invoke (s: 'a, d: outref<Type0>) = 
+                    let r: Type0 =
+                        match
+                            typeof<'Type>.IsAssignableFrom typeof<'_0>
+                        with
+                        | true -> unit.create() |> Ftc.tail
+                        | false -> Fty.raiseInvalid typeof<has_type<'a, '_0, 'Type>>
+                    d <- r
+                member this.GetWitness (d: outref<('a -> Type0)>) = d <- Ff.toArrow this
+            interface Type with
                 member this.GetTailTypeContext (d: outref<objnull>) = d <- Ftc.tail this |> box
-                member this.GetWitness (d: outref<('a -> Type0)>) = d <- Unchecked.defaultof<_>
-                member this.GetWitness (d: outref<objnull>) = d <- Unchecked.defaultof<_>
-                member this.Invoke (s: 'a, d: outref<Type0>) = d <- Unchecked.defaultof<_>
-*)          
+                member this.GetWitness (d: outref<objnull>) = d <- Ftc.witness this |> box
+        end      
 
     (** Squashed universal quantification, or dependent products, written
         [forall (x:a). p x], specialized to Type0 *)
@@ -467,7 +465,8 @@ module Prims =
     [<FStarTypeProxy(typedefof<FStarForallProxy<_,_,_>>)>]
     type l_Forall<'a, 'p
                     when 'a :> Type 
-                    and 'p :> ``->``<'a, Type0>> = 
+                    and 'p :> ``->``<'a, Type0>
+                    and 'p : unmanaged> = 
         inherit logical
     
     and FStarForallProxy<'a, 'p, 'x
@@ -725,81 +724,42 @@ module Prims =
         end
 *)
     [<unopteq>]
-    [<FStarTypeProxy(typedefof<IFStarDTuple2Proxy<_,_,_>>)>]
     type dtuple2<'a, 'b 
                     when 'a :> Type 
                     and 'b :> ``->``<'a, Type>
                     and 'b : unmanaged> =
         Fv<FStarDependentTuple<'a, 'b>>
 
-    and IFStarDTuple2Proxy<'a, 'b, '``b _1``
-                            when 'a :> Type
-                            and 'b :> ``->``<'a, Type>
-                            and 'b : unmanaged> =
-        refine<FStarDelayedValue<Fv<FStarDependentTypedValue<'a, 'b>>, '``b _1``>>
-        //  FStarDependentTypedValue<'a, 'b> -> '``b _1``
-
-
-    let inline private createDTuple2<^a, ^b, ^``b _1``, ^sv, ^th
-                                        when ^a :> Type 
-                                        and ^b :> ``->``<^a, Type>
-                                        and ^b : unmanaged
-                                        and ^sv :> IFStarDependentTypedValueSolver<^a, ^b, ^``b _1``>
-                                        and (^b or ^th) : (static member GetSolver: Core.unit -> ^sv)>
-        (_1: ^a) (_2: ^``b _1``) =
-        let b: ^b = Unchecked.defaultof<^b> in
-        let sv: ^sv = ((^b or ^th) : (static member GetSolver: Core.unit -> ^sv) ()) in
-        let bt = sv.Box _2 in
+    let inline private createDTuple2<'a, 'b, '``b _1``
+                                        when 'a :> Type 
+                                        and 'b :> ``->``<'a, Type>
+                                        and 'b : unmanaged>
+        (_1: 'a) (_2: '``b _1``) =
+        let sv = FStarDependentTuples.FStarDependentTypedValueSolverTheory<'a, 'b, '``b _1``>.GetSolver() in
+        let bt = sv.Boxer _2 in
         let fdt: FStarDependentTuple<^a,^b> = { 
             FStarDependentTuple.BoxedSource = _1; 
             FStarDependentTuple.BoxedTarget = bt
         }
         Flv.lift fdt
 
-    let inline (|Mkdtuple2|) (_1: ^a) (_2: ^``b _1``) : dtuple2<^a, ^b> =
-        createDTuple2<^a, ^b, ^``b _1``, 
-                        FStarDependentTypedValueSolver<^a, ^b, ^``b _1``>,
-                        FStarDependentTuples.FStarDependentTypedValueSolverTheory<^a, ^b, ^``b _1``>> _1 _2
+    let (|Mkdtuple2|) (_1: 'a) (_2: '``b _1``) : dtuple2<'a, 'b> = createDTuple2 _1 _2
 
-
-
-(*
-    let (|Mkdtuple2|)<'a, 'b, '_1, '``b _1``, 'solver
-                        when 'a :> Type
-                        and 'b :> ``->``<'a, Type>
-                        and 'b : unmanaged
-                        and '_1 :> thunk<'a>
-                        and '``b _1`` :> thunk<Type>
-                        and 'solver :> IFStarDependentTupleSolver<'a, 'b, '_1, '``b _1``>
-                        and 'solver : unmanaged>
-        (_1: 'a) (_2: '``b _1``) : dtuple2<'a, 'b> =
-        let b: 'b = Unchecked.defaultof<'b> in
-        let fdt: FStarDependentTuple<'a,'b> = { 
-            FStarDependentTuple.BoxedSource = _1; 
-            FStarDependentTuple.BoxedTarget = _2 |> box
-        } in
-        let solver: 'solver = Unchecked.defaultof<'solver> in
-        let r = solver.Invoke(fdt) in
-        Flv.lift r
-
-        //Unchecked.defaultof<'solver>.Invoke
-*)
 
 
     (** Squashed existential quantification, or dependent sums,
         are written [exists (x:a). p x] : specialized to Type0 *)
     [<tac_opaque; smt_theory_symbol>]
     [<Interface>]
-    [<FStarTypeProxy(typedefof<FStarExistsProxy<_,_,_,_>>)>]
+    [<FStarTypeProxy(typedefof<FStarExistsProxy<_,_,_>>)>]
     type l_Exists<'a, 'p when 'a :> Type and 'p :> ``->``<'a, Type0>> = inherit logical
-        
 
-    and FStarExistsProxy<'a, 'p, 'x, '``p x``
+    and FStarExistsProxy<'a, 'p, 'x
                             when 'a :> Type 
                             and 'p :> ``->``<'a, Type0>
-                            and 'x :> thunk<'a>
-                            and '``p x`` :> dvalue<'a, 'x, Type, ``->0``<'a,'p>, '``p x``>> =
-        squash<FStarDTuple2Proxy<'a, ``->0``<'a,'p>, 'x, '``p x``>>
+                            and 'p : unmanaged
+                            and 'x :> thunk<'a>> =
+        squash<Fv<FStarDependentTypedValueSolver<'a, ``->0``<'a,'p>, 'x>>>
  
 
     (** Primitive type of mathematical integers, mapped to zarith in OCaml
