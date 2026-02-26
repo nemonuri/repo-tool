@@ -46,6 +46,7 @@ module Prims =
     module Ff = Nemonuri.FStarDotNet.Primitives.Abstractions.FStarFunctions
     module Uc = Microsoft.FSharp.Core.Operators.Unchecked
     module Fty = Nemonuri.FStarDotNet.Primitives.FStarTypes
+    module Flv = Nemonuri.FStarDotNet.Primitives.FStarLiftedValues
     type private Fot = Nemonuri.FStarDotNet.Primitives.FStarObjectType
 
 
@@ -307,20 +308,10 @@ module Prims =
             end
 
     (** constructive conjunction *)
-    [<Struct>]
-    type pair<'p, 'q> = | Pair of _1: 'p * _2: 'q 
-        with
-            interface eterm<Type0, pair<'p, 'q>, ('p * 'q)> with
-                member this.Embed (d: outref<'p * 'q>) = d <- match this with | Pair(_1, _2) -> _1, _2
-                member this.GetTailTypeContext (d: outref<Type0>) = d <- Fot()
-                member this.GetValue (d: outref<pair<'p,'q>>) = d <- this
-                member this.GetWitness (d: outref<pair<'p,'q>>) = d <- Fv.value this
-            interface Type with
-                member this.GetTailTypeContext (d: outref<objnull>) = d <- Ftc.tail this |> box
-                member this.GetWitness (d: outref<objnull>) = d <- Ftc.witness this |> box
-            interface Abstractions.IEmbeddable with
-                member this.Embed (d: outref<objnull>) = d <- Fv.embed this |> box
-        end
+    type pair<'p, 'q when 'p :> tc and 'q :> tc> = Fv<FStarPair<'p, 'q>>
+
+    let (|Pair|) (_1: 'p) (_2: 'q) = Flv.functor() { return FStarPair (_1, _2) }
+
             
     (** squashed conjunction, specialized to [Type0], written with an
         infix binary [/\] *)
@@ -328,6 +319,21 @@ module Prims =
     type l_and<'p, 'q when 'p :> logical and 'q :> logical> = squash<pair<'p, 'q>>
 
     (** constructive disjunction *)
+    type sum<'p, 'q when 'p :> tc and 'q :> tc> = Fv<FStarSum<'p, 'q>>
+
+    let inline private createSum<^p, ^q, ^x, ^th 
+                                    when (^x or ^th) : (static member Create: ^x -> FStarSum<^p,^q>)>
+        (v: ^x) =
+        ((^x or ^th) : (static member Create: ^x -> FStarSum<^p,^q>) v)
+
+    let inline (|Left|Right|) (v: ^x) : Choice<^p, ^q> =
+        let sum = createSum<^p, ^q, ^x, FStarSums.FStarSumTheory> v
+        match sum with
+        | FStarSumLeft (v: ^p) -> Left v
+        | FStarSumRight (v: ^q) -> Right v
+
+
+(*
     [<Struct>]
     type sum<'p,'q> =
         | Left of vl: 'p
@@ -344,6 +350,7 @@ module Prims =
             interface Abstractions.IEmbeddable with
                 member this.Embed (d: outref<objnull>) = d <- Fv.embed this |> box
         end
+*)
 
     (** squashed disjunction, specialized to [Type0], written with an
         infix binary [\/] *)
@@ -737,7 +744,7 @@ module Prims =
                             and '_2 :> dvalue<'a, '_1, Type, 'b, '_2>> =
         pair<'_1, '_2>
 
-    let (|Mkdtuple2|) (dt: dtuple2<'a, 'b>) = Pair (dt._1, dt._2)
+    let (|Mkdtuple2|) (dt: dtuple2<'a, 'b>) = (|Pair|) dt._1 dt._2
 
 
     (** Squashed existential quantification, or dependent sums,
@@ -760,7 +767,6 @@ module Prims =
         extraction and to the SMT sort of integers *)
     type int = EqType<Core.bigint>
 
-    module Flv = Nemonuri.FStarDotNet.Primitives.FStarLiftedValues
     module Intr = Microsoft.FSharp.Core.LanguagePrimitives.IntrinsicOperators
 
     (**** Basic operators on booleans and integers *)

@@ -165,7 +165,14 @@ type FStarLiftedValue<[<ComparisonConditionalOn; EqualityConditionalOn>] 'TEmbed
         member this.GetValue (d: outref<FStarObject>) = d <- Fv.value this.StrictBox
         member this.GetWitness (d: outref<FStarObject>) = d <- Ftc.witness this.StrictBox
 
+[<Struct>]
+type FStarPair<'TP, 'TQ> = 
+    | FStarPair of _1: 'TP * _2: 'TQ
 
+[<Struct>]
+type FStarSum<'TP, 'TQ> =
+    | FStarSumLeft of left: 'TP
+    | FStarSumRight of right: 'TQ
 
 [<Struct>]
 [<RequireQualifiedAccess>]
