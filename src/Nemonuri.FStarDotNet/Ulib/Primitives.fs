@@ -187,6 +187,86 @@ type DependentTypeProxy<'TSourceTypeContext, 'TSource, 'TTargetTypeContext, 'TIm
         member this.GetTailTypeContext (d: outref<objnull>): unit = d <- this.Source |> Ftc.Boxed.tail
         member this.GetWitness (d: outref<objnull>): unit = d <- null
 
+[<Struct>]
+[<RequireQualifiedAccess>]
+type FStarDependentTuple<'TSourceTypeContext, 'TTypeImplication
+                            when 'TTypeImplication :> A.imp<IFStarObjectType, 'TSourceTypeContext, IFStarTypeContext>
+                            and 'TTypeImplication : unmanaged> =
+    {   BoxedSource: 'TSourceTypeContext;
+        BoxedTarget: FStarDependentTypedValue<'TSourceTypeContext, 'TTypeImplication> }
+
+and [<Struct>]
+    [<RequireQualifiedAccess>]
+    FStarDependentTypedValue<'TSourceTypeContext, 'TTypeImplication
+                                when 'TTypeImplication :> A.imp<IFStarObjectType, 'TSourceTypeContext, IFStarTypeContext>
+                                and 'TTypeImplication : unmanaged> =
+    | Box of box: obj
+    | Pointer of pointer: nativeint
+
+type IFStarDependentTypedValueSolver<'TSourceTypeContext, 'TTypeImplication, 'TTarget
+                                        when 'TTypeImplication :> A.imp<IFStarObjectType, 'TSourceTypeContext, IFStarTypeContext>
+                                        and 'TTypeImplication : unmanaged> =
+    abstract member Box: 'TTarget -> FStarDependentTypedValue<'TSourceTypeContext, 'TTypeImplication>
+    abstract member Unbox: FStarDependentTypedValue<'TSourceTypeContext, 'TTypeImplication> -> 'TTarget
+
+[<Struct>]
+[<RequireQualifiedAccess>]
+type FStarDependentTypedValueSolver<'TSourceTypeContext, 'TTypeImplication, 'TTarget
+                                        when 'TTypeImplication :> A.imp<IFStarObjectType, 'TSourceTypeContext, IFStarTypeContext>
+                                        and 'TTypeImplication : unmanaged> =
+    {   Boxer: 'TTarget -> FStarDependentTypedValue<'TSourceTypeContext, 'TTypeImplication>
+        Unboxer: FStarDependentTypedValue<'TSourceTypeContext, 'TTypeImplication> -> 'TTarget   }
+    with
+        interface IFStarDependentTypedValueSolver<'TSourceTypeContext, 'TTypeImplication, 'TTarget> with
+            member this.Box (arg: 'TTarget): FStarDependentTypedValue<'TSourceTypeContext,'TTypeImplication> = this.Boxer arg
+            member this.Unbox (arg: FStarDependentTypedValue<'TSourceTypeContext,'TTypeImplication>): 'TTarget = this.Unboxer arg
+    end
+
+
+
+
+(*
+type FStarDependentTypedValueSolver<'TSourceTypeContext, 'TTypeImplication, 'TTarget
+                                        when 'TTypeImplication :> A.imp<IFStarObjectType, 'TSourceTypeContext, IFStarTypeContext>
+                                        and 'TTypeImplication : unmanaged> =
+    FStarDependentTypedValue<'TSourceTypeContext, 'TTypeImplication> -> 'TTarget
+*)
+
+(*
+[<Struct>]
+[<RequireQualifiedAccess>]
+type FStarDependentTupleSolution<'TSourceTypeContext, 'TTargetTypeContext, 'TTypeImplication, 'TSource, 'TTarget
+                                    when 'TSourceTypeContext :> A.tc
+                                    and 'TTargetTypeContext :> A.tc
+                                    and 'TTypeImplication :> A.imp<IFStarObjectType, 'TSourceTypeContext, 'TTargetTypeContext>
+                                    and 'TSource :> A.thunk<'TSourceTypeContext>
+                                    and 'TTarget :> A.thunk<'TTargetTypeContext>> =
+    {   Source: 'TSource;
+        Implication: FStarFunction<'TTypeImplication, 'TSource, 'TTarget> }
+*)
+
+(*
+[<Interface>]
+type IFStarDependentTupleSolver<'TSourceTypeContext, 'TTargetTypeContext, 'TTypeImplication
+                                    when 'TSourceTypeContext :> A.tc
+                                    and 'TTargetTypeContext :> A.tc
+                                    and 'TTypeImplication :> A.imp<IFStarObjectType, 'TSourceTypeContext, 'TTargetTypeContext>> =
+    abstract member Solve: FStarDependentTuple<'TSourceTypeContext, 'TTargetTypeContext, 'TTypeImplication> -> 
+                            FStarDependentTupleSolution<'TSourceTypeContext, 'TTargetTypeContext, 'TTypeImplication, A.thunk<'TSourceTypeContext>, A.thunk<'TTargetTypeContext>> ref -> unit
+*)
+
+[<Interface>]
+type IFStarDependentTupleSolver<'TSourceTypeContext, 'TTypeImplication, 'TSource, 'TTarget
+                                    when 'TTypeImplication :> A.imp<IFStarObjectType, 'TSourceTypeContext, IFStarTypeContext>
+                                    and 'TTypeImplication : unmanaged> =
+    inherit A.imp<IFStarObjectType, 
+                    FStarDependentTuple<'TSourceTypeContext, 'TTypeImplication>, 
+                    FStarPair<'TSource, 'TTarget>>
+    // inherit IFStarDependentTupleSolver<'TSourceTypeContext, 'TTargetTypeContext, 'TTypeImplication>
+    // abstract member Solve: FStarDependentTuple<'TSourceTypeContext, 'TTargetTypeContext, 'TTypeImplication> -> 
+    //                        FStarDependentTupleSolution<'TSourceTypeContext, 'TTargetTypeContext, 'TTypeImplication, 'TSource, 'TTarget> ref -> unit
+
+
 
 
 [<AttributeUsage(AttributeTargets.Interface ||| AttributeTargets.Struct ||| AttributeTargets.Class, AllowMultiple = true)>]

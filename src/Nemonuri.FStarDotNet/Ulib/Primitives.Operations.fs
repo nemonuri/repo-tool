@@ -1,5 +1,6 @@
 namespace Nemonuri.FStarDotNet.Primitives
 
+open Nemonuri.FStarDotNet.Primitives.Abstractions
 module Fv = Nemonuri.FStarDotNet.Primitives.Abstractions.FStarValues
 
 module FStarTypes =
@@ -65,3 +66,28 @@ module FStarSums =
 
         static member inline Create<'p,'q>(x: 'p) = FStarSum<'p,'q>.FStarSumLeft x
         static member inline Create<'p,'q>(x: 'q) = FStarSum<'p,'q>.FStarSumRight x
+
+module FStarDependentTuples =
+
+    open Nemonuri.FStarDotNet.Primitives.Abbreviations
+
+    [<AbstractClass; Sealed>]
+    type FStarDependentTupleTheory =
+
+        static member inline Apply<'a, '_1, 'imp, '_2
+                                    when 'a :> tc
+                                    and '_1 :> thunk<'a>
+                                    and 'imp :> imp<'a, '_1, '_2>> 
+            (source: '_1) (impl: 'imp) : '_2 =
+            let r: '_2 = impl.Invoke(source) in r
+
+    [<AbstractClass; Sealed>]
+    type FStarDependentTypedValueSolverTheory<'TSourceTypeContext, 'TTypeImplication, 'TTarget
+                                                when 'TTypeImplication :> imp<IFStarObjectType, 'TSourceTypeContext, IFStarTypeContext>
+                                                and 'TTypeImplication : unmanaged> =
+        static let mutable solver: FStarDependentTypedValueSolver<'TSourceTypeContext, 'TTypeImplication, 'TTarget> option = None
+
+        static member SetSolver(sv: FStarDependentTypedValueSolver<'TSourceTypeContext, 'TTypeImplication, 'TTarget>) = solver <- Some sv
+
+        static member GetSolver() = Option.get solver
+            
