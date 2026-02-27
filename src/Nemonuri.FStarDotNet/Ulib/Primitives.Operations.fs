@@ -24,19 +24,28 @@ module FStarLiftedValues =
     type FStarException<'exn when 'exn :> System.Exception> = Fv<'exn>
 
 
-    type FunctorBuilder =
+    type Monad =
         struct
             member inline this.Bind(t1: Fv<'s1>, sf: 's1 -> Fv<'s2>) : Fv<'s2> = sf (embed t1)
             member inline this.Return(s: 's1) : Fv<'s1> = lift s
             member inline this.Zero() : Fv<unit> = lift()
         end
+    
+    type Comonad =
+        struct
+            member inline this.Bind(t1: 's1, sf: Fv<'s1> -> 's2) : 's2 = sf (lift t1)
+            member inline this.Return(s: Fv<'s1>) : 's1 = embed s
+            member inline this.Zero() : unit = ()
+        end
 
-    let inline functor() = FunctorBuilder()
+    let inline monad() = Monad()
 
-    let inline map1 tf s1 = functor() { let! t1 = s1 in return tf t1 }
-    let inline map2 tf s1 s2 = functor() { let! t1 = s1 in let! t2 = s2 in return tf t1 t2 }
-    let inline map3 tf s1 s2 s3 = functor() { let! t1 = s1 in let! t2 = s2 in let! t3 = s3 in return tf t1 t2 t3 }
-    let inline curryMap2 tf s1 s2 = functor() {let! t1 = s1 in let! t2 = s2 in return tf (t1, t2)}
+    let inline comonad() = Comonad()
+
+    let inline map1 tf s1 = monad() { let! t1 = s1 in return tf t1 }
+    let inline map2 tf s1 s2 = monad() { let! t1 = s1 in let! t2 = s2 in return tf t1 t2 }
+    let inline map3 tf s1 s2 s3 = monad() { let! t1 = s1 in let! t2 = s2 in let! t3 = s3 in return tf t1 t2 t3 }
+    let inline curryMap2 tf s1 s2 = monad() {let! t1 = s1 in let! t2 = s2 in return tf (t1, t2)}
 
 
 module FStarSums =

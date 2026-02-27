@@ -237,7 +237,7 @@ module Prims =
                 member this.Embed (d: outref<objnull>) = d <- Fv.Boxed.embed this
             interface Type with
                 member this.GetTailTypeContext (d: outref<objnull>) = d <- Ftc.tail this |> box
-                member this.GetWitness (d: outref<objnull>) = d <- Ftc.tail this |> box
+                member this.GetWitness (d: outref<objnull>) = d <- Ftc.witness this |> box
             interface squash<'p>
         end
 
@@ -327,11 +327,18 @@ module Prims =
                     | false -> Fty.raiseInvalid typeof<b2t<'b>>
             end
 
+
     (** constructive conjunction *)
+    let Pair (_1: 'p) (_2: 'q) = Flv.monad() { return FStarPair (_1, _2) }
+
+    [<FStarConstructorProxy(nameof Pair)>]
     type pair<'p, 'q when 'p :> tc and 'q :> tc> = Fv<FStarPair<'p, 'q>>
 
-    let (|Pair|) (_1: 'p) (_2: 'q) = Flv.functor() { return FStarPair (_1, _2) }
-
+    let (|Pair|) (p: pair<'p, 'q>) = 
+        let r = Flv.monad() { 
+            match! p with
+            | FStarPair (t1, t2) -> return (t1, t2)
+        } in r |> Flv.embed
             
     (** squashed conjunction, specialized to [Type0], written with an
         infix binary [/\] *)
@@ -339,20 +346,33 @@ module Prims =
     type l_and<'p, 'q when 'p :> logical and 'q :> logical> = squash<pair<'p, 'q>>
 
     (** constructive disjunction *)
-    type sum<'p, 'q when 'p :> tc and 'q :> tc> = Fv<FStarSum<'p, 'q>>
-
     let inline private createSum<^p, ^q, ^x, ^th 
                                     when (^x or ^th) : (static member Create: ^x -> FStarSum<^p,^q>)>
         (v: ^x) =
         ((^x or ^th) : (static member Create: ^x -> FStarSum<^p,^q>) v)
 
+(*
     let inline (|Left|Right|) (v: ^x) : Choice<^p, ^q> =
         let sum = createSum<^p, ^q, ^x, FStarSums.FStarSumTheory> v
         match sum with
         | FStarSumLeft (v: ^p) -> Left v
         | FStarSumRight (v: ^q) -> Right v
+*)
 
+    let Left v = Flv.monad() { return FStarSum<'p,'q>.FStarSumLeft v }
 
+    let Right v = Flv.monad() { return FStarSum<'p,'q>.FStarSumRight v }
+    
+    [<FStarConstructorProxy(nameof Left)>]
+    [<FStarConstructorProxy(nameof Right)>]
+    type sum<'p, 'q when 'p :> tc and 'q :> tc> = Fv<FStarSum<'p, 'q>>
+
+    let (|Left|Right|) (sum: sum<'p,'q>) =
+        let r = Flv.monad() {
+            match! sum with
+            | FStarSumLeft v -> return Left v
+            | FStarSumRight v -> return Right v
+        } in r |> Flv.embed
 
     (** squashed disjunction, specialized to [Type0], written with an
         infix binary [\/] *)
@@ -743,13 +763,6 @@ module Prims =
             member this._2 = let r: Type = this.b.Invoke(this._1) in r
         end
 *)
-    [<unopteq>]
-    type dtuple2<'a, 'b 
-                    when 'a :> Type 
-                    and 'b :> ``->``<'a, Type>
-                    and 'b : unmanaged> =
-        Fv<FStarDependentTuple<'a, 'b>>
-
     let inline private createDTuple2<'a, 'b, '``b _1``
                                         when 'a :> Type 
                                         and 'b :> ``->``<'a, Type>
@@ -764,7 +777,19 @@ module Prims =
         }
         Flv.lift fdt
 
-    let (|Mkdtuple2|) (_1: 'a) (_2: '``b _1``) : dtuple2<'a, 'b> = createDTuple2 _1 _2
+    let (|Mkdtuple2|) (_1: 'a) (_2: '``b _1``) : Fv<FStarDependentTuple<'a, 'b>> = createDTuple2 _1 _2
+
+    let Mkdtuple2 (_1: 'a) (_2: '``b _1``) : Fv<FStarDependentTuple<'a, 'b>> = (|Mkdtuple2|) _1 _2
+
+
+    [<unopteq>]
+    type dtuple2<'a, 'b 
+                    when 'a :> Type 
+                    and 'b :> ``->``<'a, Type>
+                    and 'b : unmanaged> =
+        Fv<FStarDependentTuple<'a, 'b>>
+
+
 
 
 
