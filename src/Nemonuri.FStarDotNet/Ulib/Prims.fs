@@ -514,7 +514,7 @@ module Prims =
                     and 'p :> ``->``<'a, Type0>
                     and 'p : unmanaged
                     and 'x :> thunk<'a>> =
-        squash<imp<'a, 'x, FStarDependentTuples.FStarDependentTupleConstruction<'a, ``->0``<'a, 'p>, 'x>>>
+        squash<FStarFunction<'a, 'x, FStarDependentTuples.FStarDependentTupleConstruction<'a, ``->0``<'a, 'p>, 'x>>>
 
     (** [p1 `subtype_of` p2] when every element of [p1] is also an element
         of [p2]. *)
@@ -768,7 +768,7 @@ module Prims =
                                         and 'b :> ``->``<'a, Type>
                                         and 'b : unmanaged>
         (_1: 'a) (_2: '``b _1``) =
-        FStarDependentTuples.FStarDependentTupleConstruction<'a, 'b, '``b _1``>() |> ignore
+        //FStarDependentTuples.FStarDependentTupleConstruction<'a, 'b, '``b _1``>() |> ignore
         let sv = FStarDependentTuples.FStarDependentTypedValueSolverTheory<'a, 'b, '``b _1``>.GetSolver() in
         let bt = sv.Boxer _2 in
         let fdt: FStarDependentTuple<^a,^b> = { 
@@ -777,19 +777,21 @@ module Prims =
         }
         Flv.lift fdt
 
-    let (|Mkdtuple2|) (_1: 'a) (_2: '``b _1``) : Fv<FStarDependentTuple<'a, 'b>> = createDTuple2 _1 _2
-
-    let Mkdtuple2 (_1: 'a) (_2: '``b _1``) : Fv<FStarDependentTuple<'a, 'b>> = (|Mkdtuple2|) _1 _2
-
+    let Mkdtuple2 (_1: 'a) (_2: '``b _1``) : Fv<FStarDependentTuple<'a, 'b>> = createDTuple2 _1 _2
 
     [<unopteq>]
+    [<FStarConstructorProxy(nameof Mkdtuple2)>]
     type dtuple2<'a, 'b 
                     when 'a :> Type 
                     and 'b :> ``->``<'a, Type>
                     and 'b : unmanaged> =
         Fv<FStarDependentTuple<'a, 'b>>
 
-
+    let (|Mkdtuple2|) (d: dtuple2<'a, 'b>) =
+        let r = Flv.monad() {
+            match! d with
+            | { BoxedSource = bs ; BoxedTarget = bt } -> return bs, bt
+        } in r |> Flv.embed
 
 
 
