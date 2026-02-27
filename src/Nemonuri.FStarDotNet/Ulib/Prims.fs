@@ -514,7 +514,7 @@ module Prims =
                     and 'p :> ``->``<'a, Type0>
                     and 'p : unmanaged
                     and 'x :> thunk<'a>> =
-        squash<FStarFunction<'a, 'x, FStarDependentTuples.FStarDependentTupleConstruction<'a, ``->0``<'a, 'p>, 'x>>>
+        squash<imp<'a, 'x, FStarDependentTuples.FStarDependentTupleConstruction<'a, ``->0``<'a, 'p>, Type0>>>
 
     (** [p1 `subtype_of` p2] when every element of [p1] is also an element
         of [p2]. *)
