@@ -89,5 +89,19 @@ module FStarDependentTuples =
 
         static member SetSolver(sv: FStarDependentTypedValueSolver<'TSourceTypeContext, 'TTypeImplication, 'TTarget>) = solver <- Some sv
 
+        static member internal GetSolverField() = solver
+
         static member GetSolver() = Option.get solver
-            
+    
+    type FStarDependentTupleConstruction<'TSourceTypeContext, 'TTypeImplication, 'TTarget
+                                            when 'TTypeImplication :> imp<IFStarObjectType, 'TSourceTypeContext, IFStarTypeContext>
+                                            and 'TTypeImplication : unmanaged>() =
+        class
+            do 
+                match FStarDependentTypedValueSolverTheory<'TSourceTypeContext, 'TTypeImplication, 'TTarget>.GetSolverField() with
+                | Some _ -> ()
+                | None -> FStarTypes.raiseInvalid typeof<FStarDependentTupleConstruction<'TSourceTypeContext, 'TTypeImplication, 'TTarget>>
+            interface Abstractions.IFStarTypeContext with
+                member this.GetTailTypeContext (d: outref<objnull>) = d <- FStarObjectType.Tail
+                member this.GetWitness (d: outref<objnull>) = d <- FStarObjectType.Witness
+        end

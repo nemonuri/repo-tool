@@ -260,6 +260,9 @@ type IFStarDependentTupleSolver<'TSourceTypeContext, 'TTypeImplication, 'TSource
 [<AttributeUsage(AttributeTargets.Interface ||| AttributeTargets.Struct ||| AttributeTargets.Class, AllowMultiple = true)>]
 type FStarTypeProxyAttribute(proxy: System.Type) = inherit Attribute()
 
+[<AttributeUsage(AttributeTargets.Interface ||| AttributeTargets.Struct ||| AttributeTargets.Class, AllowMultiple = true)>]
+type FStarTypeInstanceConstructorAttribute(cons: Core.string) = inherit Attribute()
+
 module Abbreviations =
 
     type tc = A.tc

@@ -141,11 +141,11 @@ module Prims =
 
     type BTrue = 
         struct
-            interface eterm<Type0, BTrue, bool> with
-                member this.GetValue (d: outref<BTrue>) = d <- Uc.defaultof<BTrue>
-                member this.Embed (d: outref<bool>) = d <- bool.create true
+            interface eterm<Type0, bool, BTrue> with
+                member this.GetValue (d: outref<bool>) = d <- bool.create true
+                member this.Embed (d: outref<BTrue>) = d <- Uc.defaultof<BTrue>
                 member this.GetTailTypeContext (d: outref<Type0>) = d <- Ftc.tail this
-                member this.GetWitness (d: outref<BTrue>) = d <- Fv.value this
+                member this.GetWitness (d: outref<bool>) = d <- Fv.value this
             interface Type with
                 member this.GetTailTypeContext (d: outref<objnull>) = d <- Ftc.tail this |> box
                 member this.GetWitness (d: outref<objnull>) = d <- Ftc.witness this |> box
@@ -155,11 +155,11 @@ module Prims =
 
     type BFalse = 
         struct
-            interface eterm<Type0, BFalse, bool> with
-                member this.GetValue (d: outref<BFalse>) = d <- Uc.defaultof<BFalse>
-                member this.Embed (d: outref<bool>) = d <- bool.create true
+            interface eterm<Type0, bool, BFalse> with
+                member this.GetValue (d: outref<bool>) = d <- bool.create false
+                member this.Embed (d: outref<BFalse>) = d <- Uc.defaultof<BFalse>
                 member this.GetTailTypeContext (d: outref<Type0>) = d <- Ftc.tail this
-                member this.GetWitness (d: outref<BFalse>) = d <- Fv.value this
+                member this.GetWitness (d: outref<bool>) = d <- Fv.value this
             interface Type with
                 member this.GetTailTypeContext (d: outref<objnull>) = d <- Ftc.tail this |> box
                 member this.GetWitness (d: outref<objnull>) = d <- Ftc.witness this |> box
@@ -292,15 +292,15 @@ module Prims =
         when using a boolean in context expecting a type. But,
         occasionally, one may have to write [b2t] explicitly *)
     [<FStarTypeProxy(typedefof<FStarEqualsProxy<_,_>>)>]
-    type b2t<'b when 'b :> eterm<Type0, 'b, bool> and 'b : unmanaged> = squash<eq2<Type0, 'b, BTrue>>
+    type b2t<'b when 'b :> term<Type0, bool> and 'b : unmanaged> = squash<eq2<Type0, 'b, BTrue>>
 
     and [<AbstractClass>]
-        FStarB2tProxy<'b when 'b :> eterm<Type0, 'b, bool> and 'b : unmanaged>() =
+        FStarB2tProxy<'b when 'b :> term<Type0, bool> and 'b : unmanaged>() =
             class
                 do
                     match
-                        let e1 = Fv.embed Uc.defaultof<'b> in
-                        let e2 = Fv.embed Uc.defaultof<BTrue> in
+                        let e1 = Fv.value Uc.defaultof<'b> in
+                        let e2 = Fv.value Uc.defaultof<BTrue> in
                         e1 = e2
                     with
                     | true -> ()
@@ -474,7 +474,7 @@ module Prims =
                     and 'p :> ``->``<'a, Type0>
                     and 'p : unmanaged
                     and 'x :> thunk<'a>> =
-        squash<imp<'a, 'x, FStarDependentTuple<'a, ``->0``<'a, 'p>>>>
+        squash<imp<'a, 'x, FStarDependentTuples.FStarDependentTupleConstruction<'a, ``->0``<'a, 'p>, 'x>>>
 
     (** [p1 `subtype_of` p2] when every element of [p1] is also an element
         of [p2]. *)
@@ -735,6 +735,7 @@ module Prims =
                                         and 'b :> ``->``<'a, Type>
                                         and 'b : unmanaged>
         (_1: 'a) (_2: '``b _1``) =
+        FStarDependentTuples.FStarDependentTupleConstruction<'a, 'b, '``b _1``>() |> ignore
         let sv = FStarDependentTuples.FStarDependentTypedValueSolverTheory<'a, 'b, '``b _1``>.GetSolver() in
         let bt = sv.Boxer _2 in
         let fdt: FStarDependentTuple<^a,^b> = { 
@@ -759,7 +760,7 @@ module Prims =
                             and 'p :> ``->``<'a, Type0>
                             and 'p : unmanaged
                             and 'x :> thunk<'a>> =
-        squash<Fv<FStarDependentTypedValueSolver<'a, ``->0``<'a,'p>, 'x>>>
+        squash<FStarDependentTuples.FStarDependentTupleConstruction<'a, ``->0``<'a,'p>, 'x>>
  
 
     (** Primitive type of mathematical integers, mapped to zarith in OCaml
