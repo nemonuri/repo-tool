@@ -171,16 +171,13 @@ module Prims =
         inhabitants represents logical falsehood. Note, [empty] is
         seldom used directly in F*. We instead use its "squashed" variant,
         [False], see below. *)
-    [<AbstractClass>]
+    [<Class>]
     type empty() =
         do Fty.raiseInvalid typeof<empty>
 
-        abstract member GetTailTypeContext: outref<objnull> -> unit
-        abstract member GetWitness: outref<objnull> -> unit
-
         interface Type with
-            member this.GetTailTypeContext (d: outref<objnull>): unit = d <- this.GetTailTypeContext()
-            member this.GetWitness (d: outref<objnull>): unit = d <- this.GetWitness()
+            member this.GetTailTypeContext (d: outref<objnull>) = d <- Fot.Tail
+            member this.GetWitness (d: outref<objnull>) = d <- Fot.Witness
 
     (** [trivial] is the singleton inductive type---it is trivially
         inhabited. Like [empty], [trivial] is seldom used. We instead use
@@ -189,8 +186,8 @@ module Prims =
     [<Struct>]
     type trivial = | T with
         interface Type with
-            member this.GetTailTypeContext (d: outref<objnull>): unit = d <- Fot.Tail
-            member this.GetWitness (d: outref<objnull>): unit = d <- Fot.Witness
+            member this.GetTailTypeContext (d: outref<objnull>) = d <- Fot.Tail
+            member this.GetWitness (d: outref<objnull>) = d <- Fot.Witness
 
 
     (** [unit]: another singleton type, with its only inhabitant written [()]
@@ -220,6 +217,29 @@ module Prims =
     type squash<'p when 'p :> Type> =
         inherit refine<'p>
         inherit Type0
+    
+    and [<Class>]
+        SquashProxy<'p, 'x 
+                        when 'p :> Type
+                        and 'p : (new: Core.unit -> 'p)
+                        and 'x :> SquashProxy<'p, 'x>>() =
+        class
+            let proved: 'p = new 'p()
+
+            member inline private this.Base = unit.create()
+            
+            interface eterm<Type0, unit, 'p> with
+                member this.GetTailTypeContext (d: outref<Type0>) = d <- Ftc.tail this.Base
+                member this.Embed (d: outref<'p>) = d <- proved
+                member this.GetValue (d: outref<unit>) = d <- Fv.value this.Base
+                member this.GetWitness (d: outref<unit>) = d <- Fv.value this
+            interface Primitives.Abstractions.IEmbeddable with
+                member this.Embed (d: outref<objnull>) = d <- Fv.Boxed.embed this
+            interface Type with
+                member this.GetTailTypeContext (d: outref<objnull>) = d <- Ftc.tail this |> box
+                member this.GetWitness (d: outref<objnull>) = d <- Ftc.tail this |> box
+            interface squash<'p>
+        end
 
     (** [auto_squash] is equivalent to [squash]. However, F* will
         automatically insert `auto_squash` when simplifying terms,
