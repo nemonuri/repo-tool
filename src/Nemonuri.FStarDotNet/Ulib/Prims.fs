@@ -38,6 +38,7 @@ module Prims =
     open System
     open TypeEquality
     open Nemonuri.FStarDotNet.Primitives
+    open Nemonuri.FStarDotNet.Primitives.Abstractions
     open Nemonuri.FStarDotNet.Primitives.Abbreviations
     open System.Collections
     open System.Collections.Generic 
@@ -47,7 +48,6 @@ module Prims =
     module Uc = Microsoft.FSharp.Core.Operators.Unchecked
     module Fty = Nemonuri.FStarDotNet.Primitives.FStarTypes
     module Flv = Nemonuri.FStarDotNet.Primitives.FStarLiftedValues
-    type private Fot = Nemonuri.FStarDotNet.Primitives.FStarObjectType
 
 
     (***** Begin trusted primitives *****)
@@ -93,42 +93,46 @@ module Prims =
     [<AttributeUsage(AttributeTargets.All)>]
     type do_not_unrefine() = inherit attribute()
 
-    type Type = tc
+    type Type = FStarOmega
+    type typeN = IFStarTypeContext
 
-    type Type0 = Abstractions.IFStarObjectType
+    type Type0 = FStarObject
+    type type0 = IFStarThunk<FStarObject>
 
+    let inline toType0 (ty0: type0) : Type0 = { Witness = ty0 }
+
+    let inline private ty0w (ty0: type0) = toType0 ty0 |> Ftc.Boxed.witness
+    let inline private ty0t (ty0: type0) = toType0 ty0 |> Ftc.Boxed.tail
 
     (** A predicate to express when a type supports decidable equality
         The type-checker emits axioms for [hasEq] for each inductive type *)
-    [<AbstractClass>]
     type hasEq<'Type 
-                when 'Type :> eterm<Type0, 'Type>
+                when 'Type :> typeN
                 and 'Type : equality> =
-        class
-            interface Type0 with
-                member this.GetTailTypeContext (d: outref<objnull>) = d <- Fot.Tail
-                member this.GetWitness (d: outref<objnull>) = d <- Fot.Witness
+        struct
+            interface type0 with
+                member this.BoxedWitness = ty0w this
+                member this.BoxToTailTypeContext () = ty0t this
         end
 
 
     (** A convenient abbreviation, [eqtype] is the type of types in
         universe 0 which support decidable equality *)
     [<FStarTypeProxy(typedefof<eqtype<_>>)>]
-    [<Interface>]
-    type eqtype = inherit Type0
+    type eqtype = Type0
     
-    and [<FStarTypeProxy(typedefof<IFStarEquatableProxy<_>>)>]
-        eqtype<'TTerm 
-                when 'TTerm :> eqtype<'TTerm> 
-                and 'TTerm : equality> =
-        eterm<Type0, 'TTerm>
+    and [<FStarTypeProxy(typedefof<FStarEquatableProxy<_>>)>]
+        eqtype<'a 
+                when 'a :> eqtype<'a> 
+                and 'a : equality> =
+        tc<Type0, 'a>
 
-    and IFStarEquatableProxy<'TTerm 
-                                when 'TTerm :> IFStarEquatableProxy<'TTerm> 
-                                and 'TTerm : equality> =
-        interface
-            inherit eqtype<'TTerm>
-            inherit refine<hasEq<'TTerm>>
+    and FStarEquatableProxy<'a 
+                                when 'a :> FStarEquatableProxy<'a> 
+                                and 'a : equality>() =
+        class
+            interface eqtype<'a>
+            interface refine<hasEq<'a>>
         end
 
 
@@ -141,53 +145,38 @@ module Prims =
 
     type BTrue = 
         struct
-            interface eterm<Type0, bool, BTrue> with
-                member this.GetValue (d: outref<bool>) = d <- bool.create true
-                member this.Embed (d: outref<BTrue>) = d <- Uc.defaultof<BTrue>
-                member this.GetTailTypeContext (d: outref<Type0>) = d <- Ftc.tail this
-                member this.GetWitness (d: outref<bool>) = d <- Fv.value this
-            interface Type with
-                member this.GetTailTypeContext (d: outref<objnull>) = d <- Ftc.tail this |> box
-                member this.GetWitness (d: outref<objnull>) = d <- Ftc.witness this |> box
-            interface Abstractions.IEmbeddable with
-                member this.Embed (d: outref<objnull>) = d <- Fv.embed this |> box
+            interface tc<bool, BTrue> 
         end
 
     type BFalse = 
         struct
-            interface eterm<Type0, bool, BFalse> with
-                member this.GetValue (d: outref<bool>) = d <- bool.create false
-                member this.Embed (d: outref<BFalse>) = d <- Uc.defaultof<BFalse>
-                member this.GetTailTypeContext (d: outref<Type0>) = d <- Ftc.tail this
-                member this.GetWitness (d: outref<bool>) = d <- Fv.value this
-            interface Type with
-                member this.GetTailTypeContext (d: outref<objnull>) = d <- Ftc.tail this |> box
-                member this.GetWitness (d: outref<objnull>) = d <- Ftc.witness this |> box
-            interface Abstractions.IEmbeddable with
-                member this.Embed (d: outref<objnull>) = d <- Fv.embed this |> box
+            interface value<Type0, bool, BFalse> with
+                member this.Embed (): BFalse = this
         end
 
     (** [empty] is the empty inductive type. The type with no
         inhabitants represents logical falsehood. Note, [empty] is
         seldom used directly in F*. We instead use its "squashed" variant,
         [False], see below. *)
+(*
     [<Class>]
     type empty() =
         do Fty.raiseInvalid typeof<empty>
 
-        interface Type with
-            member this.GetTailTypeContext (d: outref<objnull>) = d <- Fot.Tail
-            member this.GetWitness (d: outref<objnull>) = d <- Fot.Witness
+        interface type0 with
+            member this.BoxedWitness = ty0w this
+            member this.BoxToTailTypeContext () = ty0t this
+*)
+    type empty = Fv<System.Void>
 
     (** [trivial] is the singleton inductive type---it is trivially
         inhabited. Like [empty], [trivial] is seldom used. We instead use
         its "squashed" variants, [True] *)
-    [<RequireQualifiedAccess>]
-    [<Struct>]
-    type trivial = | T with
-        interface Type with
-            member this.GetTailTypeContext (d: outref<objnull>) = d <- Fot.Tail
-            member this.GetWitness (d: outref<objnull>) = d <- Fot.Witness
+    let T = FStarTrivial |> Flv.lift
+
+    [<FStarConstructorProxy(nameof T)>]
+    type trivial = Fv<FStarTrivial>
+
 
 
     (** [unit]: another singleton type, with its only inhabitant written [()]
@@ -213,32 +202,26 @@ module Prims =
         See FStar.Squash for various ways of manipulating squashed
         types. *)
     [<tac_opaque>]
-    [<Interface>]
-    type squash<'p when 'p :> Type> =
-        inherit refine<'p>
-        inherit Type0
+    [<FStarTypeProxy(typedefof<SquashProxy<_,_>>)>]
+    [<MeasureAnnotatedAbbreviation>]
+    type squash<'p when 'p :> typeN> = unit
     
     and [<Class>]
         SquashProxy<'p, 'x 
-                        when 'p :> Type
+                        when 'p :> typeN
                         and 'p : (new: Core.unit -> 'p)
                         and 'x :> SquashProxy<'p, 'x>>() =
         class
             let proved: 'p = new 'p()
-
-            member inline private this.Base = unit.create()
+            let teq = 
+                match Teq.tryRefl<SquashProxy<'p, 'x>,'x> with
+                | Some v -> v
+                | None -> Fty.raiseInvalid typeof<SquashProxy<'p, 'x>>
             
-            interface eterm<Type0, unit, 'p> with
-                member this.GetTailTypeContext (d: outref<Type0>) = d <- Ftc.tail this.Base
-                member this.Embed (d: outref<'p>) = d <- proved
-                member this.GetValue (d: outref<unit>) = d <- Fv.value this.Base
-                member this.GetWitness (d: outref<unit>) = d <- Fv.value this
-            interface Primitives.Abstractions.IEmbeddable with
-                member this.Embed (d: outref<objnull>) = d <- Fv.Boxed.embed this
-            interface Type with
-                member this.GetTailTypeContext (d: outref<objnull>) = d <- Ftc.tail this |> box
-                member this.GetWitness (d: outref<objnull>) = d <- Ftc.witness this |> box
-            interface squash<'p>
+            interface refine<'p>
+            interface tc<unit,'x> with
+                member this.ToTailTypeContext (): unit = { Value = () }
+                member this.Witness = this |> Teq.cast teq
         end
 
     (** [auto_squash] is equivalent to [squash]. However, F* will
@@ -252,7 +235,7 @@ module Prims =
         in rare circumstances when writing tactics to process proofs that
         have already been partially simplified by F*'s simplifier.
     *)
-    type auto_squash<'p when 'p :> Type> = squash<'p>
+    type auto_squash<'p when 'p :> typeN> = squash<'p>
 
     (** The [logical] type is transitionary. It is just an abbreviation
         for [Type0], but is used to classify uses of the basic squashed
@@ -262,7 +245,7 @@ module Prims =
         The type is marked [private] to intentionally prevent user code
         from referencing this type, hopefully easing the removal of
         [logical] in the future. *)
-    type private logical = Type0
+    type private logical = type0
 
     (** An attribute indicating that a symbol is an smt theory symbol and
         hence may not be used in smt patterns.  The typechecker warns if
@@ -286,17 +269,12 @@ module Prims =
         type with a single constructor for reflexivity.  As with the other
         connectives, we often work instead with the squashed version of
         equality, below. *)
+    let Refl<'a, 'x when 'a :> typeN and 'x :> thunk<'a>> = FStarEquals<'a,'x,'x>.FStarRefl |> Flv.lift
 
-    [<Struct>]
-    [<FStarTypeProxy(typedefof<FStarEqualsProxy<_,_>>)>]
-    type equals<'a, 'x, '_0 when 'a :> Type and 'x :> thunk<'a> and '_0 :> thunk<'a>> = | Refl 
-        with
-            interface Type with
-                member this.GetTailTypeContext (d: outref<objnull>) = d <- Fot.Tail
-                member this.GetWitness (d: outref<objnull>) = d <- Fot.Witness
-        end
+    [<FStarConstructorProxy(nameof Refl)>]
+    type equals<'a, 'x, '_0 when 'a :> typeN and 'x :> thunk<'a> and '_0 :> thunk<'a>> = Fv<FStarEquals<'a, 'x, '_0>>
 
-    and FStarEqualsProxy<'a, 'x when 'a :> Type and 'x :> thunk<'a>> = equals<'a, 'x, 'x>
+
 
     (** [eq2] is the squashed version of [equals]. It's a proof
         irrelevant, homogeneous equality in Type#0 and is written with
@@ -306,14 +284,15 @@ module Prims =
             we should just rename eq2 to op_Equals_Equals
     *)
     [<tac_opaque; smt_theory_symbol>]
-    type eq2<[<unrefine>] 'a, 'x, 'y when 'a :> Type and 'x :> thunk<'a> and 'y :> thunk<'a>> = squash<equals<'a, 'x, 'y>>
+    type eq2<[<unrefine>] 'a, 'x, 'y when 'a :> typeN and 'x :> thunk<'a> and 'y :> thunk<'a>> = squash<equals<'a, 'x, 'y>>
 
     (** bool-to-type coercion: This is often automatically inserted type,
         when using a boolean in context expecting a type. But,
         occasionally, one may have to write [b2t] explicitly *)
-    [<FStarTypeProxy(typedefof<FStarEqualsProxy<_,_>>)>]
-    type b2t<'b when 'b :> term<Type0, bool> and 'b : unmanaged> = squash<eq2<Type0, 'b, BTrue>>
+    // [<FStarTypeProxy(typedefof<FStarEqualsProxy<_,_>>)>]
+    type b2t<'b when 'b :> tc<bool, 'b> and 'b : unmanaged> = squash<eq2<bool, 'b, BTrue>>
 
+(*
     and [<AbstractClass>]
         FStarB2tProxy<'b when 'b :> term<Type0, bool> and 'b : unmanaged>() =
             class
@@ -326,7 +305,7 @@ module Prims =
                     | true -> ()
                     | false -> Fty.raiseInvalid typeof<b2t<'b>>
             end
-
+*)
 
     (** constructive conjunction *)
     let Pair (_1: 'p) (_2: 'q) = Flv.monad() { return FStarPair (_1, _2) }
@@ -380,11 +359,10 @@ module Prims =
     type l_or<'p, 'q when 'p :> logical and 'q :> logical> = squash<sum<'p, 'q>>
 
 
-    type ``->``<'p, 'q when 'p :> Type and 'q :> Type> = imp<Type0, 'p, 'q>
-    //imp<'p, thunk<'p>, 'q>
-    //pureFuncType<'p, 'q>
-    //type ``>=>``<'p, 'q, 'x when 'p :> Type and 'q :> Type and 'x :> pureTerm<'p>> = pureFuncType<'x, 'q>
+    type ``->``<'p, 'q when 'p :> typeN and 'q :> typeN> = IFStarFunction<Type, 'p, 'q>
 
+
+#if false
     type ``->0``<'a, 'p 
                     when 'a :> Type 
                     and 'p :> ``->``<'a, Type0>
@@ -400,6 +378,7 @@ module Prims =
                 member this.GetTailTypeContext (d: outref<objnull>) = d <- Ftc.tail this |> box
                 member this.GetWitness (d: outref<objnull>) = d <- Ftc.witness this |> box
         end
+#endif
 
     (** squashed (non-dependent) implication, specialized to [Type0],
         written with an infix binary [==>]. Note, [==>] binds weaker than

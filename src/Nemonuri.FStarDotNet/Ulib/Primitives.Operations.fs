@@ -1,21 +1,17 @@
 namespace Nemonuri.FStarDotNet.Primitives
 
 open Nemonuri.FStarDotNet.Primitives.Abstractions
+module Ftc = Nemonuri.FStarDotNet.Primitives.Abstractions.FStarTypeContexts
 module Fv = Nemonuri.FStarDotNet.Primitives.Abstractions.FStarValues
 
-module FStarTypes =
-
-    exception InvalidInhabitant of System.Type
-
-    let raiseInvalid (ty: System.Type) = raise (InvalidInhabitant ty)
 
 module FStarLiftedValues =
 
     open Nemonuri.FStarDotNet.Primitives.Abbreviations
 
-    let lift (x: 'a) = Fv<'a>.create x
+    let lift (x: 'a) : Fv<'a> = { Value = x }
 
-    let embed (x: Fv<'a>) = Fv.embed x
+    let embed (x: Fv<'a>) : 'a = Fv.embed x
 
     type FStar<'a when 'a :> tc> = 'a
 
@@ -81,18 +77,8 @@ module FStarDependentTuples =
     open Nemonuri.FStarDotNet.Primitives.Abbreviations
 
     [<AbstractClass; Sealed>]
-    type FStarDependentTupleTheory =
-
-        static member inline Apply<'a, '_1, 'imp, '_2
-                                    when 'a :> tc
-                                    and '_1 :> thunk<'a>
-                                    and 'imp :> imp<'a, '_1, '_2>> 
-            (source: '_1) (impl: 'imp) : '_2 =
-            let r: '_2 = impl.Invoke(source) in r
-
-    [<AbstractClass; Sealed>]
     type FStarDependentTypedValueSolverTheory<'TSourceTypeContext, 'TTypeImplication, 'TTarget
-                                                when 'TTypeImplication :> imp<IFStarObjectType, 'TSourceTypeContext, IFStarTypeContext>
+                                                when 'TTypeImplication :> imp<FStarOmega, 'TSourceTypeContext, FStarThunk<FStarOmega>>
                                                 and 'TTypeImplication : unmanaged> =
         static let mutable solver: FStarDependentTypedValueSolver<'TSourceTypeContext, 'TTypeImplication, 'TTarget> option = None
 
@@ -103,14 +89,14 @@ module FStarDependentTuples =
         static member GetSolver() = Option.get solver
     
     type FStarDependentTupleConstruction<'TSourceTypeContext, 'TTypeImplication, 'TTarget
-                                            when 'TTypeImplication :> imp<IFStarObjectType, 'TSourceTypeContext, IFStarTypeContext>
-                                            and 'TTypeImplication : unmanaged>() =
+                                                when 'TTypeImplication :> imp<FStarOmega, 'TSourceTypeContext, FStarThunk<FStarOmega>>
+                                                and 'TTypeImplication : unmanaged>() =
         class
             do 
                 match FStarDependentTypedValueSolverTheory<'TSourceTypeContext, 'TTypeImplication, 'TTarget>.GetSolverField() with
                 | Some _ -> ()
                 | None -> FStarTypes.raiseInvalid typeof<FStarDependentTupleConstruction<'TSourceTypeContext, 'TTypeImplication, 'TTarget>>
             interface Abstractions.IFStarTypeContext with
-                member this.GetTailTypeContext (d: outref<objnull>) = d <- FStarObjectType.Tail
-                member this.GetWitness (d: outref<objnull>) = d <- FStarObjectType.Witness
+                member this.BoxedWitness = FStarOmega() |> Ftc.Boxed.witness
+                member this.BoxToTailTypeContext (): IFStarTypeContext = FStarOmega() |> Ftc.Boxed.tail
         end

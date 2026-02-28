@@ -2,16 +2,20 @@
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0;netstandard2.1</TargetFrameworks>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <LangVersion>10</LangVersion>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\Primitives\Nemonuri.FStarDotNet.Primitives.csproj" />
     <PackageReference Include="TypeEquality" />
+    <PackageReference Include="FSharp.Core" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Functionals.fs" />
     <Compile Include="Primitives.Abstractions.fs" />
-    <Compile Include="Primitives.fs" /><Compile Include="Primitives.Operations.fs" />
-    
+    <Compile Include="Primitives.FStarBox.fs" />
+    <Compile Include="Primitives.FStarKinds.fs" />
+    <Compile Include="Primitives.fs" />
+    <Compile Include="Primitives.Operations.fs" />
     <Compile Include="Prims.fs" />
   </ItemGroup>
 </Project>
