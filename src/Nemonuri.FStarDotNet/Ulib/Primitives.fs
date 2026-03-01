@@ -106,7 +106,7 @@ type FStarLiftedValue<[<ComparisonConditionalOn; EqualityConditionalOn>] 'TValue
 [<Struct>]
 type FStarKindContext<'TKind when 'TKind :> A.tc and 'TKind : unmanaged> =
     struct
-        member private this.Base: FStarTypeContext<FStarOmega, 'TKind> = { Witness = Unchecked.defaultof<'TKind>; Lifter = fun _ -> FStarOmega() }
+        member private this.Base: FStarTypeContext<FStarOmega, 'TKind> = { Witness = Unchecked.defaultof<'TKind>; Pure = fun _ -> FStarOmega() }
 
         interface IFStarTypeContext<FStarOmega, 'TKind> with
             member this.Witness = this.Base |> Ftc.witness

@@ -8,6 +8,8 @@ module FStarTypes =
 
     let raiseInvalid (ty: System.Type) = raise (InvalidInhabitant ty)
 
+    type TypeParameterProxy<'T> = struct end
+
 
 module FStarKinds =
 
@@ -68,4 +70,3 @@ module FStarKinds =
             member inline this.Bind(t: 't, f: 's -> 't2) : 't2 = 
                 TargetMonad<'TTail>() { let! ks = t in return KindSourceMonad<'TTail>() { let! s = ks in return f s } }
         end
-

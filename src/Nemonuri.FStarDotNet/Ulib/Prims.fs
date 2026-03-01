@@ -38,6 +38,7 @@ module Prims =
     open System
     open TypeEquality
     open Nemonuri.FStarDotNet.Primitives
+    open Nemonuri.FStarDotNet.Primitives.FStarKinds
     open Nemonuri.FStarDotNet.Primitives.Abstractions
     open Nemonuri.FStarDotNet.Primitives.Abbreviations
     open System.Collections
@@ -93,12 +94,13 @@ module Prims =
     [<AttributeUsage(AttributeTargets.All)>]
     type do_not_unrefine() = inherit attribute()
 
-    type Type = FStarOmega
-    type typeN = tc
-    type Type<'a> = Tc<FStarOmega, 'a>
+    type Type = Fu.Boxed.Type
+    type typ = Fu.Boxed.typ
+    type Type0 = Fu.Boxed.Type0
+    type type0 = Fu.Boxed.type0
 
-    type Type0 = Fu.Type0
-    type type0 = Fu.type0
+    type Type<'a> = Fu.Type<'a>
+    type typ<'a> = Fu.typ<'a>
     type Type0<'a> = Fu.Type0<'a>
     type type0<'a> = Fu.type0<'a>
 
@@ -115,9 +117,9 @@ module Prims =
 
     (** A predicate to express when a type supports decidable equality
         The type-checker emits axioms for [hasEq] for each inductive type *)
-    type FStarHasEq<'Type when 'Type :> typeN and 'Type : equality> = struct end
+    type FStarHasEq<'Type when 'Type :> typ and 'Type : equality> = struct end
 
-    type hasEq<'Type when 'Type :> typeN and 'Type : equality> = Type0<FStarHasEq<'Type>>
+    type hasEq<'Type when 'Type :> typ and 'Type : equality> = Type0<FStarHasEq<'Type>>
     
 
 
@@ -154,15 +156,6 @@ module Prims =
         inhabitants represents logical falsehood. Note, [empty] is
         seldom used directly in F*. We instead use its "squashed" variant,
         [False], see below. *)
-(*
-    [<Class>]
-    type empty() =
-        do Fty.raiseInvalid typeof<empty>
-
-        interface type0 with
-            member this.BoxedWitness = ty0w this
-            member this.BoxToTailTypeContext () = ty0t this
-*)
     type empty = Type0<System.Void>
 
     (** [trivial] is the singleton inductive type---it is trivially
@@ -198,27 +191,7 @@ module Prims =
         See FStar.Squash for various ways of manipulating squashed
         types. *)
     [<tac_opaque>]
-    [<FStarTypeProxy(typedefof<SquashProxy<_,_>>)>]
-    [<MeasureAnnotatedAbbreviation>]
-    type squash<'p when 'p :> typeN> = Type0<Tc<unit, 'p>>
-    
-    and [<Class>]
-        SquashProxy<'p, 'x 
-                        when 'p :> typeN
-                        and 'p : (new: Core.unit -> 'p)
-                        and 'x :> SquashProxy<'p, 'x>>() =
-        class
-            let proved: 'p = new 'p()
-            let teq = 
-                match Teq.tryRefl<SquashProxy<'p, 'x>,'x> with
-                | Some v -> v
-                | None -> Fty.raiseInvalid typeof<SquashProxy<'p, 'x>>
-            
-            interface refine<'p>
-            interface tc<unit,'x> with
-                member this.ToTailTypeContext () = Fu.pur ()
-                member this.Witness = this |> Teq.cast teq
-        end
+    type squash<'p when 'p :> typ> = Type0<Tc<unit, 'p>>
 
     (** [auto_squash] is equivalent to [squash]. However, F* will
         automatically insert `auto_squash` when simplifying terms,
@@ -231,7 +204,7 @@ module Prims =
         in rare circumstances when writing tactics to process proofs that
         have already been partially simplified by F*'s simplifier.
     *)
-    type auto_squash<'p when 'p :> typeN> = squash<'p>
+    type auto_squash<'p when 'p :> typ> = squash<'p>
 
     (** The [logical] type is transitionary. It is just an abbreviation
         for [Type0], but is used to classify uses of the basic squashed
@@ -265,10 +238,10 @@ module Prims =
         type with a single constructor for reflexivity.  As with the other
         connectives, we often work instead with the squashed version of
         equality, below. *)
-    let Refl<'a, 'x when 'a :> typeN and 'x :> thunk<'a>> = FStarEquals<'a,'x,'x>.FStarRefl |> Fu.pur
+    let Refl<'a, 'x when 'a :> typ and 'x :> thunk<'a>> = FStarEquals<'a,'x,'x>.FStarRefl |> Fu.pur
 
     [<FStarConstructorProxy(nameof Refl)>]
-    type equals<'a, 'x, '_0 when 'a :> typeN and 'x :> thunk<'a> and '_0 :> thunk<'a>> = Type0<FStarEquals<'a, 'x, '_0>>
+    type equals<'a, 'x, '_0 when 'a :> typ and 'x :> thunk<'a> and '_0 :> thunk<'a>> = Type0<FStarEquals<'a, 'x, '_0>>
 
 
 
@@ -280,7 +253,7 @@ module Prims =
             we should just rename eq2 to op_Equals_Equals
     *)
     [<tac_opaque; smt_theory_symbol>]
-    type eq2<[<unrefine>] 'a, 'x, 'y when 'a :> typeN and 'x :> thunk<'a> and 'y :> thunk<'a>> = squash<equals<'a, 'x, 'y>>
+    type eq2<[<unrefine>] 'a, 'x, 'y when 'a :> typ and 'x :> thunk<'a> and 'y :> thunk<'a>> = squash<equals<'a, 'x, 'y>>
 
     (** bool-to-type coercion: This is often automatically inserted type,
         when using a boolean in context expecting a type. But,
@@ -288,26 +261,12 @@ module Prims =
     // [<FStarTypeProxy(typedefof<FStarEqualsProxy<_,_>>)>]
     type b2t<'b when 'b :> type0<'b>> = squash<eq2<Type0, 'b, trivial>>
 
-(*
-    and [<AbstractClass>]
-        FStarB2tProxy<'b when 'b :> term<Type0, bool> and 'b : unmanaged>() =
-            class
-                do
-                    match
-                        let e1 = Fv.value Uc.defaultof<'b> in
-                        let e2 = Fv.value Uc.defaultof<BTrue> in
-                        e1 = e2
-                    with
-                    | true -> ()
-                    | false -> Fty.raiseInvalid typeof<b2t<'b>>
-            end
-*)
 
     (** constructive conjunction *)
     let Pair (_1: 'p) (_2: 'q) = Fu.monad() { return FStarPair (_1, _2) }
 
     [<FStarConstructorProxy(nameof Pair)>]
-    type pair<'p, 'q when 'p :> tc and 'q :> tc> = Type0<FStarPair<'p, 'q>>
+    type pair<'p, 'q when 'p :> typ and 'q :> typ> = Type0<FStarPair<'p, 'q>>
 
     let (|Pair|) (p: pair<'p, 'q>) = Fu.emonad() { match! p with | FStarPair (t1, t2) -> return (t1, t2) }
 
@@ -337,7 +296,7 @@ module Prims =
     
     [<FStarConstructorProxy(nameof Left)>]
     [<FStarConstructorProxy(nameof Right)>]
-    type sum<'p, 'q when 'p :> tc and 'q :> tc> = Type0<FStarSum<'p, 'q>>
+    type sum<'p, 'q when 'p :> typ and 'q :> typ> = Type0<FStarSum<'p, 'q>>
 
     let (|Left|Right|) (sum: sum<'p,'q>) =
         Fu.emonad() {
@@ -351,27 +310,6 @@ module Prims =
     [<tac_opaque; smt_theory_symbol>]
     type l_or<'p, 'q when 'p :> logical and 'q :> logical> = squash<sum<'p, 'q>>
 
-
-    //  type ``->``<'p, 'q when 'p :> typeN and 'q :> typeN> = IFStarFunction<Type, 'p, 'q>
-
-
-#if false
-    type ``->0``<'a, 'p 
-                    when 'a :> Type 
-                    and 'p :> ``->``<'a, Type0>
-                    and 'p : unmanaged> = 
-        struct
-            member inline private this.Base = Unchecked.defaultof<'p>
-
-            interface ``->``<'a, Type> with
-                member this.Invoke (s: 'a, d: outref<Type>) = d <- this.Base.Invoke(s)
-                member this.GetTailTypeContext (d: outref<Type0>) = d <- AFtc.tail this.Base
-                member this.GetWitness (d: outref<('a -> Type)>) = d <- Ff.toArrow this
-            interface Type with
-                member this.GetTailTypeContext (d: outref<objnull>) = d <- AFtc.tail this |> box
-                member this.GetWitness (d: outref<objnull>) = d <- AFtc.witness this |> box
-        end
-#endif
 
     (** squashed (non-dependent) implication, specialized to [Type0],
         written with an infix binary [==>]. Note, [==>] binds weaker than
@@ -405,8 +343,9 @@ module Prims =
             * The subterm ordering on inductive types
             * [f x << D f] for data constructors D of an inductive t whose
                 arguments include a ghost or total function returning a t *)
-    [<Interface>]
-    type precedes<'a, 'b, '_0, '_1 when 'a :> Type and 'b :> Type and '_0 :> thunk<'a> and '_1 :> thunk<'b>> = inherit Type0
+    type FStarPrecedes<'a, 'b, '_0, '_1 when 'a :> typ and 'b :> typ and '_0 :> thunk<'a> and '_1 :> thunk<'b>> = struct end
+
+    type precedes<'a, 'b, '_0, '_1 when 'a :> typ and 'b :> typ and '_0 :> thunk<'a> and '_1 :> thunk<'b>> = Type0<FStarPrecedes<'a, 'b, '_0, '_1>>
         
 
     (** The type of primitive strings of characters; See FStar.String *)
@@ -449,55 +388,40 @@ module Prims =
         Note, unless you have a really good reason, you probably don't
         want to use this [has_type] predicate. F*'s type theory certainly
         does not internalize its own typing judgment *)
+
     [<deprecated "'has_type' is intended for internal use and debugging purposes only; \
                     do not rely on it for your proofs">]
-    // [<FStarTypeProxy(typedefof<FStarHasTypeProxy<_,_,_>>)>]
-    type has_type<'a, '_0, 'Type when 'a :> Type and '_0 :> thunk<'a>> = 
+    type has_type<'a, '_0, 'Type 
+                        when 'a :> typ
+                        and '_0 :> thunk<'a>
+                        and 'Type :> typ> =
         struct
-            interface ``->``<'a, Type0> with
-                member this.GetTailTypeContext (d: outref<Type0>) = d <- Fot()
-                member this.Invoke (s: 'a, d: outref<Type0>) = 
-                    let r: Type0 =
-                        match
-                            typeof<'Type>.IsAssignableFrom typeof<'_0>
-                        with
-                        | true -> unit.create() |> AFtc.tail
-                        | false -> Fty.raiseInvalid typeof<has_type<'a, '_0, 'Type>>
-                    d <- r
-                member this.GetWitness (d: outref<('a -> Type0)>) = d <- Ff.toArrow this
-            interface Type with
-                member this.GetTailTypeContext (d: outref<objnull>) = d <- AFtc.tail this |> box
-                member this.GetWitness (d: outref<objnull>) = d <- AFtc.witness this |> box
-        end      
+            member this.Invoke (_: '_0) : bool = typeof<'Type>.IsAssignableFrom typeof<'_0> |> Fu.pur
+
+            interface typ<'a -> Type0> with
+                member this.Witness: 'a -> Type0 = fun _ -> Unchecked.defaultof<'_0> |> this.Invoke |> Fu.toBoxed
+        end
 
     (** Squashed universal quantification, or dependent products, written
         [forall (x:a). p x], specialized to Type0 *)
+    type FStarForAll<'a, 'p, 'x 
+                        when 'a :> typ 
+                        and 'p :> typ<'a -> Type0> 
+                        and 'x :> thunk<'a>> = 
+        squash<Type<'x -> KindSource<'p, 'x>>>
+
     [<tac_opaque; smt_theory_symbol>]
-    [<Interface>]
-    [<FStarTypeProxy(typedefof<FStarForallProxy<_,_,_>>)>]
-    type l_Forall<'a, 'p
-                    when 'a :> Type 
-                    and 'p :> ``->``<'a, Type0>
-                    and 'p : unmanaged> = 
-        inherit logical
+    [<FStarTypeProxy(typedefof<FStarForAll<_,_,_>>)>]
+    type l_Forall<'a, 'p when 'a :> typ and 'p :> typ<'a -> Type0>> = FStarForAll<'a,'p,thunk<'a>>
     
-    and FStarForallProxy<'a, 'p, 'x
-                    when 'a :> Type 
-                    and 'p :> ``->``<'a, Type0>
-                    and 'p : unmanaged
-                    and 'x :> thunk<'a>> =
-        squash<imp<'a, 'x, FStarDependentTuples.FStarDependentTupleConstruction<'a, ``->0``<'a, 'p>, Type0>>>
 
     (** [p1 `subtype_of` p2] when every element of [p1] is also an element
         of [p2]. *)
-    [<Interface>]
-    [<FStarTypeProxy(typedefof<FStarSubtypeOfProxy<_,_,_>>)>]
-    type subtype_of<'p1, 'p2 when 'p1 :> Type and 'p2 :> Type> = 
-        inherit logical
 
-    and FStarSubtypeOfProxy<'p1, 'p2, 'x 
-                                when 'p1 :> Type and 'p2 :> Type and 'x :> thunk<'p1>> =
-            FStarForallProxy<'p1, has_type<'p1, 'x, 'p2>, 'x>
+    type FStarSubTypeOf<'p1, 'p2, 'x when 'p1 :> typ and 'p2 :> typ and 'x :> thunk<'p1>> = FStarForAll<'p1, has_type<'p1, 'x, 'p2>, 'x>
+        
+    [<FStarTypeProxy(typedefof<FStarSubTypeOf<_,_,_>>)>]
+    type subtype_of<'p1, 'p2 when 'p1 :> typ and 'p2 :> typ> = FStarSubTypeOf<'p1, 'p2, thunk<'p1>>
 
     (** The type of squashed types.
 
@@ -509,13 +433,13 @@ module Prims =
         See https://github.com/FStarLang/FStar/issues/1048 for more
         details and the current status of the work.
         *)
-    [<FStarTypeProxy(typedefof<IFStarPropProxy<_>>)>]
-    [<Interface>]
-    type prop = inherit term<Type0, unit>
-        
-    and IFStarPropProxy<'a when 'a :> IFStarPropProxy<'a>> =
-        inherit prop
-        inherit refine<subtype_of<'a, unit>>
+    type FStarProp<'a when 'a :> typ> = Type0<subtype_of<'a, unit>>
+    //Type0<Tc<unit, 'p>>
+
+    [<FStarTypeProxy(typedefof<FStarProp<_>>)>]
+    type Prop = Type0<unit>
+
+    type prop = type0<unit>
 
     (**** The PURE effect *)
 
@@ -526,8 +450,8 @@ module Prims =
         [pre] is also valid. This provides a way for postcondition formula
         to be typed in a context where they can assume the validity of the
         precondition. This is discussed extensively in Issue #57 *)
-    type pure_post'<'a, 'pre when 'pre :> Type and 'a :> Type and 'a :> refine<'pre>> = ``->``<'a, Type0>
-    type pure_post<'a when 'a :> Type and 'a :> refine<l_True>> = pure_post'<'a, l_True>
+    type pure_post'<'a, 'pre when 'pre :> typ and 'a :> typ and 'a :> tc<'a,'pre>> = Type<'a -> Type0>
+    type pure_post<'a when 'a :> typ and 'a :> tc<'a,l_True>> = pure_post'<'a, l_True>
 
     (** A pure weakest precondition transforms postconditions on [a]-typed
         results to pure preconditions
@@ -536,7 +460,7 @@ module Prims =
         property over the postconditions
         To enforce it, we first define a vanilla wp type,
         and then refine it with the monotonicity condition *)
-    type pure_wp'<'a when 'a :> Type and 'a :> refine<l_True>> = ``->``<pure_post<'a>, pure_pre>
+    type pure_wp'<'a when 'a :> typ and 'a :> tc<'a,l_True>> = Type<pure_post<'a> -> pure_pre>
 
     (** The monotonicity predicate is marked opaque_to_smt,
         meaning that its definition is hidden from the SMT solver,

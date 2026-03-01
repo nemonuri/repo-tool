@@ -53,11 +53,18 @@ module FStarTypeContexts =
 
 module FStarTypeUniverses =
 
-    type type0 = A.tc<FStarOmega, FStarObject>
-    type Type0 = A.Tc<FStarOmega, FStarObject>
-    
-    type type0<'a> = A.tc<Type0, 'a>
-    type Type0<'a> = A.Tc<Type0, 'a>
+    module Boxed =
+
+        type Type = FStarOmega
+        type typ = A.tc
+        type type0 = A.tc<FStarOmega, FStarObject>
+        type Type0 = A.Tc<FStarOmega, FStarObject>
+
+
+    type Type<'a> = A.Tc<Boxed.Type, 'a>
+    type typ<'a> = A.tc<Boxed.Type, 'a>
+    type type0<'a> = A.tc<Boxed.Type0, 'a>
+    type Type0<'a> = A.Tc<Boxed.Type0, 'a>
 
     type EqType<'a when 'a : equality> = Type0<'a>
 
@@ -68,6 +75,8 @@ module FStarTypeUniverses =
         }
 
     let inline extract (ty0: Type0<'a>) : 'a = ty0.Witness
+
+    let inline toBoxed (x: Type0<'a>) : Boxed.Type0 = x |> FStarTypeContexts.tail
 
     type Monad =
         struct
