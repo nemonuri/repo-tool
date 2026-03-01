@@ -43,11 +43,11 @@ module Prims =
     open System.Collections
     open System.Collections.Generic 
     module Fv = Nemonuri.FStarDotNet.Primitives.Abstractions.FStarValues
-    module Ftc = Nemonuri.FStarDotNet.Primitives.Abstractions.FStarTypeContexts
-    module Ff = Nemonuri.FStarDotNet.Primitives.Abstractions.FStarFunctions
+    module AFtc = Nemonuri.FStarDotNet.Primitives.Abstractions.FStarTypeContexts
+    module Ftc = Nemonuri.FStarDotNet.Primitives.FStarTypeContexts
     module Uc = Microsoft.FSharp.Core.Operators.Unchecked
     module Fty = Nemonuri.FStarDotNet.Primitives.FStarTypes
-    module Flv = Nemonuri.FStarDotNet.Primitives.FStarLiftedValues
+    module Fu = Nemonuri.FStarDotNet.Primitives.FStarTypeUniverses
 
 
     (***** Begin trusted primitives *****)
@@ -94,26 +94,31 @@ module Prims =
     type do_not_unrefine() = inherit attribute()
 
     type Type = FStarOmega
-    type typeN = IFStarTypeContext
+    type typeN = tc
+    type Type<'a> = Tc<FStarOmega, 'a>
 
-    type Type0 = FStarObject
-    type type0 = IFStarThunk<FStarObject>
+    type Type0 = Fu.Type0
+    type type0 = Fu.type0
+    type Type0<'a> = Fu.Type0<'a>
+    type type0<'a> = Fu.type0<'a>
 
-    let inline toType0 (ty0: type0) : Type0 = { Witness = ty0 }
+    type EqType<'a when 'a : equality> = Fu.EqType<'a>
 
-    let inline private ty0w (ty0: type0) = toType0 ty0 |> Ftc.Boxed.witness
-    let inline private ty0t (ty0: type0) = toType0 ty0 |> Ftc.Boxed.tail
+#if false
+    let inline toType0 x : Type0 = { Witness = { Witness = x |> box }; Lifter = fun _ -> Type(); }
+
+    let inline private ty0wb ty0 = toType0 ty0 |> AFtc.Boxed.witness
+    let inline private ty0tb ty0 = toType0 ty0 |> AFtc.Boxed.tail
+    let inline private ty0w ty0 = toType0 ty0 |> Ftc.witness
+    let inline private ty0t ty0 = toType0 ty0 |> Ftc.tail
+#endif
 
     (** A predicate to express when a type supports decidable equality
         The type-checker emits axioms for [hasEq] for each inductive type *)
-    type hasEq<'Type 
-                when 'Type :> typeN
-                and 'Type : equality> =
-        struct
-            interface type0 with
-                member this.BoxedWitness = ty0w this
-                member this.BoxToTailTypeContext () = ty0t this
-        end
+    type FStarHasEq<'Type when 'Type :> typeN and 'Type : equality> = struct end
+
+    type hasEq<'Type when 'Type :> typeN and 'Type : equality> = Type0<FStarHasEq<'Type>>
+    
 
 
     (** A convenient abbreviation, [eqtype] is the type of types in
@@ -125,7 +130,7 @@ module Prims =
         eqtype<'a 
                 when 'a :> eqtype<'a> 
                 and 'a : equality> =
-        tc<Type0, 'a>
+        type0<'a>
 
     and FStarEquatableProxy<'a 
                                 when 'a :> FStarEquatableProxy<'a> 
@@ -136,6 +141,7 @@ module Prims =
         end
 
 
+                    
 
     (** [bool] is a two element type with elements [true] and [false]. We
         assume it is primitive, for convenient interop with other
@@ -143,16 +149,6 @@ module Prims =
         with two cases, [BTrue | BFalse] *)
     type bool = EqType<Core.bool>
 
-    type BTrue = 
-        struct
-            interface tc<bool, BTrue> 
-        end
-
-    type BFalse = 
-        struct
-            interface value<Type0, bool, BFalse> with
-                member this.Embed (): BFalse = this
-        end
 
     (** [empty] is the empty inductive type. The type with no
         inhabitants represents logical falsehood. Note, [empty] is
@@ -167,15 +163,15 @@ module Prims =
             member this.BoxedWitness = ty0w this
             member this.BoxToTailTypeContext () = ty0t this
 *)
-    type empty = Fv<System.Void>
+    type empty = Type0<System.Void>
 
     (** [trivial] is the singleton inductive type---it is trivially
         inhabited. Like [empty], [trivial] is seldom used. We instead use
         its "squashed" variants, [True] *)
-    let T = FStarTrivial |> Flv.lift
+    let T = FStarTrivial |> Fu.pur
 
     [<FStarConstructorProxy(nameof T)>]
-    type trivial = Fv<FStarTrivial>
+    type trivial = Type0<FStarTrivial>
 
 
 
@@ -204,7 +200,7 @@ module Prims =
     [<tac_opaque>]
     [<FStarTypeProxy(typedefof<SquashProxy<_,_>>)>]
     [<MeasureAnnotatedAbbreviation>]
-    type squash<'p when 'p :> typeN> = unit
+    type squash<'p when 'p :> typeN> = Type0<Tc<unit, 'p>>
     
     and [<Class>]
         SquashProxy<'p, 'x 
@@ -220,7 +216,7 @@ module Prims =
             
             interface refine<'p>
             interface tc<unit,'x> with
-                member this.ToTailTypeContext (): unit = { Value = () }
+                member this.ToTailTypeContext () = Fu.pur ()
                 member this.Witness = this |> Teq.cast teq
         end
 
@@ -245,7 +241,7 @@ module Prims =
         The type is marked [private] to intentionally prevent user code
         from referencing this type, hopefully easing the removal of
         [logical] in the future. *)
-    type private logical = type0
+    type private logical = thunk<Type0>
 
     (** An attribute indicating that a symbol is an smt theory symbol and
         hence may not be used in smt patterns.  The typechecker warns if
@@ -269,10 +265,10 @@ module Prims =
         type with a single constructor for reflexivity.  As with the other
         connectives, we often work instead with the squashed version of
         equality, below. *)
-    let Refl<'a, 'x when 'a :> typeN and 'x :> thunk<'a>> = FStarEquals<'a,'x,'x>.FStarRefl |> Flv.lift
+    let Refl<'a, 'x when 'a :> typeN and 'x :> thunk<'a>> = FStarEquals<'a,'x,'x>.FStarRefl |> Fu.pur
 
     [<FStarConstructorProxy(nameof Refl)>]
-    type equals<'a, 'x, '_0 when 'a :> typeN and 'x :> thunk<'a> and '_0 :> thunk<'a>> = Fv<FStarEquals<'a, 'x, '_0>>
+    type equals<'a, 'x, '_0 when 'a :> typeN and 'x :> thunk<'a> and '_0 :> thunk<'a>> = Type0<FStarEquals<'a, 'x, '_0>>
 
 
 
@@ -290,7 +286,7 @@ module Prims =
         when using a boolean in context expecting a type. But,
         occasionally, one may have to write [b2t] explicitly *)
     // [<FStarTypeProxy(typedefof<FStarEqualsProxy<_,_>>)>]
-    type b2t<'b when 'b :> tc<bool, 'b> and 'b : unmanaged> = squash<eq2<bool, 'b, BTrue>>
+    type b2t<'b when 'b :> type0<'b>> = squash<eq2<Type0, 'b, trivial>>
 
 (*
     and [<AbstractClass>]
@@ -308,17 +304,14 @@ module Prims =
 *)
 
     (** constructive conjunction *)
-    let Pair (_1: 'p) (_2: 'q) = Flv.monad() { return FStarPair (_1, _2) }
+    let Pair (_1: 'p) (_2: 'q) = Fu.monad() { return FStarPair (_1, _2) }
 
     [<FStarConstructorProxy(nameof Pair)>]
-    type pair<'p, 'q when 'p :> tc and 'q :> tc> = Fv<FStarPair<'p, 'q>>
+    type pair<'p, 'q when 'p :> tc and 'q :> tc> = Type0<FStarPair<'p, 'q>>
 
-    let (|Pair|) (p: pair<'p, 'q>) = 
-        let r = Flv.monad() { 
-            match! p with
-            | FStarPair (t1, t2) -> return (t1, t2)
-        } in r |> Flv.embed
-            
+    let (|Pair|) (p: pair<'p, 'q>) = Fu.emonad() { match! p with | FStarPair (t1, t2) -> return (t1, t2) }
+
+
     (** squashed conjunction, specialized to [Type0], written with an
         infix binary [/\] *)
     [<tac_opaque; smt_theory_symbol>]
@@ -338,20 +331,20 @@ module Prims =
         | FStarSumRight (v: ^q) -> Right v
 *)
 
-    let Left v = Flv.monad() { return FStarSum<'p,'q>.FStarSumLeft v }
+    let Left v = Fu.monad() { return FStarSum<'p,'q>.FStarSumLeft v }
 
-    let Right v = Flv.monad() { return FStarSum<'p,'q>.FStarSumRight v }
+    let Right v = Fu.monad() { return FStarSum<'p,'q>.FStarSumRight v }
     
     [<FStarConstructorProxy(nameof Left)>]
     [<FStarConstructorProxy(nameof Right)>]
-    type sum<'p, 'q when 'p :> tc and 'q :> tc> = Fv<FStarSum<'p, 'q>>
+    type sum<'p, 'q when 'p :> tc and 'q :> tc> = Type0<FStarSum<'p, 'q>>
 
     let (|Left|Right|) (sum: sum<'p,'q>) =
-        let r = Flv.monad() {
+        Fu.emonad() {
             match! sum with
             | FStarSumLeft v -> return Left v
             | FStarSumRight v -> return Right v
-        } in r |> Flv.embed
+        }
 
     (** squashed disjunction, specialized to [Type0], written with an
         infix binary [\/] *)
@@ -359,7 +352,7 @@ module Prims =
     type l_or<'p, 'q when 'p :> logical and 'q :> logical> = squash<sum<'p, 'q>>
 
 
-    type ``->``<'p, 'q when 'p :> typeN and 'q :> typeN> = IFStarFunction<Type, 'p, 'q>
+    //  type ``->``<'p, 'q when 'p :> typeN and 'q :> typeN> = IFStarFunction<Type, 'p, 'q>
 
 
 #if false
@@ -372,11 +365,11 @@ module Prims =
 
             interface ``->``<'a, Type> with
                 member this.Invoke (s: 'a, d: outref<Type>) = d <- this.Base.Invoke(s)
-                member this.GetTailTypeContext (d: outref<Type0>) = d <- Ftc.tail this.Base
+                member this.GetTailTypeContext (d: outref<Type0>) = d <- AFtc.tail this.Base
                 member this.GetWitness (d: outref<('a -> Type)>) = d <- Ff.toArrow this
             interface Type with
-                member this.GetTailTypeContext (d: outref<objnull>) = d <- Ftc.tail this |> box
-                member this.GetWitness (d: outref<objnull>) = d <- Ftc.witness this |> box
+                member this.GetTailTypeContext (d: outref<objnull>) = d <- AFtc.tail this |> box
+                member this.GetWitness (d: outref<objnull>) = d <- AFtc.witness this |> box
         end
 #endif
 
@@ -384,7 +377,7 @@ module Prims =
         written with an infix binary [==>]. Note, [==>] binds weaker than
         [/\] and [\/] *)
     [<tac_opaque; smt_theory_symbol>]
-    type l_imp<'p, 'q when 'p :> logical and 'q :> logical> = squash<``->``<'p, 'q>>
+    type l_imp<'p, 'q when 'p :> logical and 'q :> logical> = squash<Type<'p -> 'q>>
     (* ^^^ NB: The GTot effect is primitive;            *)
     (*         elaborated using GHOST a few lines below *)
 
@@ -468,13 +461,13 @@ module Prims =
                         match
                             typeof<'Type>.IsAssignableFrom typeof<'_0>
                         with
-                        | true -> unit.create() |> Ftc.tail
+                        | true -> unit.create() |> AFtc.tail
                         | false -> Fty.raiseInvalid typeof<has_type<'a, '_0, 'Type>>
                     d <- r
                 member this.GetWitness (d: outref<('a -> Type0)>) = d <- Ff.toArrow this
             interface Type with
-                member this.GetTailTypeContext (d: outref<objnull>) = d <- Ftc.tail this |> box
-                member this.GetWitness (d: outref<objnull>) = d <- Ftc.witness this |> box
+                member this.GetTailTypeContext (d: outref<objnull>) = d <- AFtc.tail this |> box
+                member this.GetWitness (d: outref<objnull>) = d <- AFtc.witness this |> box
         end      
 
     (** Squashed universal quantification, or dependent products, written
@@ -754,7 +747,7 @@ module Prims =
             FStarDependentTuple.BoxedSource = _1; 
             FStarDependentTuple.BoxedTarget = bt
         }
-        Flv.lift fdt
+        Flv.pureLift fdt
 
     let Mkdtuple2 (_1: 'a) (_2: '``b _1``) : Fv<FStarDependentTuple<'a, 'b>> = createDTuple2 _1 _2
 
@@ -770,7 +763,7 @@ module Prims =
         let r = Flv.monad() {
             match! d with
             | { BoxedSource = bs ; BoxedTarget = bt } -> return bs, bt
-        } in r |> Flv.embed
+        } in r |> Flv.extract
 
 
 
@@ -880,9 +873,9 @@ module Prims =
     type list<'a> = FStarLiftedValue<Microsoft.FSharp.Collections.list<'a>>
 
     let (|Nil|Cons|) (l: list<'a>) =
-        match Fv.embed l with
+        match Fv.extract l with
         | [] -> Nil l
-        | hd::tl -> Cons (Flv.lift hd, Flv.lift tl)
+        | hd::tl -> Cons (Flv.pureLift hd, Flv.pureLift tl)
 
 #if false
     (** The [M] marker is interpreted by the Dijkstra Monads for Free

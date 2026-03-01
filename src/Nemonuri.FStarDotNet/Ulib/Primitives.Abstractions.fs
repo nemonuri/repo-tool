@@ -12,14 +12,14 @@ type ITypeTail<'TTail> =
 [<Interface>]
 type IExtractable =
     interface 
-        abstract member EmbedToBox: unit -> objnull
+        abstract member ExtractToBox: unit -> objnull
     end
 
 [<Interface>]
 type IExtractable<'TTarget> =
     interface 
         inherit IExtractable
-        abstract member Embed: unit -> 'TTarget
+        abstract member Extract: unit -> 'TTarget
     end
 
 [<Interface>]
@@ -163,11 +163,11 @@ module FStarValues =
 
     module Boxed =
 
-        let embed (term: A.value<_,_>) = term.EmbedToBox()
+        let extract (term: A.value<_,_>) = term.ExtractToBox()
 
-    let embed (term: A.value<_,_,'v>) = term.Embed()
+    let extract (term: A.value<_,_,'v>) = term.Extract()
 
-    let boxEmbed (term: A.value<_,_,'v>): objnull = embed term |> box
+    let boxExtract (term: A.value<_,_,'v>): objnull = extract term |> box
 
 (*
 module FStarFunctions =

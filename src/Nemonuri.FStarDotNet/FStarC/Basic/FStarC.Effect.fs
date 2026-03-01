@@ -53,18 +53,18 @@ module Effect =
 
     type ref<'a when 'a :> tc> = Fv<Core.ref<'a>>
 
-    let (!) (r: ref<'a>) : ML<'a> = Flv.embed r |> _.Value
+    let (!) (r: ref<'a>) : ML<'a> = Flv.extract r |> _.Value
 
     let (:=) (r: ref<'a>) (x: 'a) : ML<Prims.unit> = 
-        let t1 = Flv.embed r in
+        let t1 = Flv.extract r in
         Fv.create (t1.Value <- x)
 
     let alloc (x: 'a) : ref<'a> = Fv.create { contents = x }
     let mk_ref x = alloc x
 
-    let raise (e: Prims.exn) : ML<'a> = Core.Operators.raise (Flv.embed e)
+    let raise (e: Prims.exn) : ML<'a> = Core.Operators.raise (Flv.extract e)
 
-    let exit (n: Prims.int) : ML<'a> = Core.Operators.exit (Flv.embed n |> bigint.op_Explicit)
+    let exit (n: Prims.int) : ML<'a> = Core.Operators.exit (Flv.extract n |> bigint.op_Explicit)
 
     let try_with (s1: Prims.unit -> ML<'a>) (s2: Prims.exn -> ML<'a>) : ML<'a> = 
         try
@@ -76,4 +76,4 @@ module Effect =
 
     let Failure (msg: Prims.string) : Prims.exn = Flv.map1 (fun tmsg -> System.Exception(tmsg)) msg
 
-    let failwith (msg: Prims.string) : ML<'a> = Core.Operators.failwith (Flv.embed msg)
+    let failwith (msg: Prims.string) : ML<'a> = Core.Operators.failwith (Flv.extract msg)

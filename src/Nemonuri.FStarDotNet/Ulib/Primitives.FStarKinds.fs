@@ -34,10 +34,12 @@ module FStarKinds =
 
     let inline getBijection<'tail, 'head, 'target> = EnsuredBijection<'tail, 'head, 'target>.Create().Bijection
 
+    let inline isBijectionInitialized<'tail, 'head, 'target> = Bijection<KindSource<'tail, 'head>, 'target>.Default <> null
+
     let inline initBijection<'tail, 'head, 'target> 
         (pureImpl: KindSource<'tail, 'head> -> 'target) 
         (extractImpl: 'target -> KindSource<'tail, 'head>) =
-        if Bijection<KindSource<'tail, 'head>, 'target>.Default <> null then
+        if isBijectionInitialized<'tail, 'head, 'target> then
             invalidOp "Already initialized."
         else
             Bijection<KindSource<'tail, 'head>, 'target>.Default <- Bijection<_,_>(pureImpl, extractImpl)

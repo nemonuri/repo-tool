@@ -38,15 +38,15 @@ type FStarObject = { Witness: objnull } with
 
 [<Struct>]
 type FStarTypeContext<'TTail, 'THead when 'TTail :> IFStarTypeContext> = 
-    { Tail: 'TTail; Witness: 'THead } with
+    { Witness: 'THead; Pure: 'THead -> 'TTail; } with
     interface IFStarTypeContext<'TTail, 'THead> with
         member this.Witness = this.Witness
-        member this.ToTailTypeContext (): 'TTail = this.Tail
+        member this.ToTailTypeContext (): 'TTail = Ftc.witness this |> this.Pure
     interface IFStarTypeContext with
         member this.BoxedWitness = Ftc.boxWitness this
         member this.BoxToTailTypeContext (): IFStarTypeContext = Ftc.boxTail this
 
-        
+#if false
 [<Struct>]
 type FStarBoxedValue<'TTail, 'TTerm when 'TTail :> IFStarTypeContext and 'TTerm :> IFStarTypeContext<'TTail, 'TTerm>> =
     { Tail: 'TTail; Witness: 'TTerm; Embedder: 'TTerm -> objnull } 
@@ -60,8 +60,8 @@ type FStarBoxedValue<'TTail, 'TTerm when 'TTail :> IFStarTypeContext and 'TTerm 
         interface IFStarTypeContext with
             member this.BoxedWitness = this.Base |> Ftc.Boxed.witness
             member this.BoxToTailTypeContext () = this.Base |> Ftc.Boxed.tail
-        interface IEmbeddable with
-            member this.EmbedToBox () = this.Embedder this.Witness
+        interface IExtractable with
+            member this.ExtractToBox () = this.Embedder this.Witness
     end
 
 
@@ -73,15 +73,15 @@ type FStarValue<'TTail, 'TTerm, 'TValue when 'TTail :> IFStarTypeContext and 'TT
             { Tail = this.Tail; Witness = this.Witness; Embedder = this.Embedder >> box }
         
         interface IFStarValue<'TTail, 'TTerm, 'TValue> with
-            member this.Embed () = this.Embedder this.Witness
+            member this.Extract () = this.Embedder this.Witness
         interface IFStarTypeContext<'TTail, 'TTerm> with
             member this.Witness = this.Base |> Ftc.witness
             member this.ToTailTypeContext () = this.Base |> Ftc.tail
         interface IFStarTypeContext with
             member this.BoxedWitness = this.Base |> Ftc.Boxed.witness
             member this.BoxToTailTypeContext () = this.Base |> Ftc.Boxed.tail
-        interface IEmbeddable with
-            member this.EmbedToBox () = this.Base |> Fv.Boxed.embed
+        interface IExtractable with
+            member this.ExtractToBox () = this.Base |> Fv.Boxed.extract
     end
 
 [<Struct>]
@@ -97,18 +97,18 @@ type FStarLiftedValue<[<ComparisonConditionalOn; EqualityConditionalOn>] 'TValue
             member this.BoxToTailTypeContext (): IFStarTypeContext = this.Base |> Ftc.Boxed.tail
 
         interface IFStarValue<FStarObject,FStarLiftedValue<'TValue>,'TValue> with
-            member this.Embed (): 'TValue = this.Value
-            member this.EmbedToBox (): objnull = this.Base |> Fv.Boxed.embed
+            member this.Extract (): 'TValue = this.Value
+            member this.ExtractToBox (): objnull = this.Base |> Fv.Boxed.extract
     end
 
-[<Struct>]
-type FStarFunction<'TTail, 'TSource, 'TTarget when 'TTail :> A.tc> =
-    { Tail: 'TTail; Witness: 'TSource -> 'TTarget } 
-    with
-        member private this.Base: FStarTypeContext<_,_> = { Tail = this.Tail; Witness = this.Witness }
+#endif
 
-        interface IFStarFunction<'TTail, 'TSource, 'TTarget>
-        interface IFStarTypeContext<'TTail, 'TSource -> 'TTarget> with
+[<Struct>]
+type FStarKindContext<'TKind when 'TKind :> A.tc and 'TKind : unmanaged> =
+    struct
+        member private this.Base: FStarTypeContext<FStarOmega, 'TKind> = { Witness = Unchecked.defaultof<'TKind>; Lifter = fun _ -> FStarOmega() }
+
+        interface IFStarTypeContext<FStarOmega, 'TKind> with
             member this.Witness = this.Base |> Ftc.witness
             member this.ToTailTypeContext () = this.Base |> Ftc.tail
         interface IFStarTypeContext with
@@ -117,6 +117,37 @@ type FStarFunction<'TTail, 'TSource, 'TTarget when 'TTail :> A.tc> =
     end
 
 #if false
+
+[<Struct>]
+type FStarFunction<'TTail, 'TSource, 'TTarget when 'TTail :> A.tc> =
+    { Tail: 'TTail; Witness: 'TSource -> 'TTarget } 
+    with
+        member private this.Base: FStarTypeContext<_,_> = { Tail = this.Tail; Witness = this.Witness }
+
+        interface IFStarTypeContext<'TTail, 'TSource -> 'TTarget> with
+            member this.Witness = this.Base |> Ftc.witness
+            member this.ToTailTypeContext () = this.Base |> Ftc.tail
+        interface IFStarTypeContext with
+            member this.BoxedWitness = this.Base |> Ftc.Boxed.witness
+            member this.BoxToTailTypeContext () = this.Base |> Ftc.Boxed.tail
+    end
+
+
+[<Struct>]
+type FStarTypeFunction<'TKind, 'TSource when 'TKind :> A.tc and 'TKind : unmanaged> =
+    struct
+        member private this.Base: FStarFunction<FStarOmega, 'TSource, FStarKinds.KindSource<'TKind, 'TSource>> =
+            { Tail = FStarOmega(); Witness = fun v -> { Witness = v } }
+
+        interface IFStarTypeContext<FStarOmega, 'TSource -> FStarKinds.KindSource<'TKind, 'TSource>> with
+            member this.Witness = this.Base |> Ftc.witness
+            member this.ToTailTypeContext () = this.Base |> Ftc.tail
+        interface IFStarTypeContext with
+            member this.BoxedWitness = this.Base |> Ftc.Boxed.witness
+            member this.BoxToTailTypeContext () = this.Base |> Ftc.Boxed.tail
+    end
+
+
 [<Struct>]
 type FStarObjectType =
     interface IFStarObjectType with
@@ -222,7 +253,7 @@ type DependentTypeProxy<'TSourceTypeContext, 'TSource, 'TTargetTypeContext, 'TIm
     interface A.tc with
         member this.GetTailTypeContext (d: outref<objnull>): unit = d <- this.Source |> Ftc.Boxed.tail
         member this.GetWitness (d: outref<objnull>): unit = d <- null
-#endif
+
 
 [<Struct>]
 type FStarDependentTuple<'TSourceTypeContext, 'TTypeImplication
@@ -245,7 +276,7 @@ type FStarDependentTypedValueSolver<'TSourceTypeContext, 'TTypeImplication, 'TTa
                                         and 'TTypeImplication : unmanaged> =
     {   Boxer: 'TTarget -> FStarDependentTypedValue<'TSourceTypeContext, 'TTypeImplication>
         Unboxer: FStarDependentTypedValue<'TSourceTypeContext, 'TTypeImplication> -> 'TTarget   }
-
+#endif
 
 type FStarTrivial = | FStarTrivial
 
@@ -265,12 +296,16 @@ module Abbreviations =
 
     type tc<'t, 'h when 't :> tc> = A.tc<'t, 'h>
 
+    type Tc<'t, 'h when 't :> tc> = FStarTypeContext<'t, 'h>
 
     type term<'t, 'term 
                 when 't :> tc 
                 and 'term :> term<'t, 'term>> = A.term<'t, 'term>
 
-    type imp<'t, 'p, 'q when 't :> tc> = A.imp<'t, 'p, 'q>
+    //type imp<'t, 'p, 'q when 't :> tc> = A.imp<'t, 'p, 'q>
+    type kc<'k
+                when 'k :> tc
+                and 'k : unmanaged> = tc<FStarOmega,'k>
 
     type refine<'t> = A.refine<'t>
 
@@ -282,9 +317,9 @@ module Abbreviations =
                 when 't :> tc
                 and 'term :> term<'t, 'term>> = A.value<'t, 'term, 'v>
 
-    type EqType<'a when 'a : equality> = FStarLiftedValue<'a>
+    //type EqType<'a when 'a : equality> = FStarLiftedValue<'a>
 
-    type Fv<'a> = FStarLiftedValue<'a>
+    //type Fv<'a> = FStarLiftedValue<'a>
 
 
 (*
