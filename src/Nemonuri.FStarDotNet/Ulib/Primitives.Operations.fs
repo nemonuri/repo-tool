@@ -80,11 +80,9 @@ module FStarTypeUniverses =
 
     type EqType<'a when 'a : equality> = Type0<'a>
 
-    let inline pur (x: 'a) : Type0<'a> = 
-        { 
-            Witness = x
-            Pure = fun v -> { Witness = v |> FStarTypeContexts.toObj; Pure = FStarTypeContexts.toOmega }
-        }
+    let pur (x: 'a) : Type0<'a> = 
+        let pur0 (v: 'a) : Boxed.Type0 = { Witness = v |> FStarTypeContexts.toObj; Pure = FStarTypeContexts.toOmega }
+        { Witness = x; Pure = pur0 }
 
     let inline extract (ty0: Type0<'a>) : 'a = ty0.Witness
 
@@ -107,6 +105,13 @@ module FStarTypeUniverses =
 
     let inline emonad() = ExtractorMonad()
 
+    type Comonad =
+        struct
+            member inline this.Bind(t1: 's1, sf: Type0<'s1> -> 's2) : 's2 = sf (pur t1)
+            member inline this.Return(s: Type0<'s1>) : 's1 = extract s
+        end
+
+    let inline comonad() = Comonad()
 
 module FStarKindContexts =
 

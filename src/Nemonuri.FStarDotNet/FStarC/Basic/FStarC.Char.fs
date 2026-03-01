@@ -2,11 +2,10 @@
 
 namespace Nemonuri.FStarDotNet.FStarC
 
-open Nemonuri.FStarDotNet.Primitives.Abbreviations
-module Flv = Nemonuri.FStarDotNet.Primitives.FStarLiftedValues
+open Nemonuri.FStarDotNet
 
 [<RequireQualifiedAccess>]
 module Char =
 
-    type char = Fv<Core.char>
+    type char = Prims.Type0<Core.char>
 

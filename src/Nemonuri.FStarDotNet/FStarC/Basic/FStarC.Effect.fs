@@ -21,7 +21,7 @@ namespace Nemonuri.FStarDotNet.FStarC
 open Nemonuri.FStarDotNet
 open Nemonuri.FStarDotNet.Primitives
 open Nemonuri.FStarDotNet.Primitives.Abbreviations
-module Flv = Nemonuri.FStarDotNet.Primitives.FStarLiftedValues
+module Fu = Nemonuri.FStarDotNet.Primitives.FStarTypeUniverses
 
 [<RequireQualifiedAccess>]
 module Effect =
@@ -51,29 +51,31 @@ module Effect =
 
     type ML<'a when 'a :> tc> = 'a
 
-    type ref<'a when 'a :> tc> = Fv<Core.ref<'a>>
+    type ref<'a when 'a :> tc> = Prims.Type0<Core.ref<'a>>
 
-    let (!) (r: ref<'a>) : ML<'a> = Flv.extract r |> _.Value
+    let (!) (r: ref<'a>) : ML<'a> = Fu.emonad() { let! tr = r in return tr.Value }
 
-    let (:=) (r: ref<'a>) (x: 'a) : ML<Prims.unit> = 
-        let t1 = Flv.extract r in
-        Fv.create (t1.Value <- x)
+    let (:=) (r: ref<'a>) (x: 'a) : ML<Prims.unit> = Fu.monad() { let! tr = r in return tr.Value <- x }
+        
 
-    let alloc (x: 'a) : ref<'a> = Fv.create { contents = x }
+    let alloc (x: 'a) : ref<'a> = Fu.monad() { return { contents = x } }
     let mk_ref x = alloc x
 
-    let raise (e: Prims.exn) : ML<'a> = Core.Operators.raise (Flv.extract e)
+    let raise (e: Prims.exn) : ML<'a> = Fu.emonad() { let! te = e in return Operators.raise te }
 
-    let exit (n: Prims.int) : ML<'a> = Core.Operators.exit (Flv.extract n |> bigint.op_Explicit)
+    let exit (n: Prims.int) : ML<'a> = Fu.emonad() { 
+        let! tn = n in 
+        let n32: int = tn |> bigint.op_Explicit in
+        return Operators.exit n32
+    }
 
     let try_with (s1: Prims.unit -> ML<'a>) (s2: Prims.exn -> ML<'a>) : ML<'a> = 
         try
-            s1 (Prims.unit.create())
+            () |> Fu.pur |> s1
         with
-            e -> Fv.create e |> s2
+            e -> e |> Fu.pur |> s2
 
-    //exception Failure of string
 
-    let Failure (msg: Prims.string) : Prims.exn = Flv.map1 (fun tmsg -> System.Exception(tmsg)) msg
+    let Failure (msg: Prims.string) : Prims.exn = Fu.monad() { let! tmsg = msg in return Operators.Failure tmsg }
 
-    let failwith (msg: Prims.string) : ML<'a> = Core.Operators.failwith (Flv.extract msg)
+    let failwith (msg: Prims.string) : ML<'a> = Fu.emonad() { let! tmsg = msg in return Operators.failwith tmsg }
