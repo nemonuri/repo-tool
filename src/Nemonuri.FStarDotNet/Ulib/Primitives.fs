@@ -233,7 +233,7 @@ type FStarLiftedValue<[<ComparisonConditionalOn; EqualityConditionalOn>] 'TEmbed
 
 [<Struct>]
 type FStarPair<'TP, 'TQ> = 
-    | FStarPair of _1: 'TP * _2: 'TQ
+    | FStarPair of 'TP * 'TQ
 
 [<Struct>]
 type FStarSum<'TP, 'TQ> =
@@ -281,6 +281,9 @@ type FStarDependentTypedValueSolver<'TSourceTypeContext, 'TTypeImplication, 'TTa
 type FStarTrivial = | FStarTrivial
 
 type FStarEquals<'a, 'x, '_0> = | FStarRefl
+
+type FStarDependentTuple<'TTail, 'THead, 'TTarget> = 
+    | FStarDependentTuple of 'THead * FStarKinds.KindSource<'TTail, 'THead> * Bijection<'TTarget, FStarKinds.KindSource<'TTail, 'THead>>
 
 [<AttributeUsage(AttributeTargets.Interface ||| AttributeTargets.Struct ||| AttributeTargets.Class, AllowMultiple = true)>]
 type FStarTypeProxyAttribute(proxy: System.Type) = inherit Attribute()

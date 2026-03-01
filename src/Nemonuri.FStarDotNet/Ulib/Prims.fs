@@ -49,6 +49,7 @@ module Prims =
     module Uc = Microsoft.FSharp.Core.Operators.Unchecked
     module Fty = Nemonuri.FStarDotNet.Primitives.FStarTypes
     module Fu = Nemonuri.FStarDotNet.Primitives.FStarTypeUniverses
+    module Fk = Nemonuri.FStarDotNet.Primitives.FStarKinds
 
 
     (***** Begin trusted primitives *****)
@@ -117,9 +118,19 @@ module Prims =
 
     (** A predicate to express when a type supports decidable equality
         The type-checker emits axioms for [hasEq] for each inductive type *)
-    type FStarHasEq<'Type when 'Type :> typ and 'Type : equality> = struct end
+    type FStarHasEq<'Type when 'Type :> typ and 'Type : equality> =
+        struct 
+            member this.Invoke(_: 'Type) : Type0<Core.bool> = true |> Fu.pur
 
-    type hasEq<'Type when 'Type :> typ and 'Type : equality> = Type0<FStarHasEq<'Type>>
+            interface typ<'Type -> Type0> with
+                member this.Witness: 'Type -> Type0 = this.Invoke >> Fu.toBoxed
+                member this.ToTailTypeContext () = Type()
+            interface typ with
+                member this.BoxedWitness = this |> AFtc.boxWitness
+                member this.BoxToTailTypeContext () = this |> AFtc.boxTail
+        end
+
+    type hasEq<'Type when 'Type :> typ and 'Type : equality> = Type<FStarHasEq<'Type>>
     
 
 
@@ -128,19 +139,10 @@ module Prims =
     [<FStarTypeProxy(typedefof<eqtype<_>>)>]
     type eqtype = Type0
     
-    and [<FStarTypeProxy(typedefof<FStarEquatableProxy<_>>)>]
-        eqtype<'a 
+    and eqtype<'a 
                 when 'a :> eqtype<'a> 
                 and 'a : equality> =
-        type0<'a>
-
-    and FStarEquatableProxy<'a 
-                                when 'a :> FStarEquatableProxy<'a> 
-                                and 'a : equality>() =
-        class
-            interface eqtype<'a>
-            interface refine<hasEq<'a>>
-        end
+        type0<Tc<'a, hasEq<'a>>>
 
 
                     
@@ -399,7 +401,11 @@ module Prims =
             member this.Invoke (_: '_0) : bool = typeof<'Type>.IsAssignableFrom typeof<'_0> |> Fu.pur
 
             interface typ<'a -> Type0> with
-                member this.Witness: 'a -> Type0 = fun _ -> Unchecked.defaultof<'_0> |> this.Invoke |> Fu.toBoxed
+                member this.Witness: 'a -> Type0 = (fun _ -> Unchecked.defaultof<'_0>) >> this.Invoke >> Fu.toBoxed
+                member this.ToTailTypeContext () = Type()
+            interface typ with
+                member this.BoxedWitness = this |> AFtc.boxWitness
+                member this.BoxToTailTypeContext () = this |> AFtc.boxTail
         end
 
     (** Squashed universal quantification, or dependent products, written
@@ -417,7 +423,6 @@ module Prims =
 
     (** [p1 `subtype_of` p2] when every element of [p1] is also an element
         of [p2]. *)
-
     type FStarSubTypeOf<'p1, 'p2, 'x when 'p1 :> typ and 'p2 :> typ and 'x :> thunk<'p1>> = FStarForAll<'p1, has_type<'p1, 'x, 'p2>, 'x>
         
     [<FStarTypeProxy(typedefof<FStarSubTypeOf<_,_,_>>)>]
@@ -434,7 +439,6 @@ module Prims =
         details and the current status of the work.
         *)
     type FStarProp<'a when 'a :> typ> = Type0<subtype_of<'a, unit>>
-    //Type0<Tc<unit, 'p>>
 
     [<FStarTypeProxy(typedefof<FStarProp<_>>)>]
     type Prop = Type0<unit>
@@ -490,7 +494,7 @@ module Prims =
         instead use FStar.Pervasives.pure_return *)
     [<MeasureAnnotatedAbbreviation>]
     [<unfold>]
-    type pure_return0<'a, 'x, 'p when 'a :> Type and 'x :> thunk<'a>> = prop
+    type pure_return0<'a, 'x, 'p when 'a :> typ and 'x :> thunk<'a>> = prop
 
     (** Sequential composition for the PURE effect
 
@@ -640,166 +644,161 @@ module Prims =
 
     (** [===] heterogeneous equality *)
     let ( === ) (x: 'a) (y: 'b) : bool = 
-        match 
-            Teq.tryRefl<'a, 'b>.IsSome && x.Equals(y)
-        with
-        | true -> bool.create true
-        | false -> bool.create false
+        Fu.monad() { 
+            match Teq.tryRefl<'a,'b> with
+            | None -> return false
+            | Some _ -> 
+                let x2 = x |> AFtc.Boxed.witness in
+                let y2 = y |> AFtc.Boxed.witness in
+                return x2 = y2
+        }
+
 
     (** Dependent pairs [dtuple2] in concrete syntax is [x:a & b x].
         Its values can be constructed with the concrete syntax [(| x, y |)] *)
-(*
-    [<unopteq>]
-    [<RequireQualifiedAccess>]
-    [<FStarTypeProxy(typedefof<FStarDTuple2Proxy<_,_,_,_>>)>]
-    type dtuple2<'a, 'b 
-                    when 'a :> Type 
-                    and 'b :> ``->``<'a, Type>> = { b: 'b; _1: thunk<'a> }
-        with
-            member this._2 = let r: Type = this.b.Invoke(this._1) in r
-        end
-*)
-    let inline private createDTuple2<'a, 'b, '``b _1``
-                                        when 'a :> Type 
-                                        and 'b :> ``->``<'a, Type>
-                                        and 'b : unmanaged>
-        (_1: 'a) (_2: '``b _1``) =
-        //FStarDependentTuples.FStarDependentTupleConstruction<'a, 'b, '``b _1``>() |> ignore
-        let sv = FStarDependentTuples.FStarDependentTypedValueSolverTheory<'a, 'b, '``b _1``>.GetSolver() in
-        let bt = sv.Boxer _2 in
-        let fdt: FStarDependentTuple<^a,^b> = { 
-            FStarDependentTuple.BoxedSource = _1; 
-            FStarDependentTuple.BoxedTarget = bt
-        }
-        Flv.pureLift fdt
+    module DependentTupleAuxiliaries =
 
-    let Mkdtuple2 (_1: 'a) (_2: '``b _1``) : Fv<FStarDependentTuple<'a, 'b>> = createDTuple2 _1 _2
+        let createDTuple2Aux<'a, 'b, '``b _1``
+                                when 'a :> typ
+                                and 'b :> typ<'a -> Type>>
+            (_1: 'a) (_2: '``b _1``) : Type0<FStarDependentTuple<'b, 'a, '``b _1``>> =
+            Fu.monad() { return FStarDependentTuples.create<'b,'a,'``b _1``> _1 _2 }
+
+        [<FStarConstructorProxy(nameof createDTuple2Aux)>]
+        type DTuple2Aux<'a, 'b, '``b _1``> = Type0<FStarDependentTuple<'b, 'a, '``b _1``>>
+
+    module Aux = DependentTupleAuxiliaries
+
+    let Mkdtuple2<'a, 'b, '``b _1``
+                    when 'a :> typ
+                    and 'b :> typ<'a -> Type>>
+        (_1: 'a) (_2: '``b _1``) : Aux.DTuple2Aux<'a, 'b, KindSource<'b,'a>> =
+        Fu.monad() { 
+            match! Aux.createDTuple2Aux<'a, 'b, '``b _1``> _1 _2 with
+            | FStarDependentTuple(hd, ks, _) -> return FStarDependentTuple (hd, ks, getIdBijection<'b,'a>)
+        }
 
     [<unopteq>]
     [<FStarConstructorProxy(nameof Mkdtuple2)>]
     type dtuple2<'a, 'b 
-                    when 'a :> Type 
-                    and 'b :> ``->``<'a, Type>
-                    and 'b : unmanaged> =
-        Fv<FStarDependentTuple<'a, 'b>>
+                    when 'a :> typ 
+                    and 'b :> typ<'a -> Type>> = Aux.DTuple2Aux<'a, 'b, KindSource<'b,'a>>
 
     let (|Mkdtuple2|) (d: dtuple2<'a, 'b>) =
-        let r = Flv.monad() {
-            match! d with
-            | { BoxedSource = bs ; BoxedTarget = bt } -> return bs, bt
-        } in r |> Flv.extract
-
+        Fu.emonad() { match! d with | FStarDependentTuple (_1, ks, _) -> return (_1, ks) }
 
 
     (** Squashed existential quantification, or dependent sums,
         are written [exists (x:a). p x] : specialized to Type0 *)
-    [<tac_opaque; smt_theory_symbol>]
-    [<Interface>]
-    [<FStarTypeProxy(typedefof<FStarExistsProxy<_,_,_>>)>]
-    type l_Exists<'a, 'p when 'a :> Type and 'p :> ``->``<'a, Type0>> = inherit logical
+    type FStarExists<'a, 'p, 'x 
+                        when 'a :> typ 
+                        and 'p :> typ<'a -> Type0> 
+                        and 'x :> thunk<'a>> = 
+        squash<Aux.DTuple2Aux<'a, 'p, 'x>>
 
-    and FStarExistsProxy<'a, 'p, 'x
-                            when 'a :> Type 
-                            and 'p :> ``->``<'a, Type0>
-                            and 'p : unmanaged
-                            and 'x :> thunk<'a>> =
-        squash<FStarDependentTuples.FStarDependentTupleConstruction<'a, ``->0``<'a,'p>, 'x>>
- 
+    [<tac_opaque; smt_theory_symbol>]
+    [<FStarTypeProxy(typedefof<FStarExists<_,_,_>>)>]
+    type l_Exists<'a, 'p when 'a :> typ and 'p :> typ<'a -> Type0>> = FStarExists<'a, 'p, thunk<'a>>
+
+
 
     (** Primitive type of mathematical integers, mapped to zarith in OCaml
         extraction and to the SMT sort of integers *)
     type int = EqType<Core.bigint>
-
-    module Intr = Microsoft.FSharp.Core.LanguagePrimitives.IntrinsicOperators
 
     (**** Basic operators on booleans and integers *)
 
     (** [&&] boolean conjunction *)
 
     [<smt_theory_symbol>]
-    let op_AmpAmp x y = (Intr.(&&) |> Flv.map2) x y
+    let op_AmpAmp (x: bool) (y: bool) : bool = Fu.monad() { let! tx = x in let! ty = y in return tx && ty }
 
     (** [||] boolean disjunction *)
 
     [<smt_theory_symbol>]
-    let op_BarBar x y = (Intr.(||) |> Flv.map2) x y
+    let op_BarBar (x: bool) (y: bool) : bool = Fu.monad() { let! tx = x in let! ty = y in return tx || ty }
 
     (** [not] boolean negation *)
 
     [<smt_theory_symbol>]
-    let op_Negation x = (not |> Flv.map1) x
+    let op_Negation (x: bool) : bool = Fu.monad() { let! tx = x in return not tx }
 
     (** Integer multiplication, no special symbol. See FStar.Mul *)
 
     [<smt_theory_symbol>]
-    let op_Multiply x y = (bigint.Multiply |> Flv.curryMap2) x y
+    let op_Multiply (x: int) (y: int) : int = Fu.monad() { let! tx = x in let! ty = y in return bigint.Multiply(tx, ty) }
 
     (** [-] integer subtraction *)
 
     [<smt_theory_symbol>]
-    let op_Subtraction x y = (bigint.Subtract |> Flv.curryMap2) x y
+    let op_Subtraction (x: int) (y: int) : int = Fu.monad() { let! tx = x in let! ty = y in return bigint.Subtract(tx, ty) }
 
     (** [+] integer addition *)
 
     [<smt_theory_symbol>]
-    let op_Addition x y = (bigint.Add |> Flv.curryMap2) x y
+    let op_Addition (x: int) (y: int) : int = Fu.monad() { let! tx = x in let! ty = y in return bigint.Add(tx, ty) }
 
     (** [-] prefix unary integer negation *)
 
     [<smt_theory_symbol>]
-    let op_Minus i = (bigint.Negate |> Flv.map1) i
+    let op_Minus (x: int) : int = Fu.monad() { let! tx = x in return bigint.Negate(tx) }
 
     (** [<=] integer comparison *)
 
-    let inline private tyFix (f: bigint -> bigint -> Core.bool) = f
-
     [<smt_theory_symbol>]
-    let op_LessThanOrEqual x y = ((<=) |> tyFix |> Flv.map2) x y
+    let op_LessThanOrEqual (x: int) (y: int) : bool = Fu.monad() { let! tx = x in let! ty = y in return tx <= ty }
 
     (** [>] integer comparison *)
 
     [<smt_theory_symbol>]
-    let op_GreaterThan x y = ((>) |> tyFix |> Flv.map2) x y
+    let op_GreaterThan (x: int) (y: int) : bool = Fu.monad() { let! tx = x in let! ty = y in return tx > ty }
 
     (** [>=] integer comparison *)
 
     [<smt_theory_symbol>]
-    let op_GreaterThanOrEqual x y = ((>=) |> tyFix |> Flv.map2) x y
+    let op_GreaterThanOrEqual (x: int) (y: int) : bool = Fu.monad() { let! tx = x in let! ty = y in return tx >= ty }
 
     (** [<] integer comparison *)
 
     [<smt_theory_symbol>]
-    let op_LessThan x y = ((<) |> tyFix |> Flv.map2) x y
+    let op_LessThan (x: int) (y: int) : bool = Fu.monad() { let! tx = x in let! ty = y in return tx < ty }
 
     (** [=] decidable equality on [eqtype] *)
 
-    let inline private eq' (x: 'a) (y: 'a) = x = y
-
     [<smt_theory_symbol>]
-    let inline op_Equality<[<unrefine>] 'a when 'a :> eqtype<'a> and 'a : equality> (x: 'a) (y: 'a) = (=) x y |> bool.create
+    let inline op_Equality<[<unrefine>] 'a when 'a :> eqtype<'a> and 'a : equality> (x: 'a) (y: 'a) : bool = Fu.monad() { return x = y }
+        
 
     (** [<>] decidable dis-equality on [eqtype] *)
 
     [<smt_theory_symbol>]
-    let op_disEquality<[<unrefine>] 'a when 'a :> eqtype<'a> and 'a : equality> (x: 'a) (y: 'a) = (<>) x y |> bool.create
+    let op_disEquality<[<unrefine>] 'a when 'a :> eqtype<'a> and 'a : equality> (x: 'a) (y: 'a) : bool = Fu.monad() { return x <> y }
 
     (** The extensible open inductive type of exceptions *)
-    type exn = FStarLiftedValue<Core.exn>
+    type exn = Type0<Core.exn>
 
     (** String concatenation and its abbreviation as [^].  TODO, both
         should be removed in favor of what is present in FStar.String *)
-    let strcat (s1: string) (s2: string) : string = Flv.map2 (fun (t1: Core.string) (t2: Core.string) -> System.String.Concat(t1, t2)) s1 s2
+    let strcat (s1: string) (s2: string) : string = Fu.monad() { let! t1 = s1 in let! t2 = s2 in return System.String.Concat(t1, t2) }
     
     [<inline_for_extraction; unfold>]
     let op_Hat s1 s2 = strcat s1 s2
 
     (** The inductive type of polymorphic lists *)
-    type list<'a> = FStarLiftedValue<Microsoft.FSharp.Collections.list<'a>>
+    let Nil<'a> = Fu.monad() { let e: list<'a> = [] in return e }
+
+    let Cons (hd: 'a) (tl: Type0<list<'a>>) : Type0<list<'a>> = Fu.monad() { let thd = hd in let! ttl = tl in return thd::ttl }
+
+    [<FStarConstructorProxy(nameof Nil)>]
+    [<FStarConstructorProxy(nameof Cons)>]
+    type list<'a> = Type0<Microsoft.FSharp.Collections.list<'a>>
 
     let (|Nil|Cons|) (l: list<'a>) =
-        match Fv.extract l with
-        | [] -> Nil l
-        | hd::tl -> Cons (Flv.pureLift hd, Flv.pureLift tl)
+        Fu.emonad() {
+            match! l with
+            | [] as nil -> return Nil (Fu.monad() { return nil })
+            | hd::tl -> return Cons (hd, Fu.monad() { return tl })
+        }
 
 #if false
     (** The [M] marker is interpreted by the Dijkstra Monads for Free

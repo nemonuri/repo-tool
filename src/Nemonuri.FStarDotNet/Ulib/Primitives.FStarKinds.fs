@@ -22,11 +22,11 @@ module FStarKinds =
         end
 
     [<Struct>]
-    type EnsuredBijection<'TTail, 'THead, 'TTarget> = private { Bijection: Bijection<KindSource<'TTail, 'THead>, 'TTarget> }
+    type EnsuredBijection<'TTail, 'THead, 'TTarget> = private { Bijection: Bijection<'TTarget, KindSource<'TTail, 'THead>> }
         with
             static member Create(): EnsuredBijection<'TTail, 'THead, 'TTarget> =
                 let inline raise'() = FStarTypes.raiseInvalid typeof<EnsuredBijection<'TTail, 'THead, 'TTarget>>
-                match Bijection<KindSource<'TTail, 'THead>, 'TTarget>.Default with
+                match Bijection<'TTarget, KindSource<'TTail, 'THead>>.Default with
                 | Null -> raise'()
                 | NonNull bij -> 
                 match bij.Pure, bij.Extract with
@@ -34,17 +34,27 @@ module FStarKinds =
                 | _ -> raise'()
         end
 
-    let inline getBijection<'tail, 'head, 'target> = EnsuredBijection<'tail, 'head, 'target>.Create().Bijection
+    let isBijectionInitialized<'tail, 'head, 'target> = Bijection<'target, KindSource<'tail, 'head>>.Default <> null
 
-    let inline isBijectionInitialized<'tail, 'head, 'target> = Bijection<KindSource<'tail, 'head>, 'target>.Default <> null
-
-    let inline initBijection<'tail, 'head, 'target> 
-        (pureImpl: KindSource<'tail, 'head> -> 'target) 
-        (extractImpl: 'target -> KindSource<'tail, 'head>) =
+    let initBijection<'tail, 'head, 'target> 
+        (pureImpl: 'target -> KindSource<'tail, 'head>) 
+        (extractImpl: KindSource<'tail, 'head> -> 'target) =
         if isBijectionInitialized<'tail, 'head, 'target> then
             invalidOp "Already initialized."
         else
-            Bijection<KindSource<'tail, 'head>, 'target>.Default <- Bijection<_,_>(pureImpl, extractImpl)
+            Bijection<'target, KindSource<'tail, 'head>>.Default <- Bijection<_,_>(pureImpl, extractImpl)
+
+    let private initIdIfUninitialized<'tail, 'head> =
+        if isBijectionInitialized<'tail, 'head, KindSource<'tail, 'head>> then () else
+            initBijection<'tail, 'head, KindSource<'tail, 'head>> id id
+
+    let getBijection<'tail, 'head, 'target> = 
+        match TypeEquality.Teq.tryRefl<'target, KindSource<'tail, 'head>> with
+        | Some _ -> initIdIfUninitialized<'tail, 'head>
+        | None -> ()
+        EnsuredBijection<'tail, 'head, 'target>.Create().Bijection
+
+    let getIdBijection<'tail, 'head> = getBijection<'tail, 'head, KindSource<'tail, 'head>>
 
     [<Struct>]
     type KindSourceMonad<'TTail> =
@@ -57,9 +67,9 @@ module FStarKinds =
     [<Struct>]
     type TargetMonad<'TTail> =
         struct
-            member inline this.Return(s: KindSource<'TTail, 'THead>) : 'TTarget = getBijection<'TTail, 'THead, 'TTarget>.Pure.Invoke(s)
+            member inline this.Return(s: KindSource<'TTail, 'THead>) : 'TTarget = getBijection<'TTail, 'THead, 'TTarget>.Extract.Invoke(s)
             
-            member inline this.Bind(x: 'TTarget, f: KindSource<'TTail, 'THead> -> 'TTarget2) = getBijection<'TTail, 'THead, 'TTarget>.Extract.Invoke(x) |> f
+            member inline this.Bind(x: 'TTarget, f: KindSource<'TTail, 'THead> -> 'TTarget2) = getBijection<'TTail, 'THead, 'TTarget>.Pure.Invoke(x) |> f
         end
 
     [<Struct>]
@@ -70,3 +80,6 @@ module FStarKinds =
             member inline this.Bind(t: 't, f: 's -> 't2) : 't2 = 
                 TargetMonad<'TTail>() { let! ks = t in return KindSourceMonad<'TTail>() { let! s = ks in return f s } }
         end
+
+    let inline kmonad<'t>() = KindMonad<'t>()
+

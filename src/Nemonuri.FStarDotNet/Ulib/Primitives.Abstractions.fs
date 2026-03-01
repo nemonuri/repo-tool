@@ -155,9 +155,9 @@ module FStarTypeContexts =
 
     let tail (tc: A.thunk<'t>) = tc.ToTailTypeContext()
 
-    let inline boxWitness (tc: A.tc<_,'h>) = witness tc |> box
+    let boxWitness (tc: A.tc<_,'h>) = witness tc |> box
 
-    let inline boxTail (tc: #A.tc) : A.tc = tc |> unbox
+    let boxTail (tc: #A.tc) : A.tc = tc |> tail |> unbox
     
 module FStarValues =
 
