@@ -4,7 +4,7 @@ namespace Nemonuri.ByteChars;
 
 
 public readonly ref struct FixedSizeChunkSpan<TSize, T>
-     where TSize : unmanaged, IFixedSizePremise<TSize>
+     where TSize : unmanaged, IFixedSizePremise
 {
     internal FixedSizeChunkSpan(Span<T> rawValues, int chunkCount)
     {

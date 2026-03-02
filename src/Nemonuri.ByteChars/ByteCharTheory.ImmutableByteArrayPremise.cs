@@ -4,7 +4,7 @@ namespace Nemonuri.ByteChars;
 
 public static partial class ByteCharTheory
 {
-    public readonly unsafe struct ImmutableByteArrayPremise : IByteCharPremise<ImmutableByteArrayPremise, ImmutableArray<byte>>
+    public readonly unsafe struct ImmutableByteArrayPremise : IByteCharPremise<ImmutableArray<byte>>
     {
         public bool LessThanOrEqualAll(ImmutableArray<byte> left, ImmutableArray<byte> right) => 
             ByteCharSpanTheory.LessThanOrEqualAll(left.AsSpan(), left.AsSpan());

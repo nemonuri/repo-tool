@@ -3,7 +3,7 @@ using Fst = Nemonuri.ByteChars.FixedSizeTheory;
 namespace Nemonuri.ByteChars;
 
 public readonly ref struct FixedSizeReadOnlyChunkSpan<TSize, T>
-     where TSize : unmanaged, IFixedSizePremise<TSize>
+     where TSize : unmanaged, IFixedSizePremise
 {
     internal FixedSizeReadOnlyChunkSpan(ReadOnlySpan<T> rawValues, int chunkCount)
     {

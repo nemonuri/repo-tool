@@ -3,7 +3,7 @@ namespace Nemonuri.ByteChars;
 public static partial class FixedSizeTheory
 {
     extension<TPremise>(TPremise) /* TPremise */
-        where TPremise : unmanaged, IFixedSizePremise<TPremise>
+        where TPremise : unmanaged, IFixedSizePremise
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int GetFixedSize()

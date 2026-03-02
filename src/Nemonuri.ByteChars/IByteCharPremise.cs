@@ -1,7 +1,6 @@
 namespace Nemonuri.ByteChars;
 
-public unsafe interface IByteCharPremise<TSelf, TOperand>
-    where TSelf : unmanaged, IByteCharPremise<TSelf, TOperand>
+public unsafe interface IByteCharPremise<TOperand>
 #if NET9_0_OR_GREATER
     where TOperand : allows ref struct
 #endif

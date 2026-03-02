@@ -2,17 +2,17 @@ using System.Numerics;
 
 namespace Nemonuri.ByteChars.Internal;
 
-internal readonly struct StackLimitSizePremise : IFixedSizePremise<StackLimitSizePremise>
+internal readonly struct StackLimitSizePremise : IFixedSizePremise
 {
     public readonly int FixedSize => ByteStringConstants.StackAllocThreshold;
 }
 
-internal readonly struct ByteVectorSizePremise : IFixedSizePremise<ByteVectorSizePremise>
+internal readonly struct ByteVectorSizePremise : IFixedSizePremise
 {
     public readonly int FixedSize => Vector<byte>.Count;
 }
 
-internal readonly struct Base1E9Premise : IFixedSizePremise<Base1E9Premise>
+internal readonly struct Base1E9Premise : IFixedSizePremise
 {
 /**
 ## 1E9 진법?

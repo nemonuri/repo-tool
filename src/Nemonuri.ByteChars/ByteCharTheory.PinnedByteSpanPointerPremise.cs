@@ -6,7 +6,7 @@ namespace Nemonuri.ByteChars;
 
 public static partial class ByteCharTheory
 {
-    public readonly struct PinnedByteSpanPointerPremise : IByteCharPremise<PinnedByteSpanPointerPremise, UnsafePinnedSpanPointer<byte>>
+    public readonly struct PinnedByteSpanPointerPremise : IByteCharPremise<UnsafePinnedSpanPointer<byte>>
     {
         public bool LessThanOrEqualAll(UnsafePinnedSpanPointer<byte> left, UnsafePinnedSpanPointer<byte> right) =>
             ByteCharSpanTheory.LessThanOrEqualAll(left.LoadSpan(), right.LoadSpan());

@@ -17,7 +17,7 @@ public static unsafe partial class ByteCharTheory
         
 
     extension<TPremise, TOperand>(TPremise) /* TPremise, TOperand */
-        where TPremise : unmanaged, IByteCharPremise<TPremise, TOperand>
+        where TPremise : unmanaged, IByteCharPremise<TOperand>
         where TOperand : notnull
 #if NET9_0_OR_GREATER
         // , allows ref struct

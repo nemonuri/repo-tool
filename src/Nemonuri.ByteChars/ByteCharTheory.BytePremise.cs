@@ -2,7 +2,7 @@ namespace Nemonuri.ByteChars;
 
 public static partial class ByteCharTheory
 {
-    public readonly struct BytePremise : IByteCharPremise<BytePremise, byte>
+    public readonly struct BytePremise : IByteCharPremise<byte>
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool LessThanOrEqualAll(byte left, byte right) => left <= right;

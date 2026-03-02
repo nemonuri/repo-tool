@@ -1,7 +1,6 @@
 namespace Nemonuri.ByteChars;
 
-public interface IFixedSizePremise<TPremise>
-    where TPremise : unmanaged, IFixedSizePremise<TPremise>
+public interface IFixedSizePremise
 {
     int FixedSize {get;}
 }

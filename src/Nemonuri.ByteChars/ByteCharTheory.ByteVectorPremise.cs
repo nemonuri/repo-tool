@@ -8,7 +8,7 @@ namespace Nemonuri.ByteChars;
 
 public static partial class ByteCharTheory
 {
-    public readonly struct ByteVectorPremise : IByteCharPremise<ByteVectorPremise, Vector<byte>>
+    public readonly struct ByteVectorPremise : IByteCharPremise<Vector<byte>>
     {
         public bool LessThanOrEqualAll(Vector<byte> left, Vector<byte> right) => Vector.LessThanOrEqualAll(left, right);
 

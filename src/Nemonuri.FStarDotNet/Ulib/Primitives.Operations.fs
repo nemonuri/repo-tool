@@ -90,6 +90,8 @@ module FStarTypeUniverses =
 
     let inline toBoxed (x: Type0<'a>) : Boxed.Type0 = x |> FStarTypeContexts.tail
 
+    let zero() = () |> pur
+
     type Monad =
         struct
             member inline this.Bind(t1: Type0<'s1>, sf: 's1 -> Type0<'s2>) : Type0<'s2> = sf (extract t1)

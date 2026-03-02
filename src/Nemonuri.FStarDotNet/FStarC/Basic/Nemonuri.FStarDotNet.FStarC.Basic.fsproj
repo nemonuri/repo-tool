@@ -10,6 +10,8 @@
     <Compile Include="FStarC.Getopt.fs" />
     <Compile Include="FStarC.VConfig.fs" />
     <Compile Include="FStarC.String.fs" />
+    <Compile Include="FStarC.PSMap.fs" />
+    <Compile Include="FStarC.Options.fs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Ulib\Nemonuri.FStarDotNet.Ulib.fsproj" />

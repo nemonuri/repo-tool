@@ -3,7 +3,7 @@ namespace Nemonuri.ByteChars;
 public static partial class FixedSizeTheory
 {
     public readonly ref struct SplitSpanResult<TSize, T>
-        where TSize : unmanaged, IFixedSizePremise<TSize>
+        where TSize : unmanaged, IFixedSizePremise
     {
         internal SplitSpanResult(FixedSizeChunkSpan<TSize, T> chunks, Span<T> remainder)
         {
