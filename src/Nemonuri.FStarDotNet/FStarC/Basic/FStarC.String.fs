@@ -3,6 +3,8 @@
 
 module Nemonuri.FStarDotNet.FStarC.String
 open Nemonuri.FStarDotNet
+
+#if false
 open Nemonuri.OCamlDotNet
 open Nemonuri.OCamlDotNet.Batteries
 open Nemonuri.OCamlDotNet.Zarith
@@ -52,3 +54,4 @@ let index_of s c =
 let list_of_string s = BatList.init (BatUTF8.length s) (fun i -> BatUChar.code (BatUTF8.get s i))
 let string_of_list l = BatUTF8.init (BatList.length l) (fun i -> BatUChar.chr (BatList.at l i))
 let string_of_char (c:char) = BatString.of_char (Char.chr c)
+#endif

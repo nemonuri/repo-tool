@@ -49,13 +49,13 @@ module Effect =
     effect ML (a:Type) = ALL a (fun (p:all_post a) (_:unit) -> forall (a:result a) (h:unit). p a h)
 #endif
 
-    type ML<'a when 'a :> tc> = 'a
+    type ML<'a> = Prims.Type0<'a>
 
-    type ref<'a when 'a :> tc> = Prims.Type0<Core.ref<'a>>
+    type ref<'a> = Prims.Type0<Core.ref<'a>>
 
-    let (!) (r: ref<'a>) : ML<'a> = Fu.emonad() { let! tr = r in return tr.Value }
+    let (!) (r: ref<'a>) : ML<'a> = Fu.monad() { let! tr = r in return tr.Value }
 
-    let (:=) (r: ref<'a>) (x: 'a) : ML<Prims.unit> = Fu.monad() { let! tr = r in return tr.Value <- x }
+    let (:=) (r: ref<'a>) (x: 'a) : ML<unit> = Fu.monad() { let! tr = r in return tr.Value <- x }
         
 
     let alloc (x: 'a) : ref<'a> = Fu.monad() { return { contents = x } }
@@ -69,11 +69,11 @@ module Effect =
         return Operators.exit n32
     }
 
-    let try_with (s1: Prims.unit -> ML<'a>) (s2: Prims.exn -> ML<'a>) : ML<'a> = 
+    let try_with (s1: ML<Prims.unit -> 'a>) (s2: ML<Prims.exn -> 'a>) : ML<'a> = 
         try
-            () |> Fu.pur |> s1
+            Fu.monad() { let! t1 = s1 in return () |> Fu.pur |> t1 }
         with
-            e -> e |> Fu.pur |> s2
+            e -> Fu.monad() { let! t2 = s2 in return e |> Fu.pur |> t2 }
 
 
     let Failure (msg: Prims.string) : Prims.exn = Fu.monad() { let! tmsg = msg in return Operators.Failure tmsg }

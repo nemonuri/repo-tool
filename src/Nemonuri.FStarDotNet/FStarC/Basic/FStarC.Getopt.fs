@@ -9,32 +9,33 @@ open Nemonuri.FStarDotNet
 module Fu = Nemonuri.FStarDotNet.Primitives.FStarTypeUniverses
 module B = Nemonuri.FStarDotNet.FStarC.BaseTypes
 
-[<RequireQualifiedAccess>]
+
 module Getopt =
 
-    let nolong : Prims.string = Fu.monad() { return "" }
+    type FStar_opt_variant<'a> =
+    | ZeroArgs of Effect.ML<(Prims.unit -> 'a)>
+    | OneArg of Effect.ML<(Effect.ML<(Prims.string -> 'a)> * Prims.string)>
+    type opt_variant<'a> = Effect.ML<FStar_opt_variant<'a>>
 
-    let noshort: B.char = Fu.monad() { return '\000' }
-
-    type opt_variant<'a> =
-    | ZeroArgs of (Prims.unit -> 'a)
-    | OneArg of (Prims.string -> 'a) * Prims.string
-
-    type opt'<'a> = B.char * Prims.string * opt_variant<'a>
+    type opt'<'a> = Effect.ML<(B.char * Prims.string * opt_variant<'a>)>
     type opt = opt'<Prims.unit>
 
-    type parse_cmdline_res =
+    type FStar_parse_cmdline_res =
     | Empty
-    | Error of Prims.string * Prims.string // second arg is the long name of the failed option
+    | Error of string * string // second arg is the long name of the failed option
     | Success
+    type parse_cmdline_res = Effect.ML<FStar_parse_cmdline_res>
 
 
+    let noshort: B.char = Fu.monad() { return '\000' }
+    let nolong : Prims.string = Fu.monad() { return "" }
     let parse_cmdline: Prims.list<opt> -> (Prims.string -> parse_cmdline_res) -> parse_cmdline_res = raise (System.NotImplementedException())
     let parse_string: Prims.list<opt> -> (Prims.string -> parse_cmdline_res) -> Prims.string -> parse_cmdline_res = raise (System.NotImplementedException())
     let parse_list: Prims.list<opt> -> (Prims.string -> parse_cmdline_res) -> Prims.list<Prims.string> -> parse_cmdline_res = raise (System.NotImplementedException())
     let cmdline: Prims.unit -> Prims.list<Prims.string> = raise (System.NotImplementedException())
 
-#if false
+#if false        
+
   let bind l f =
       match l with
       | Error _ -> l

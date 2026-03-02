@@ -3,6 +3,7 @@
 namespace Nemonuri.FStarDotNet.FStarC
 
 open Nemonuri.FStarDotNet
+open Nemonuri.FStarDotNet.Primitives.FStarKinds
 
 [<RequireQualifiedAccess>]
 module Char =

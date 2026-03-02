@@ -16,6 +16,6 @@
     <Compile Include="Primitives.FStarKinds.fs" />
     <Compile Include="Primitives.fs" />
     <Compile Include="Primitives.Operations.fs" />
-    <Compile Include="Prims.fs" />
+    <Compile Include="Prims.fs" /><Compile Include="Forwarded.FStar_Pervasives_Native.fs" />
   </ItemGroup>
 </Project>

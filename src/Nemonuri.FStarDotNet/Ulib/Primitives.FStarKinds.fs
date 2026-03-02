@@ -64,6 +64,8 @@ module FStarKinds =
             member inline this.Bind(x: KindSource<'TTail, 'THead>, f: 'THead -> KindSource<'TTail, 'THead2>) = x.Witness |> f
         end
 
+    let inline ksmonad<'t> = KindSourceMonad<'t>()
+
     [<Struct>]
     type TargetMonad<'TTail> =
         struct
@@ -81,5 +83,5 @@ module FStarKinds =
                 TargetMonad<'TTail>() { let! ks = t in return KindSourceMonad<'TTail>() { let! s = ks in return f s } }
         end
 
-    let inline kmonad<'t>() = KindMonad<'t>()
+    let inline kmonad<'t> = KindMonad<'t>()
 

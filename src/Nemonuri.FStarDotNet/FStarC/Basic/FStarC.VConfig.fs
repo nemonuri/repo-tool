@@ -3,6 +3,7 @@
 namespace Nemonuri.FStarDotNet.FStarC
 
 open Nemonuri.FStarDotNet
+open Nemonuri.FStarDotNet.Forwarded
 module Fu = Nemonuri.FStarDotNet.Primitives.FStarTypeUniverses
 
 module VConfig =
@@ -11,7 +12,7 @@ module VConfig =
         to check a particular definition. It can be read from tactics via
         sigelt_opts and set via the check_with attribute.
     *)
-    type vconfig = {
+    type FStar_vconfig = {
         initial_fuel                              : Prims.int;
         max_fuel                                  : Prims.int;
         initial_ifuel                             : Prims.int;
@@ -39,8 +40,9 @@ module VConfig =
         z3seed                                    : Prims.int;
         z3version                                 : Prims.string;
         trivial_pre_for_unannotated_effectful_fns : Prims.bool;
-        reuse_hint_for                            : option<Prims.string>;
+        reuse_hint_for                            : FStar_Pervasives_Native.option<Prims.string>;
     }
+    type vconfig = Effect.ML<FStar_vconfig>
 
     (** Marker to check a sigelt with a particular vconfig, not really used internally.. *)
     let check_with (vcfg : vconfig) : Prims.unit = Fu.pur ()

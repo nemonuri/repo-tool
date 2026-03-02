@@ -65,6 +65,8 @@ module FStarDependentTuples =
 
 module FStarTypeUniverses =
 
+    open Nemonuri.FStarDotNet.Primitives.FStarKinds
+
     module Boxed =
 
         type Type = FStarOmega
@@ -112,6 +114,21 @@ module FStarTypeUniverses =
         end
 
     let inline comonad() = Comonad()
+
+    let type0ToKindSource (x: Type0<'a>) : KindSource<Boxed.Type0, 'a> = { Witness = x.Witness }
+    let type0OfKindSource (x: KindSource<Boxed.Type0, 'a>) : Type0<'a> = x.Witness |> pur
+
+    type Type0OfKindSourceMonad = 
+        struct
+            member inline this.Return(s1: KindSource<Boxed.Type0, 's1>) : Type0<'s1> = type0OfKindSource s1
+            member inline this.Bind(t1: Type0<'s1>, sf: KindSource<Boxed.Type0, 's1> -> Type0<'s2>) : Type0<'s2> = type0ToKindSource t1 |> sf
+        end
+
+    type Type0ToKindSourceMonad = 
+        struct
+            member inline this.Return(s1: Type0<'s1>) : KindSource<Boxed.Type0, 's1> = type0ToKindSource s1
+            member inline this.Bind(t1: KindSource<Boxed.Type0, 's1>, sf: Type0<'s1> -> KindSource<Boxed.Type0, 's2>) : KindSource<Boxed.Type0, 's2> = type0OfKindSource t1 |> sf
+        end
 
 module FStarKindContexts =
 
