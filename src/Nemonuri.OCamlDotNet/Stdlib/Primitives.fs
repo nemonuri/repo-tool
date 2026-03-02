@@ -28,21 +28,18 @@ open type Nemonuri.ByteChars.Extensions.UnsafePinnedSpanPointerExtensions
     type internal OCamlByteSequenceSource = 
     | None
     | Array of array: ArraySegment<byte>
-    | ImmutableArray of immutableArray: ImmutableArraySegment<byte>
     | PinnedPointer of pointer: UnsafePinnedSpanPointer<byte>
         with
             member this.AsReadOnlySpan() : ReadOnlySpan<byte> =
                 match this with
                 | None -> ReadOnlySpan<byte>.Empty
                 | Array v -> v.AsSpan()
-                | ImmutableArray v -> v.AsSpan()
                 | PinnedPointer v -> v.LoadReadOnlySpan()
             
             member this.UnsafeAsSpan() : Span<byte> =
                 match this with
                 | None -> Span<byte>.Empty
                 | Array v -> v.AsSpan()
-                | ImmutableArray v -> v.UnsafeAsSpan()
                 | PinnedPointer v -> v.LoadSpan()
 
             interface IEquatable<OCamlByteSequenceSource> with
@@ -52,6 +49,13 @@ open type Nemonuri.ByteChars.Extensions.UnsafePinnedSpanPointerExtensions
             interface IComparable<OCamlByteSequenceSource> with
                 member this.CompareTo (other: OCamlByteSequenceSource): int = 
                     this.AsReadOnlySpan().SequenceCompareTo(other.AsReadOnlySpan())
+            
+            interface IComparable with
+                member this.CompareTo (obj: obj): int = 
+                    match obj with
+                    | null -> -1
+                    | :? OCamlByteSequenceSource as other -> (this :> IComparable<OCamlByteSequenceSource>).CompareTo(other)
+                    | _ -> invalidArg (nameof obj) "Cannot compare."
 
             override this.Equals (obj: obj): bool = 
                 match obj with 
@@ -68,7 +72,6 @@ open type Nemonuri.ByteChars.Extensions.UnsafePinnedSpanPointerExtensions
                 match this with
                 | None -> None
                 | Array v -> ArraySegment<_>(v.Array, v.Offset + offset, length) |> Array
-                | ImmutableArray v -> ImmutableArraySegment<_>(v.Array, v.Offset + offset, length) |> ImmutableArray
                 | PinnedPointer v -> v.Slice(offset, length) |> PinnedPointer
 
             interface ITemporaryReadOnlySpanSource<byte> with

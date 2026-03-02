@@ -3,7 +3,7 @@ using static Nemonuri.ByteChars.FixedSizeTheory;
 namespace Nemonuri.ByteChars;
 
 public readonly ref struct FixedLengthSpan<TSize, T>
-    where TSize : unmanaged, IFixedSizePremise<TSize>
+    where TSize : unmanaged, IFixedSizePremise
 {
     public readonly Span<T> Values {get;}
 

@@ -246,12 +246,26 @@ module Operations =
             UpdateToUpperCase<ByteArraySegmentPremise,_>(&result)
             result
 
-        let lowercase_ascii  (s: rbs) = 
+        let lowercase_ascii (s: rbs) = 
             let mutable result = spanToArraySegement s
             UpdateToLowerCase<ByteArraySegmentPremise,_>(&result)
             result
-            
         
+        let capitalize_ascii (s: rbs) = 
+            let mutable result = spanToArraySegement s
+            UpdateToCapitalizdAscii<ByteArraySegmentPremise,_>(&result)
+            result
+        
+        let uncapitalize_ascii (s: rbs) = 
+            let mutable result = spanToArraySegement s
+            UpdateToUncapitalizdAscii<ByteArraySegmentPremise,_>(&result)
+            result
+
+        let starts_with (prefix: rbs) (s: rbs) = prefix.StartsWith(s)
+
+        let ends_with (suffix: rbs) (s: rbs) = suffix.EndsWith(s)
+            
+
 
             
 

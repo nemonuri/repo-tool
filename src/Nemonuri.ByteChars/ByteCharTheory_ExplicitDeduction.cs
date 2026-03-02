@@ -4,6 +4,7 @@ namespace Nemonuri.ByteChars;
 using B = ByteCharConstants;
 using Id = ByteCharTheory; // Implicit Deduction
 using System.Runtime.CompilerServices;
+using Microsoft.Extensions.ObjectPool;
 
 public static unsafe partial class ByteCharTheory
 {
@@ -118,6 +119,25 @@ public static unsafe partial class ByteCharTheory
             else if (chars is byte)
             {
                 updater(ref AsByteRef(ref chars), aux);
+            }
+            else
+            {
+                // Assume: 'chars' is empty set.
+                return;
+            }
+        }
+
+        public static void UnsafeUpdateWithState<TState>(ref TOperand chars, ref TState state, delegate*<ref byte, ref TState, void> updater)
+        {
+            TPremise th = new();
+            if (th.TryDecomposeToByteSpan(chars, out Span<byte> unsafeBytes, out var aux0))
+            {
+                foreach (ref byte b in unsafeBytes) { updater(ref b, ref state); }
+                ComposeFromByteSpanIfRequired<TPremise, TOperand>(unsafeBytes, aux0, ref chars);
+            }
+            else if (chars is byte)
+            {
+                updater(ref AsByteRef(ref chars), ref state);
             }
             else
             {
@@ -269,6 +289,40 @@ public static unsafe partial class ByteCharTheory
             else
                 { UnsafeUpdate<TPremise,TOperand>(ref chars, &Id.UpdateToLowerCase); }
         }
-            
+
+        public static void UpdateFirstAscii(ref TOperand chars, delegate*<ref byte, void> charUpdater)
+        {
+            CharUpdater cu = new(charUpdater);
+            if (chars is byte)
+            { 
+                cu.Invoke(ref AsByteRef(ref chars));
+            }
+            else
+            {
+                (bool, CharUpdater) state = (false, cu);
+                UnsafeUpdateWithState<TPremise,TOperand,(bool, CharUpdater)>(ref chars, ref state, &UpdateFirstAscii_UpdaterImpl);
+            }
+        }
+
+        public static void UpdateToCapitalizdAscii(ref TOperand chars) => UpdateFirstAscii<TPremise,TOperand>(ref chars, &Id.UpdateToUpperCase);
+
+        public static void UpdateToUncapitalizdAscii(ref TOperand chars) => UpdateFirstAscii<TPremise,TOperand>(ref chars, &Id.UpdateToLowerCase);
+    }
+
+    private static void UpdateFirstAscii_UpdaterImpl(ref byte currentChar, ref (bool PrevWasLetter, CharUpdater CharUpdater) state)
+    {
+        if (!Id.IsLetter(currentChar)) { state.PrevWasLetter = false; return; }
+        if (state.PrevWasLetter) { return; }
+
+        // Current char is first letter.
+        state.CharUpdater.Invoke(ref currentChar);
+        state.PrevWasLetter = true;
+    }
+
+    private readonly struct CharUpdater(delegate*<ref byte, void> func)
+    {
+        public readonly delegate*<ref byte, void> Func = func;
+
+        public void Invoke(ref byte @byte) => Func(ref @byte);
     }
 }
