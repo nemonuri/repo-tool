@@ -90,24 +90,25 @@ module FStarTypeUniverses =
 
     let inline toBoxed (x: Type0<'a>) : Boxed.Type0 = x |> FStarTypeContexts.tail
 
-    let zero() = () |> pur
+    let zero = () |> pur
 
     type Monad =
         struct
             member inline this.Bind(t1: Type0<'s1>, sf: 's1 -> Type0<'s2>) : Type0<'s2> = sf (extract t1)
             member inline this.Return(s: 's1) : Type0<'s1> = pur s
+            member inline this.ReturnFrom(s: Type0<'s1>) : Type0<'s1> = s
         end
     
-    let inline monad() = Monad()
+    let monad = Monad()
 
     type ExtractorMonad = 
         struct
-            member inline this.Bind(t1: Type0<'s1>, sf: 's1 -> Type0<'s2>) : Type0<'s2> = monad().Bind(t1, sf)
-            member inline this.Return(s: 's1) : Type0<'s1> = monad().Return(s)
+            member inline this.Bind(t1: Type0<'s1>, sf: 's1 -> Type0<'s2>) : Type0<'s2> = monad.Bind(t1, sf)
+            member inline this.Return(s: 's1) : Type0<'s1> = monad.Return(s)
             member inline this.Run(s: Type0<'s1>) : 's1 = s |> extract
         end
 
-    let inline emonad() = ExtractorMonad()
+    let emonad = ExtractorMonad()
 
     type Comonad =
         struct
@@ -115,7 +116,7 @@ module FStarTypeUniverses =
             member inline this.Return(s: Type0<'s1>) : 's1 = extract s
         end
 
-    let inline comonad() = Comonad()
+    let comonad = Comonad()
 
     let type0ToKindSource (x: Type0<'a>) : KindSource<Boxed.Type0, 'a> = { Witness = x.Witness }
     let type0OfKindSource (x: KindSource<Boxed.Type0, 'a>) : Type0<'a> = x.Witness |> pur

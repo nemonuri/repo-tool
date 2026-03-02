@@ -6,62 +6,74 @@
 namespace Nemonuri.FStarDotNet.FStarC
 
 open Nemonuri.FStarDotNet
+open Nemonuri.FStarDotNet.Primitives
+open Nemonuri.OCamlDotNet.Primitives
+open Nemonuri.OCamlDotNet.Primitives.Operations
 module Fu = Nemonuri.FStarDotNet.Primitives.FStarTypeUniverses
 module B = Nemonuri.FStarDotNet.FStarC.BaseTypes
-
+module Os = Nemonuri.OCamlDotNet.Primitives.Operations.OCamlStrings
+module Ef = Nemonuri.FStarDotNet.FStarC.Effect
+module Pn = Nemonuri.FStarDotNet.FStar.Pervasives.Native
 
 module Getopt =
 
     type FStar_opt_variant<'a> =
-    | ZeroArgs of Effect.ML<(Prims.unit -> 'a)>
-    | OneArg of Effect.ML<(Effect.ML<(Prims.string -> 'a)> * Prims.string)>
-    type opt_variant<'a> = Effect.ML<FStar_opt_variant<'a>>
+    | ZeroArgs of Ef.ML<Prims.unit -> 'a>
+    | OneArg of Ef.ML<Ef.ML<Prims.string -> 'a> * Prims.string>
+    type opt_variant<'a> = Ef.ML<FStar_opt_variant<'a>>
 
-    type opt'<'a> = Effect.ML<(B.char * Prims.string * opt_variant<'a>)>
+    type opt'<'a> = Ef.ML<B.char * Prims.string * opt_variant<'a>>
     type opt = opt'<Prims.unit>
 
     type FStar_parse_cmdline_res =
     | Empty
-    | Error of string * string // second arg is the long name of the failed option
+    | Error of Ef.ML<Prims.string * Prims.string> // second arg is the long name of the failed option
     | Success
-    type parse_cmdline_res = Effect.ML<FStar_parse_cmdline_res>
+    type parse_cmdline_res = Ef.ML<FStar_parse_cmdline_res>
 
 
-    let noshort: B.char = Fu.monad() { return '\000' }
-    let nolong : Prims.string = Fu.monad() { return "" }
-    let parse_cmdline: Prims.list<opt> -> (Prims.string -> parse_cmdline_res) -> parse_cmdline_res = raise (System.NotImplementedException())
-    let parse_string: Prims.list<opt> -> (Prims.string -> parse_cmdline_res) -> Prims.string -> parse_cmdline_res = raise (System.NotImplementedException())
-    let parse_list: Prims.list<opt> -> (Prims.string -> parse_cmdline_res) -> Prims.list<Prims.string> -> parse_cmdline_res = raise (System.NotImplementedException())
+    let noshort: B.char = Fu.monad { return '\000' }
+    let nolong : Prims.string = Fu.monad { return Os.ofArray ""B }
+    let parse_cmdline: Prims.list<opt> -> Ef.ML<Prims.string -> parse_cmdline_res> -> parse_cmdline_res = raise (System.NotImplementedException())
+    let parse_string: Prims.list<opt> -> Ef.ML<Prims.string -> parse_cmdline_res> -> Prims.string -> parse_cmdline_res = raise (System.NotImplementedException())
+    let parse_list: Prims.list<opt> -> Ef.ML<Prims.string -> parse_cmdline_res> -> Prims.list<Prims.string> -> parse_cmdline_res = raise (System.NotImplementedException())
     let cmdline: Prims.unit -> Prims.list<Prims.string> = raise (System.NotImplementedException())
 
-#if false        
+   
+    let bind l f =
+        Fu.monad { 
+            match! l with  
+            | Error _ -> return! l
+            | Success -> let! tf = f in return! tf Fu.zero
+        }
+        (* | Empty  *)
+        (* ^ Empty does not occur internally. *)
 
-  let bind l f =
-      match l with
-      | Error _ -> l
-      | Success -> f ()
-      (* | Empty  *)
-      (* ^ Empty does not occur internally. *)
+    (* Returns None if this wasn't an option arg (did not start with "-")
+    * Otherwise, returns Some (o, s) where [s] is the trimmed option, and [o]
+    * is the opt we found in specs (possibly None if not present, which should
+    * trigger an error) *)
+    let find_matching_opt specs0 s0 : Pn.tuple2<opt Pn.option, Prims.string> Pn.option =
+        Fu.monad {
+            let! s = s0 in
+            let! specs = specs0 in
+            return
+                if String.length s < 2 then
+                    Pn.None
+                else if String.sub s 0 2 = (Os.ofArray "--"B) then
+                (* long opts *)
+                    let strim = String.sub s 2 ((String.length s) - 2) in
+                    let o = FStar.List.tryFind (fun (_, option, _) -> option = strim) specs in
+                    Pn.Some (Pn.Mktuple2 o strim)
+                else if String.sub s 0 1 = (Os.ofArray "-"B) then
+                (* short opts *)
+                    let strim = String.sub s 1 ((String.length s) - 1) in
+                    let o = FStar.List.tryFind (fun (shortoption, _, _) -> FStar.String.make Z.one shortoption = strim) specs in
+                    Pn.Some (Pn.Mktuple2 o strim)
+                else
+                    Pn.None
+        }
 
-  (* Returns None if this wasn't an option arg (did not start with "-")
-  * Otherwise, returns Some (o, s) where [s] is the trimmed option, and [o]
-  * is the opt we found in specs (possibly None if not present, which should
-  * trigger an error) *)
-  let find_matching_opt specs s : (opt option * string) option =
-    if String.length s < 2 then
-      None
-    else if String.sub s 0 2 = "--" then
-      (* long opts *)
-      let strim = String.sub s 2 ((String.length s) - 2) in
-      let o = FStar.List.tryFind (fun (_, option, _) -> option = strim) specs in
-      Some (o, strim)
-    else if String.sub s 0 1 = "-" then
-      (* short opts *)
-      let strim = String.sub s 1 ((String.length s) - 1) in
-      let o = FStar.List.tryFind (fun (shortoption, _, _) -> FStar.String.make Z.one shortoption = strim) specs in
-      Some (o, strim)
-    else
-      None
 
   (* remark: doesn't work with files starting with -- *)
   let rec parse (opts:opt list) def ar ix max i : parse_cmdline_res =
@@ -131,4 +143,3 @@ module Getopt =
 
   let cmdline () =
     Array.to_list (Sys.argv)
-#endif

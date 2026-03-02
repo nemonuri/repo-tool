@@ -2,7 +2,22 @@
 // Reference: https://github.com/FStarLang/FStar/blob/v2025.12.15/src/ml/FStarC_String.ml
 
 module Nemonuri.FStarDotNet.FStarC.String
+
 open Nemonuri.FStarDotNet
+open Nemonuri.FStarDotNet.FStarC
+module Fu = Nemonuri.FStarDotNet.Primitives.FStarTypeUniverses
+
+module String =
+
+    (* The name of this file is misleading: most string functions are to be found in
+    util.fsi *)
+    let make (i: Prims.int) (c: Char.char) : Prims.string =
+
+
+    val split:   chars: list char -> s: string -> Tot (list string)
+    val strcat:  string -> string -> Tot string
+    val concat:  separator: string -> strings: list string -> Tot string
+
 
 #if false
 open Nemonuri.OCamlDotNet

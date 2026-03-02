@@ -76,4 +76,6 @@ module String =
     let compare (l: t) (r: t) = LanguagePrimitives.GenericComparison l r
 
     let equal (l: t) (r: t) = l = r
+
+    let sub s pos len = mnd { let! t = s in return B.sub t pos len }
     

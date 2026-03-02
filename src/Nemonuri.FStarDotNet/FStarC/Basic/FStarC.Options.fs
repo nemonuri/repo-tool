@@ -13,14 +13,14 @@ module Options =
 
     (* Set externally, checks if the directory exists and otherwise
     logs an issue. Cannot do it here due to circular deps. *)
-    let check_include_dir: Ef.ref<Ef.ML<(Prims.string -> Prims.unit)>> = Ef.mk_ref ( Fu.monad() { return fun s -> Fu.zero() } )
+    let check_include_dir: Ef.ref<Ef.ML<(Prims.string -> Prims.unit)>> = Ef.mk_ref ( Fu.monad { return fun s -> Fu.zero } )
         
     (* Raised when a processing a pragma an a non-settable option
     appears there. *)
     exception FStar_NotSettable of Prims.string
-    let NotSettable (msg: Prims.string) = Fu.monad() { return FStar_NotSettable msg }
+    let NotSettable (msg: Prims.string) = Fu.monad { return FStar_NotSettable msg }
     let (|NotSettable|_|) (exn: Prims.exn) = 
-        Fu.emonad() { 
+        Fu.emonad { 
             match! exn with 
             | FStar_NotSettable s -> return Some s
             | _ -> return None

@@ -37,6 +37,7 @@ module Prims =
 
     open System
     open TypeEquality
+    open Nemonuri.OCamlDotNet.Primitives
     open Nemonuri.FStarDotNet.Primitives
     open Nemonuri.FStarDotNet.Primitives.FStarKinds
     open Nemonuri.FStarDotNet.Primitives.Abstractions
@@ -265,12 +266,12 @@ module Prims =
 
 
     (** constructive conjunction *)
-    let Pair (_1: 'p) (_2: 'q) = Fu.monad() { return FStarPair (_1, _2) }
+    let Pair (_1: 'p) (_2: 'q) = Fu.monad { return FStarPair (_1, _2) }
 
     [<FStarConstructorProxy(nameof Pair)>]
     type pair<'p, 'q when 'p :> typ and 'q :> typ> = Type0<FStarPair<'p, 'q>>
 
-    let (|Pair|) (p: pair<'p, 'q>) = Fu.emonad() { match! p with | FStarPair (t1, t2) -> return (t1, t2) }
+    let (|Pair|) (p: pair<'p, 'q>) = Fu.emonad { match! p with | FStarPair (t1, t2) -> return (t1, t2) }
 
 
     (** squashed conjunction, specialized to [Type0], written with an
@@ -292,16 +293,16 @@ module Prims =
         | FStarSumRight (v: ^q) -> Right v
 *)
 
-    let Left v = Fu.monad() { return FStarSum<'p,'q>.FStarSumLeft v }
+    let Left v = Fu.monad { return FStarSum<'p,'q>.FStarSumLeft v }
 
-    let Right v = Fu.monad() { return FStarSum<'p,'q>.FStarSumRight v }
+    let Right v = Fu.monad { return FStarSum<'p,'q>.FStarSumRight v }
     
     [<FStarConstructorProxy(nameof Left)>]
     [<FStarConstructorProxy(nameof Right)>]
     type sum<'p, 'q when 'p :> typ and 'q :> typ> = Type0<FStarSum<'p, 'q>>
 
     let (|Left|Right|) (sum: sum<'p,'q>) =
-        Fu.emonad() {
+        Fu.emonad {
             match! sum with
             | FStarSumLeft v -> return Left v
             | FStarSumRight v -> return Right v
@@ -351,7 +352,7 @@ module Prims =
         
 
     (** The type of primitive strings of characters; See FStar.String *)
-    type string = EqType<Core.string>
+    type string = EqType<OCamlString>
 
     (** This attribute can be added to the declaration or definition of
         any top-level symbol. It causes F* to report a warning on any
@@ -368,7 +369,7 @@ module Prims =
         See tests/micro-benchmarks/WarnOnUse.fst
     *)
     [<AttributeUsage(AttributeTargets.All)>]
-    type warn_on_use (msg: string) = inherit Attribute()
+    type warn_on_use (msg: Core.string) = inherit Attribute()
         
 
     (** The [deprecated "s"] attribute: "s" is an alternative function
@@ -644,7 +645,7 @@ module Prims =
 
     (** [===] heterogeneous equality *)
     let ( === ) (x: 'a) (y: 'b) : bool = 
-        Fu.monad() { 
+        Fu.monad { 
             match Teq.tryRefl<'a,'b> with
             | None -> return false
             | Some _ -> 
@@ -662,7 +663,7 @@ module Prims =
                                 when 'a :> typ
                                 and 'b :> typ<'a -> Type>>
             (_1: 'a) (_2: '``b _1``) : Type0<FStarDependentTuple<'b, 'a, '``b _1``>> =
-            Fu.monad() { return FStarDependentTuples.create<'b,'a,'``b _1``> _1 _2 }
+            Fu.monad { return FStarDependentTuples.create<'b,'a,'``b _1``> _1 _2 }
 
         [<FStarConstructorProxy(nameof createDTuple2Aux)>]
         type DTuple2Aux<'a, 'b, '``b _1``> = Type0<FStarDependentTuple<'b, 'a, '``b _1``>>
@@ -673,7 +674,7 @@ module Prims =
                     when 'a :> typ
                     and 'b :> typ<'a -> Type>>
         (_1: 'a) (_2: '``b _1``) : Aux.DTuple2Aux<'a, 'b, KindSource<'b,'a>> =
-        Fu.monad() { 
+        Fu.monad { 
             match! Aux.createDTuple2Aux<'a, 'b, '``b _1``> _1 _2 with
             | FStarDependentTuple(hd, ks, _) -> return FStarDependentTuple (hd, ks, getIdBijection<'b,'a>)
         }
@@ -685,7 +686,7 @@ module Prims =
                     and 'b :> typ<'a -> Type>> = Aux.DTuple2Aux<'a, 'b, KindSource<'b,'a>>
 
     let (|Mkdtuple2|) (d: dtuple2<'a, 'b>) =
-        Fu.emonad() { match! d with | FStarDependentTuple (_1, ks, _) -> return (_1, ks) }
+        Fu.emonad { match! d with | FStarDependentTuple (_1, ks, _) -> return (_1, ks) }
 
 
     (** Squashed existential quantification, or dependent sums,
@@ -711,93 +712,93 @@ module Prims =
     (** [&&] boolean conjunction *)
 
     [<smt_theory_symbol>]
-    let op_AmpAmp (x: bool) (y: bool) : bool = Fu.monad() { let! tx = x in let! ty = y in return tx && ty }
+    let op_AmpAmp (x: bool) (y: bool) : bool = Fu.monad { let! tx = x in let! ty = y in return tx && ty }
 
     (** [||] boolean disjunction *)
 
     [<smt_theory_symbol>]
-    let op_BarBar (x: bool) (y: bool) : bool = Fu.monad() { let! tx = x in let! ty = y in return tx || ty }
+    let op_BarBar (x: bool) (y: bool) : bool = Fu.monad { let! tx = x in let! ty = y in return tx || ty }
 
     (** [not] boolean negation *)
 
     [<smt_theory_symbol>]
-    let op_Negation (x: bool) : bool = Fu.monad() { let! tx = x in return not tx }
+    let op_Negation (x: bool) : bool = Fu.monad { let! tx = x in return not tx }
 
     (** Integer multiplication, no special symbol. See FStar.Mul *)
 
     [<smt_theory_symbol>]
-    let op_Multiply (x: int) (y: int) : int = Fu.monad() { let! tx = x in let! ty = y in return bigint.Multiply(tx, ty) }
+    let op_Multiply (x: int) (y: int) : int = Fu.monad { let! tx = x in let! ty = y in return bigint.Multiply(tx, ty) }
 
     (** [-] integer subtraction *)
 
     [<smt_theory_symbol>]
-    let op_Subtraction (x: int) (y: int) : int = Fu.monad() { let! tx = x in let! ty = y in return bigint.Subtract(tx, ty) }
+    let op_Subtraction (x: int) (y: int) : int = Fu.monad { let! tx = x in let! ty = y in return bigint.Subtract(tx, ty) }
 
     (** [+] integer addition *)
 
     [<smt_theory_symbol>]
-    let op_Addition (x: int) (y: int) : int = Fu.monad() { let! tx = x in let! ty = y in return bigint.Add(tx, ty) }
+    let op_Addition (x: int) (y: int) : int = Fu.monad { let! tx = x in let! ty = y in return bigint.Add(tx, ty) }
 
     (** [-] prefix unary integer negation *)
 
     [<smt_theory_symbol>]
-    let op_Minus (x: int) : int = Fu.monad() { let! tx = x in return bigint.Negate(tx) }
+    let op_Minus (x: int) : int = Fu.monad { let! tx = x in return bigint.Negate(tx) }
 
     (** [<=] integer comparison *)
 
     [<smt_theory_symbol>]
-    let op_LessThanOrEqual (x: int) (y: int) : bool = Fu.monad() { let! tx = x in let! ty = y in return tx <= ty }
+    let op_LessThanOrEqual (x: int) (y: int) : bool = Fu.monad { let! tx = x in let! ty = y in return tx <= ty }
 
     (** [>] integer comparison *)
 
     [<smt_theory_symbol>]
-    let op_GreaterThan (x: int) (y: int) : bool = Fu.monad() { let! tx = x in let! ty = y in return tx > ty }
+    let op_GreaterThan (x: int) (y: int) : bool = Fu.monad { let! tx = x in let! ty = y in return tx > ty }
 
     (** [>=] integer comparison *)
 
     [<smt_theory_symbol>]
-    let op_GreaterThanOrEqual (x: int) (y: int) : bool = Fu.monad() { let! tx = x in let! ty = y in return tx >= ty }
+    let op_GreaterThanOrEqual (x: int) (y: int) : bool = Fu.monad { let! tx = x in let! ty = y in return tx >= ty }
 
     (** [<] integer comparison *)
 
     [<smt_theory_symbol>]
-    let op_LessThan (x: int) (y: int) : bool = Fu.monad() { let! tx = x in let! ty = y in return tx < ty }
+    let op_LessThan (x: int) (y: int) : bool = Fu.monad { let! tx = x in let! ty = y in return tx < ty }
 
     (** [=] decidable equality on [eqtype] *)
 
     [<smt_theory_symbol>]
-    let inline op_Equality<[<unrefine>] 'a when 'a :> eqtype<'a> and 'a : equality> (x: 'a) (y: 'a) : bool = Fu.monad() { return x = y }
+    let inline op_Equality<[<unrefine>] 'a when 'a :> eqtype<'a> and 'a : equality> (x: 'a) (y: 'a) : bool = Fu.monad { return x = y }
         
 
     (** [<>] decidable dis-equality on [eqtype] *)
 
     [<smt_theory_symbol>]
-    let op_disEquality<[<unrefine>] 'a when 'a :> eqtype<'a> and 'a : equality> (x: 'a) (y: 'a) : bool = Fu.monad() { return x <> y }
+    let op_disEquality<[<unrefine>] 'a when 'a :> eqtype<'a> and 'a : equality> (x: 'a) (y: 'a) : bool = Fu.monad { return x <> y }
 
     (** The extensible open inductive type of exceptions *)
     type exn = Type0<Core.exn>
 
     (** String concatenation and its abbreviation as [^].  TODO, both
         should be removed in favor of what is present in FStar.String *)
-    let strcat (s1: string) (s2: string) : string = Fu.monad() { let! t1 = s1 in let! t2 = s2 in return System.String.Concat(t1, t2) }
+    let strcat (s1: string) (s2: string) : string = Fu.monad { let! t1 = s1 in let! t2 = s2 in return String.cat t1 t2 }
     
     [<inline_for_extraction; unfold>]
     let op_Hat s1 s2 = strcat s1 s2
 
     (** The inductive type of polymorphic lists *)
-    let Nil<'a> = Fu.monad() { let e: list<'a> = [] in return e }
+    let Nil<'a> = Fu.monad { let e: list<'a> = [] in return e }
 
-    let Cons (hd: 'a) (tl: Type0<list<'a>>) : Type0<list<'a>> = Fu.monad() { let thd = hd in let! ttl = tl in return thd::ttl }
+    let Cons (hd: 'a) (tl: Type0<list<'a>>) : Type0<list<'a>> = Fu.monad { let thd = hd in let! ttl = tl in return thd::ttl }
 
     [<FStarConstructorProxy(nameof Nil)>]
     [<FStarConstructorProxy(nameof Cons)>]
     type list<'a> = Type0<Microsoft.FSharp.Collections.list<'a>>
 
     let (|Nil|Cons|) (l: list<'a>) =
-        Fu.emonad() {
+        Fu.emonad {
             match! l with
-            | [] as nil -> return Nil (Fu.monad() { return nil })
-            | hd::tl -> return Cons (hd, Fu.monad() { return tl })
+            | [] as nil -> return Nil (Fu.monad { return nil })
+            | hd::tl -> return Cons (hd, Fu.monad { return tl })
         }
 
 #if false
