@@ -38,6 +38,7 @@ module Prims =
     open System
     open TypeEquality
     open Nemonuri.OCamlDotNet.Primitives
+    open Nemonuri.OCamlDotNet.Forwarded
     open Nemonuri.FStarDotNet.Primitives
     open Nemonuri.FStarDotNet.Primitives.FStarKinds
     open Nemonuri.FStarDotNet.Primitives.Abstractions

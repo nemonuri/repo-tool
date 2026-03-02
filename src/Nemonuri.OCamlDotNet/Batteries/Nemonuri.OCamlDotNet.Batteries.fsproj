@@ -9,7 +9,7 @@
     <Compile Include="BatUTF8.fs" /><Compile Include="BatString.fs" /><Compile Include="BatList.fs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Core\Nemonuri.OCamlDotNet.Core.fsproj" />
+    <ProjectReference Include="..\Stdlib\Nemonuri.OCamlDotNet.Stdlib.fsproj" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Shim.System.Text.Rune" />

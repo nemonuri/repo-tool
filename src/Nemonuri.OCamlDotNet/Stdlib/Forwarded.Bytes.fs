@@ -1,6 +1,7 @@
-namespace Nemonuri.OCamlDotNet.Primitives
+namespace Nemonuri.OCamlDotNet.Forwarded
 
 open System;
+open Nemonuri.OCamlDotNet.Primitives
 open Nemonuri.OCamlDotNet.Primitives.Operations
 open type System.MemoryExtensions
 module Obs = OCamlByteSequenceSources
@@ -11,9 +12,9 @@ module Bytes =
 
     module Unsafe =
 
-        let internal ofSource (source: OCamlByteSequenceSource) = Unsafe.sourceToBytes source
+        let internal ofSource (source: OCamlByteSequenceSource) = Obs.Unsafe.sourceToBytes source
 
-        let internal toSource (s: OCamlBytes) = Unsafe.sourceOfBytes s
+        let internal toSource (s: OCamlBytes) = Obs.Unsafe.sourceOfBytes s
 
         let ofArraySegemnt (source: ArraySegment<OCamlChar>) =
             source
@@ -48,13 +49,13 @@ module Bytes =
 
     let copy (s: OCamlBytes) = (toSpan s).ToArray() |> U.ofArray
 
-    let of_string (s: OCamlString) : OCamlBytes = Unsafe.sourceOfString s |> Obs.clone |> U.ofSource
+    let of_string (s: OCamlString) : OCamlBytes = Obs.Unsafe.sourceOfString s |> Obs.clone |> U.ofSource
 
-    let to_string (s: OCamlBytes) : OCamlString = U.toSource s |> Obs.clone |> Unsafe.sourceToString
+    let to_string (s: OCamlBytes) : OCamlString = U.toSource s |> Obs.clone |> Obs.Unsafe.sourceToString
 
     let sub (s: OCamlBytes) pos len = U.toSource s |> _.Slice(pos, len) |> U.ofSource
 
-    let sub_string (s: OCamlBytes) pos len = U.toSource s |> _.Slice(pos, len) |> U.sourceToString
+    let sub_string (s: OCamlBytes) pos len = U.toSource s |> _.Slice(pos, len) |> Obs.Unsafe.sourceToString
 
     let extend (s: OCamlBytes) (left: OCamlInt) (right: OCamlInt) =
         Bs.extend (toSpan s) left right
@@ -66,7 +67,7 @@ module Bytes =
         Bs.blit (toSpan src) src_pos dst dst_pos len
 
     let blit_string (src: OCamlString) src_pos dst dst_pos len =
-        let rbs = Obs.toSpan (Unsafe.sourceOfString src)
+        let rbs = Obs.toSpan (Obs.Unsafe.sourceOfString src)
         Bs.blit rbs src_pos dst dst_pos len
     
     let concat (sep: OCamlBytes) (sl: OCamlBytes list) = Bs.concat sep sl |> U.ofArraySegemnt
@@ -133,6 +134,6 @@ module Bytes =
 
     let ends_with (suffix: OCamlBytes) (s: OCamlBytes) = Bs.ends_with (toSpan suffix) (toSpan s)
 
-    let unsafe_to_string s = U.toSource s |> Unsafe.sourceToString
+    let unsafe_to_string s = U.toSource s |> Obs.Unsafe.sourceToString
 
-    let unsafe_of_string s = Unsafe.sourceOfString s |> U.ofSource
+    let unsafe_of_string s = Obs.Unsafe.sourceOfString s |> U.ofSource

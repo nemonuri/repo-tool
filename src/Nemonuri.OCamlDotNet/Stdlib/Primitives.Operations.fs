@@ -4,6 +4,7 @@ open System
 open Nemonuri.ByteChars
 open System.Collections.Immutable
 open type System.MemoryExtensions
+open type System.Linq.ImmutableArrayExtensions
 open Microsoft.FSharp.NativeInterop
 open Nemonuri.OCamlDotNet.Primitives
 
@@ -27,17 +28,18 @@ type DotNetSpans =
 
     static member inline NativePtrToSpan(ptr: nativeptr<'T>, length: int) = Span<'T>(ptr |> NativePtr.toVoidPtr, length)
 
-module internal Unsafe =
-
-    let sourceToBytes (source: OCamlByteSequenceSource) = { OCamlBytes.Source = source }
-
-    let sourceOfBytes (bytes: OCamlBytes) = bytes.Source
-
-    let sourceToString (source: OCamlByteSequenceSource) = { OCamlString.Source = source }
-
-    let sourceOfString (str: OCamlString) = str.Source
 
 module internal OCamlByteSequenceSources =
+
+    module internal Unsafe =
+
+        let sourceToBytes (source: OCamlByteSequenceSource) = { OCamlBytes.Source = source }
+
+        let sourceOfBytes (bytes: OCamlBytes) = bytes.Source
+
+        let sourceToString (source: OCamlByteSequenceSource) = { OCamlString.Source = source }
+
+        let sourceOfString (str: OCamlString) = str.Source
 
     let empty = OCamlByteSequenceSource.None
 
@@ -51,11 +53,25 @@ module internal OCamlByteSequenceSources =
 
     let inline clone (source: OCamlByteSequenceSource) = (toSpan source).ToArray() |> ofArray
 
+
+
 module OCamlStrings =
 
-    let ofArray source  = OCamlByteSequenceSources.ofArray source |> Unsafe.sourceToString
+    module Obs = OCamlByteSequenceSources
+    module U = OCamlByteSequenceSources.Unsafe
 
-    let toDotNetString (s: OCamlString) = Nemonuri.ByteChars.ByteStringTheory.ByteStringToDotNetString((s :> ITemporaryReadOnlySpanSource<byte>).AsTemporarySpan())
+    let toSpan (s: OCamlString) = OCamlByteSequenceSources.toSpan (s |> U.sourceOfString)
+
+    let ofArraySegemnt (source: ArraySegment<OCamlChar>) = source |> Obs.ofArraySegemnt |> U.sourceToString
+
+    let ofArray source  = OCamlByteSequenceSources.ofArray source |> U.sourceToString
+
+    let toDotNetString (s: OCamlString) = ByteStringTheory.ByteStringToDotNetString(toSpan s)
+
+    let ofDotNetString (s: Core.string) = ByteStringTheory.DotNetCharSpanToByteString(s.AsSpan()).ToArray() |> ofArray
+
+
+
 
 module ByteSpans =
 
@@ -200,7 +216,7 @@ module ByteSpans =
     let checked_index_from s i c =
         match index_from s i c with
         | GreaterThanOrEqualToZero v -> v
-        | _ -> raise Exceptions.Not_found
+        | _ -> raise Not_found
 
     let index_from_opt s i c = 
         match index_from s i c with
@@ -220,7 +236,7 @@ module ByteSpans =
     let checked_rindex_from s i c =
         match rindex_from s i c with
         | GreaterThanOrEqualToZero v -> v
-        | _ -> raise Exceptions.Not_found
+        | _ -> raise Not_found
 
     let rindex_from_opt s i c = 
         match rindex_from s i c with

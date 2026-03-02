@@ -1,66 +1,72 @@
 ﻿#nowarn "9" // Unverifiable .NET IL code
 
-/// UTF-8 encoded Unicode strings. The type is normal string.
-/// - Reference: https://ocaml-batteries-team.github.io/batteries-included/hdoc2/BatUTF8.html
-module Nemonuri.OCamlDotNet.Batteries.BatUTF8
-open Nemonuri.OCamlDotNet
-open Nemonuri.OCamlDotNet.Batteries
+
+namespace Nemonuri.OCamlDotNet.Batteries
+
+open Nemonuri.OCamlDotNet.Forwarded
+open Nemonuri.OCamlDotNet.Primitives
+open Nemonuri.OCamlDotNet.Primitives.Operations
 
 open System.Text.Unicode
 open FSharp.NativeInterop
 open System.Collections.Immutable
+module Os = Nemonuri.OCamlDotNet.Primitives.Operations.OCamlStrings
 type private Sth = Nemonuri.ByteChars.ByteStringTheory
 
 /// UTF-8 encoded Unicode strings. The type is normal string.
-type t = String.t
+/// - Reference: https://ocaml-batteries-team.github.io/batteries-included/hdoc2/BatUTF8.html
+module BatUTF8 =
 
-exception Malformed_code
+    /// UTF-8 encoded Unicode strings. The type is normal string.
+    type t = String.t
 
-/// `length s` returns the number of Unicode characters contained in s
-let inline length (s: t) : int = Sth.GetRuneCount(s.AsSpan())
+    exception Malformed_code
 
-/// `validate s` successes if s is valid UTF-8, otherwise raises Malformed_code. 
-/// Other functions assume strings are valid UTF-8, so it is prudent to test their validity for strings from untrusted origins.
-let validate (s: t) : unit =
-    match Utf8.IsValid(s.AsSpan()) with
-    | true -> ()
-    | false -> raise Malformed_code
+    /// `length s` returns the number of Unicode characters contained in s
+    let inline length (s: t) : int = Sth.GetRuneCount(Os.toSpan s)
 
-/// get s n returns n-th Unicode character of s. The call requires O(n)-time.
-let get (s: t) (n: int) : BatUChar.t =
-    try
-        let success, rune = Sth.TryGetRuneAt(s.AsSpan(), n)
-        if not success then Stdlib.invalid_arg !>"Out of range"B else
-        rune
-    with
-        | :? System.ArgumentOutOfRangeException as e -> Stdlib.invalid_arg !>e.Message
+    /// `validate s` successes if s is valid UTF-8, otherwise raises Malformed_code. 
+    /// Other functions assume strings are valid UTF-8, so it is prudent to test their validity for strings from untrusted origins.
+    let validate (s: t) : unit =
+        match Utf8.IsValid(Os.toSpan s) with
+        | true -> ()
+        | false -> raise Malformed_code
 
-let [<Literal>] private spanSize = 4
+    /// get s n returns n-th Unicode character of s. The call requires O(n)-time.
+    let get (s: t) (n: int) : BatUChar.t =
+        try
+            let success, rune = Sth.TryGetRuneAt(Os.toSpan s, n)
+            if not success then Exceptions.invalid_arg (Os.ofArray "Out of range"B) else
+            rune
+        with
+            | :? System.ArgumentOutOfRangeException as e -> Exceptions.invalid_arg (Os.ofDotNetString e.Message)
 
-/// `init len f` returns a new string which contains `len` Unicode characters. The i-th Unicode character is initialized by `f i`
-let init (len: int) (f: int -> BatUChar.t) : t =
-    let builder = ImmutableArray.CreateBuilder<char>()
+    let [<Literal>] private spanSize = 4
 
-    for i in 0 .. len-1 do
-        let newRune = f i
-        let span = System.Span<byte>(NativePtr.stackalloc<byte> spanSize |> NativePtr.toVoidPtr, spanSize)
-        let writtenLength = newRune.EncodeToUtf8 span
-        builder.AddRange(span.Slice(0, writtenLength))           
-    
-    builder.DrainToImmutable()
+    /// `init len f` returns a new string which contains `len` Unicode characters. The i-th Unicode character is initialized by `f i`
+    let init (len: int) (f: int -> BatUChar.t) : t =
+        let builder = Nemonuri.ByteChars.ArrayBuilder<byte>(len)
 
-/// Positions in the string represented by the number of bytes from the head. The location of the first character is 0
-type index = int
+        for i in 0 .. len-1 do
+            let newRune = f i
+            let span = System.Span<byte>(NativePtr.stackalloc<byte> spanSize |> NativePtr.toVoidPtr, spanSize)
+            let writtenLength = newRune.EncodeToUtf8 span
+            builder.Append(span.Slice(0, writtenLength))           
+        
+        builder.DrainToArraySemgent() |> Os.ofArraySegemnt
 
-/// iter f s applies f to all Unicode characters in s. The order of application is same to the order of the Unicode characters in s.
-let iter (f: BatUChar.t -> unit) (s: t) : unit =
-    let e = Sth.EnumerateRunes(s.AsSpan())
-    for runeStep in e do
-        f runeStep
+    /// Positions in the string represented by the number of bytes from the head. The location of the first character is 0
+    type index = int
 
-let iteri (f: BatUChar.t -> int -> unit) (s: t) : unit =
-    let e = Sth.EnumerateRunes(s.AsSpan())
-    let mutable stepIndex = 0
-    for runeStep in e do
-        f runeStep stepIndex;
-        stepIndex <- stepIndex + 1
+    /// iter f s applies f to all Unicode characters in s. The order of application is same to the order of the Unicode characters in s.
+    let iter (f: BatUChar.t -> unit) (s: t) : unit =
+        let e = Sth.EnumerateRunes(Os.toSpan s)
+        for runeStep in e do
+            f runeStep
+
+    let iteri (f: BatUChar.t -> int -> unit) (s: t) : unit =
+        let e = Sth.EnumerateRunes(Os.toSpan s)
+        let mutable stepIndex = 0
+        for runeStep in e do
+            f runeStep stepIndex;
+            stepIndex <- stepIndex + 1

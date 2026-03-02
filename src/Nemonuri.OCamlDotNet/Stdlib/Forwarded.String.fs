@@ -1,10 +1,11 @@
-namespace Nemonuri.OCamlDotNet.Primitives
+namespace Nemonuri.OCamlDotNet.Forwarded
 
 open System;
+open Nemonuri.OCamlDotNet.Primitives
 open Nemonuri.OCamlDotNet.Primitives.Operations
 open type System.MemoryExtensions
 module Obs = OCamlByteSequenceSources
-module B = Nemonuri.OCamlDotNet.Primitives.Bytes
+module B = Nemonuri.OCamlDotNet.Forwarded.Bytes
 module Bs = ByteSpans
 
 /// https://ocaml.org/manual/5.4/api/String.html
@@ -17,27 +18,10 @@ module String =
             member inline this.ReturnFrom(s: 's) = s
         end
 
-    module Unsafe =
-
-        let internal ofSource (source: OCamlByteSequenceSource) = Unsafe.sourceToString source
-
-        let internal toSource (s: OCamlString) = Unsafe.sourceOfString s
-
-        let ofArraySegemnt (source: ArraySegment<OCamlChar>) =
-            source
-            |> Obs.ofArraySegemnt
-            |> ofSource
-
-        let ofArray (source: OCamlChar array) =
-            source
-            |> Obs.ofArray
-            |> ofSource
-
-    module U = Unsafe
     
     let private mnd = Monad()
 
-    let toSpan (s: OCamlString) = Obs.toSpan (U.toSource s)
+    let private toSpan s = OCamlStrings.toSpan s
 
     let make (n: OCamlInt) (c: OCamlChar) : OCamlString = mnd { return B.make n c }
     
@@ -49,13 +33,13 @@ module String =
 
     let get (s: OCamlString) (i: OCamlInt) : OCamlChar = mnd { let! b = s in return! B.get b i }
 
-    let of_bytes (s: OCamlBytes) : OCamlString = Unsafe.sourceOfBytes s |> Obs.clone |> U.ofSource
+    let of_bytes (s: OCamlBytes) : OCamlString = Obs.Unsafe.sourceOfBytes s |> Obs.clone |> Obs.Unsafe.sourceToString
 
-    let to_bytes (s: OCamlString) : OCamlBytes = U.toSource s |> Obs.clone |> Unsafe.sourceToBytes
+    let to_bytes (s: OCamlString) : OCamlBytes = Obs.Unsafe.sourceOfString s |> Obs.clone |> Obs.Unsafe.sourceToBytes
 
     let blit src src_pos dst dst_pos len = B.blit_string src src_pos dst dst_pos len
 
-    let concat (sep: OCamlString) (sl: OCamlString list) = Bs.concat sep sl |> U.ofArraySegemnt
+    let concat (sep: OCamlString) (sl: OCamlString list) = Bs.concat sep sl |> OCamlStrings.ofArraySegemnt
 
     let cat s1 s2 = mnd { let! t1 = s1 in let! t2 = s2 in return B.cat t1 t2 }
 

@@ -6,6 +6,8 @@ open Nemonuri.ByteChars
 open type System.MemoryExtensions
 open type Nemonuri.ByteChars.Extensions.UnsafePinnedSpanPointerExtensions
 
+    exception Not_found
+
     type OCamlChar = Microsoft.FSharp.Core.byte
     type OCamlInt = Microsoft.FSharp.Core.int
 

@@ -6,6 +6,7 @@ module Nemonuri.FStarDotNet.FStarC.String
 open Nemonuri.FStarDotNet
 open Nemonuri.FStarDotNet.FStarC
 module Fu = Nemonuri.FStarDotNet.Primitives.FStarTypeUniverses
+module S = Nemonuri.OCamlDotNet.Forwarded.String
 
 module String =
 

@@ -7,10 +7,11 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Primitives.fs" />
-    <Compile Include="Primitives.Exceptions.fs" />
     <Compile Include="Primitives.Operations.fs" />
-    <Compile Include="Primitives.Bytes.fs" />
-    <Compile Include="Primitives.String.fs" />
+    <Compile Include="Primitives.Exceptions.fs" />
+    <Compile Include="Forwarded.Char.fs" />
+    <Compile Include="Forwarded.Bytes.fs" />
+    <Compile Include="Forwarded.String.fs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Nemonuri.ByteChars\Nemonuri.ByteChars.csproj" />

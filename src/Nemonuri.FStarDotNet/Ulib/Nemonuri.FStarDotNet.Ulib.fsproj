@@ -20,5 +20,6 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Nemonuri.OCamlDotNet\Stdlib\Nemonuri.OCamlDotNet.Stdlib.fsproj" />
+    <ProjectReference Include="..\..\Nemonuri.OCamlDotNet\Zarith\Nemonuri.OCamlDotNet.Zarith.fsproj" />
   </ItemGroup>
 </Project>
