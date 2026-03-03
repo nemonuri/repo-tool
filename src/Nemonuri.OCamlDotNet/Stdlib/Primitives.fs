@@ -25,11 +25,14 @@ exception Not_found
 type OCamlChar = Microsoft.FSharp.Core.byte
 type OCamlInt = Microsoft.FSharp.Core.int
 
-type TargetToSourceMonad<'TTarget, 'TSource>([<InlineIfLambda>] mapTo: 'TTarget -> 'TSource, [<InlineIfLambda>] mapFrom: 'TSource -> 'TTarget) = 
+type TargetToSourceMonad<'TTarget, 'TSource>(mapTo: 'TTarget -> 'TSource, mapFrom: 'TSource -> 'TTarget) = 
     struct
+        member _.MapTo = mapTo
+        member _.MapFrom = mapFrom
+
         member inline this.ReturnFrom<'a>(s: 'a) : 'a = s
-        member inline this.Return(t: 'TTarget) : 'TSource = mapTo t
-        member inline this.Bind<'a>(s: 'TSource, tf: 'TTarget -> 'a) : 'a = s |> mapFrom |> tf
+        member inline this.Return(t: 'TTarget) : 'TSource = this.MapTo t
+        member inline this.Bind<'a>(s: 'TSource, tf: 'TTarget -> 'a) : 'a = s |> this.MapFrom |> tf
     end
 
 [<Struct>]
@@ -59,8 +62,6 @@ type OCamlByteSpanSource = internal { UnsafeSource: UnsafeOCamlByteSpanSource }
             | _ -> false
         
         override s.GetHashCode (): int = let s1 = s in O.Monad { let! t1 = s1 in return! U.hash t1 }
-
-        member s.Slice (offset: int, length: int) : OCamlByteSpanSource = let s1 = s in O.Monad { let! t1 = s1 in return U.slice t1 offset length }
 
         interface ITemporaryReadOnlySpanSource<byte> with
             member s.AsTemporarySpan (): ReadOnlySpan<byte> = U.toReadOnlySpan s.UnsafeSource

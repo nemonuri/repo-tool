@@ -1,7 +1,7 @@
 namespace Nemonuri.OCamlDotNet.Primitives
 
 open Nemonuri.OCamlDotNet.Primitives.Operations
-module S = OCamlByteSpanSources
+module O = Nemonuri.OCamlDotNet.Primitives.Operations.OCamlByteSpanSources
 
 module Exceptions =
 
@@ -9,9 +9,9 @@ module Exceptions =
 
     exception Invalid_argument = System.ArgumentException
 
-    let invalid_arg (msg: OCamlString) = let s = OCamlStrings.toDotNetString msg in raise (System.ArgumentException(s))
+    let invalid_arg (msg: OCamlString) = let s = O.stringToDotNetString msg in raise (System.ArgumentException(s))
 
     let (|Invalid_argument|_|) (e: exn) =
         match e with
-        | :? System.ArgumentException as ae -> ae.Message |> OCamlStrings.ofDotNetString |> Some
+        | :? System.ArgumentException as ae -> ae.Message |> O.stringOfDotNetString |> Some
         | _ -> None

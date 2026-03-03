@@ -105,6 +105,10 @@ module OCamlByteSpanSources =
         let stringToSpan (s: OCamlString) = toSpan (s |> ofString)        
         //---|
 
+        let bytesToString (s: OCamlBytes) : OCamlString = s |> ofBytes |> toString
+
+        let stringToBytes (s: OCamlString) : OCamlBytes = s |> ofString |> toBytes
+
     let toReadOnlySpan (s: t) = TemporaryReadOnlySpanSources.toReadOnlySpan s
 
     let empty = mnd { return U.empty }
@@ -123,7 +127,9 @@ module OCamlByteSpanSources =
 
     let slice (s: t) offset sliceLength = mnd { let! t = s in return U.slice t offset sliceLength }
 
-    let toDotNetString (s: t) = s.ToString()
+    let toDotNetString (s: t) = mnd { let! t = s in return! U.toDotNetString t }
+
+    let ofDotNetString (s: Core.string) = mnd { return U.ofDotNetString s }
 
     //---- Bytes ---
     let private bmnd = Unsafe.bmnd
@@ -135,6 +141,20 @@ module OCamlByteSpanSources =
     let bytesToArray s = bmnd { let! t = s in return! toArray t }
 
     let cloneBytes s = bmnd { let! t = s in return clone t }
+
+    let bytesEqual s1 s2 = bmnd { let! t1 = s1 in let! t2 = s2 in return! equal t1 t2 }
+
+    let bytesCompare s1 s2 = bmnd { let! t1 = s1 in let! t2 = s2 in return! compare t1 t2 }
+
+    let bytesHash s = bmnd { let! t = s in return! hash t }
+
+    let bytesLength s = bmnd { let! t = s in return! length t }
+
+    let bytesSlice s offset sliceLength = bmnd { let! t = s in return slice t offset sliceLength }
+
+    let bytesToDotNetString s = bmnd { let! t = s in return! toDotNetString t }
+
+    let bytesOfDotNetString s = bmnd { return ofDotNetString s }
     //---|
 
     //---- String ---
@@ -148,7 +168,19 @@ module OCamlByteSpanSources =
 
     let cloneString s = smnd { let! t = s in return clone t }
 
+    let stringEqual s1 s2 = smnd { let! t1 = s1 in let! t2 = s2 in return! equal t1 t2 }
+
+    let stringCompare s1 s2 = smnd { let! t1 = s1 in let! t2 = s2 in return! compare t1 t2 }
+
+    let stringHash s = smnd { let! t = s in return! hash t }
+
+    let stringLength s = smnd { let! t = s in return! length t }
+
+    let stringSlice s offset sliceLength = smnd { let! t = s in return slice t offset sliceLength }
+
     let stringToDotNetString s = smnd { let! t = s in return! toDotNetString t }
+
+    let stringOfDotNetString s = smnd { return ofDotNetString s }
     //---|
 
 

@@ -4,24 +4,16 @@ open System;
 open Nemonuri.OCamlDotNet.Primitives
 open Nemonuri.OCamlDotNet.Primitives.Operations
 open type System.MemoryExtensions
-module OCamlByteSpanSources = OCamlByteSpanSources
+module O = Nemonuri.OCamlDotNet.Primitives.Operations.OCamlByteSpanSources
+module Ou = Nemonuri.OCamlDotNet.Primitives.Operations.OCamlByteSpanSources.Unsafe
 module B = Nemonuri.OCamlDotNet.Forwarded.Bytes
 module Bs = ByteSpans
 
 /// https://ocaml.org/manual/5.4/api/String.html
 module String =
-
-    type internal Monad =
-        struct
-            member inline this.Bind(t: OCamlString, sf: OCamlBytes -> 'a) = Bytes.unsafe_of_string t |> sf
-            member inline this.Return(s: OCamlBytes) = Bytes.unsafe_to_string s
-            member inline this.ReturnFrom(s: 's) = s
-        end
-
     
-    let private mnd = Monad()
+    let private mnd = TargetToSourceMonad<OCamlBytes, OCamlString>(B.unsafe_to_string, B.unsafe_of_string)
 
-    let private toSpan s = OCamlStrings.toSpan s
 
     let make (n: OCamlInt) (c: OCamlChar) : OCamlString = mnd { return B.make n c }
     
@@ -33,13 +25,13 @@ module String =
 
     let get (s: OCamlString) (i: OCamlInt) : OCamlChar = mnd { let! b = s in return! B.get b i }
 
-    let of_bytes (s: OCamlBytes) : OCamlString = Obs.Unsafe.sourceOfBytes s |> Obs.clone |> Obs.Unsafe.sourceToString
+    let of_bytes (s: OCamlBytes) : OCamlString = B.to_string s
 
-    let to_bytes (s: OCamlString) : OCamlBytes = Obs.Unsafe.sourceOfString s |> Obs.clone |> Obs.Unsafe.sourceToBytes
+    let to_bytes (s: OCamlString) : OCamlBytes = B.of_string s
 
     let blit src src_pos dst dst_pos len = B.blit_string src src_pos dst dst_pos len
 
-    let concat (sep: OCamlString) (sl: OCamlString list) = Bs.concat sep sl |> OCamlStrings.ofArraySegemnt
+    let concat (sep: OCamlString) (sl: OCamlString list) = Bs.concat sep sl |> Ou.stringOfArraySegment
 
     let cat s1 s2 = mnd { let! t1 = s1 in let! t2 = s2 in return B.cat t1 t2 }
 
@@ -57,9 +49,9 @@ module String =
 
     type t = OCamlString
 
-    let compare (l: t) (r: t) = LanguagePrimitives.GenericComparison l r
+    let compare (l: t) (r: t) = O.stringCompare l r
 
-    let equal (l: t) (r: t) = l = r
+    let equal (l: t) (r: t) = O.stringEqual l r
 
     let sub s pos len = mnd { let! t = s in return B.sub t pos len }
     

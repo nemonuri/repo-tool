@@ -2,7 +2,7 @@
 namespace Nemonuri.OCamlDotNet.Forwarded
 
 open Nemonuri.OCamlDotNet.Primitives
-open Nemonuri.OCamlDotNet.Primitives.Operations
+module O = Nemonuri.OCamlDotNet.Primitives.Operations.OCamlByteSpanSources
 
 module Char =
 
@@ -14,4 +14,4 @@ module Char =
         try
             System.Convert.ToByte i
         with
-            | :? System.OverflowException as oe -> Exceptions.invalid_arg (OCamlStrings.ofDotNetString oe.Message)
+            | :? System.OverflowException as oe -> Exceptions.invalid_arg (O.stringOfDotNetString oe.Message)
