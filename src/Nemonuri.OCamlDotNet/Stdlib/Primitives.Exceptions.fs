@@ -1,6 +1,7 @@
 namespace Nemonuri.OCamlDotNet.Primitives
 
 open Nemonuri.OCamlDotNet.Primitives.Operations
+module S = OCamlByteSpanSources
 
 module Exceptions =
 

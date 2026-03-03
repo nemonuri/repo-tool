@@ -4,7 +4,7 @@ open System;
 open Nemonuri.OCamlDotNet.Primitives
 open Nemonuri.OCamlDotNet.Primitives.Operations
 open type System.MemoryExtensions
-module Obs = OCamlByteSequenceSources
+module OCamlByteSpanSources = OCamlByteSpanSources
 module B = Nemonuri.OCamlDotNet.Forwarded.Bytes
 module Bs = ByteSpans
 

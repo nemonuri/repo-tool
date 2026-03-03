@@ -60,4 +60,4 @@ module internal UnsafeOCamlByteSpanSources =
         | Array v -> ArraySegment<_>(v.Array, v.Offset + offset, sliceLength) |> ofArraySegment
         | PinnedPointer v -> v.Slice(offset, sliceLength) |> PinnedPointer
     
-    let toString (s: t) : string = ByteStringTheory.ByteStringToDotNetString(toSpan s)
+    let toDotNetString (s: t) : string = ByteStringTheory.ByteStringToDotNetString(toSpan s)

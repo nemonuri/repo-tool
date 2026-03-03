@@ -4,7 +4,7 @@ open System;
 open Nemonuri.OCamlDotNet.Primitives
 open Nemonuri.OCamlDotNet.Primitives.Operations
 open type System.MemoryExtensions
-module Obs = OCamlByteSequenceSources
+module OCamlByteSpanSources = OCamlByteSpanSources
 module Bs = ByteSpans
 
 /// https://ocaml.org/manual/5.4/api/Bytes.html
@@ -12,7 +12,7 @@ module Bytes =
 
     module Unsafe =
 
-        let internal ofSource (source: OCamlByteSequenceSource) = Obs.Unsafe.sourceToBytes source
+        let internal ofSource (source: OCamlByteSpanSource) = Obs.Unsafe.sourceToBytes source
 
         let internal toSource (s: OCamlBytes) = Obs.Unsafe.sourceOfBytes s
 

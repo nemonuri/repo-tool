@@ -28,7 +28,7 @@ type DotNetSpans =
 
     static member inline NativePtrToSpan(ptr: nativeptr<'T>, length: int) = Span<'T>(ptr |> NativePtr.toVoidPtr, length)
 
-
+#if false
 module internal OCamlByteSequenceSources =
 
     module internal Unsafe =
@@ -52,23 +52,104 @@ module internal OCamlByteSequenceSources =
     let inline unsafeToSpan (source: OCamlByteSequenceSource) = source.UnsafeAsSpan()
 
     let inline clone (source: OCamlByteSequenceSource) = (toSpan source).ToArray() |> ofArray
+#endif
 
+module OCamlByteSpanSources =
 
+    type t = OCamlByteSpanSource
+    type OCamlBytes = Nemonuri.OCamlDotNet.Primitives.OCamlBytes
+    type OCamlString = Nemonuri.OCamlDotNet.Primitives.OCamlString
+    module U = Nemonuri.OCamlDotNet.Primitives.Internals.Operations.UnsafeOCamlByteSpanSources
 
-module OCamlStrings =
+    let private mnd = OCamlByteSpanSource.Monad
 
-    module Obs = OCamlByteSequenceSources
-    module U = OCamlByteSequenceSources.Unsafe
+    module Unsafe =
 
-    let toSpan (s: OCamlString) = OCamlByteSequenceSources.toSpan (s |> U.sourceOfString)
+        let ofArraySegment s = mnd { return U.ofArraySegment s }
 
-    let ofArraySegemnt (source: ArraySegment<OCamlChar>) = source |> Obs.ofArraySegemnt |> U.sourceToString
+        let ofArray s = mnd { return U.ofArray s }
 
-    let ofArray source  = OCamlByteSequenceSources.ofArray source |> U.sourceToString
+        let ofPinnedSpan (s: ReadOnlySpan<byte>) = { UnsafeSource = U.ofPinnedSpan s }
 
-    let toDotNetString (s: OCamlString) = ByteStringTheory.ByteStringToDotNetString(toSpan s)
+        let toSpan (s: t) = U.toSpan s.UnsafeSource
 
-    let ofDotNetString (s: Core.string) = ByteStringTheory.DotNetCharSpanToByteString(s.AsSpan()).ToArray() |> ofArray
+        //---- Bytes ---
+        let toBytes (s: t) : OCamlBytes = { Source = s }
+
+        let ofBytes (s: OCamlBytes) : t = s.Source
+
+        let internal bmnd = TargetToSourceMonad<t, OCamlBytes>(toBytes, ofBytes)
+
+        let bytesOfArraySegment s = bmnd { return ofArraySegment s }
+
+        let bytesOfArray s = bmnd { return ofArray s }
+
+        let bytesOfPinnedSpan s = ofPinnedSpan s |> toBytes
+
+        let bytesToSpan (s: OCamlBytes) = toSpan (s |> ofBytes)        
+        //---|
+
+        //--- String ---
+        let toString (s: t) : OCamlString = { Source = s }
+
+        let ofString (s: OCamlString) : t = s.Source
+
+        let internal smnd = TargetToSourceMonad<t, OCamlString>(toString, ofString)
+
+        let stringOfArraySegment s = smnd { return ofArraySegment s }
+
+        let stringOfArray s = smnd { return ofArray s }
+
+        let stringOfPinnedSpan s = ofPinnedSpan s |> toString
+
+        let stringToSpan (s: OCamlString) = toSpan (s |> ofString)        
+        //---|
+
+    let toReadOnlySpan (s: t) = TemporaryReadOnlySpanSources.toReadOnlySpan s
+
+    let empty = mnd { return U.empty }
+
+    let toArray (s: t) = (Unsafe.toSpan s).ToArray()
+
+    let clone (s: t) = s |> toArray |> Unsafe.ofArray
+
+    let equal (s1: t) (s2: t) = mnd { let! t1 = s1 in let! t2 = s2 in return! U.equal t1 t2 }
+
+    let compare (s1: t) (s2: t) = mnd { let! t1 = s1 in let! t2 = s2 in return! U.compare t1 t2 }
+
+    let hash (s: t) = mnd { let! t = s in return! U.hash t }
+
+    let length (s: t) = mnd { let! t = s in return! U.length t }
+
+    let slice (s: t) offset sliceLength = mnd { let! t = s in return U.slice t offset sliceLength }
+
+    let toDotNetString (s: t) = s.ToString()
+
+    //---- Bytes ---
+    let private bmnd = Unsafe.bmnd
+
+    let bytesToReadOnlySpan (s: OCamlBytes) = toReadOnlySpan (s |> Unsafe.ofBytes)
+
+    let emptyBytes = bmnd { return empty }
+
+    let bytesToArray s = bmnd { let! t = s in return! toArray t }
+
+    let cloneBytes s = bmnd { let! t = s in return clone t }
+    //---|
+
+    //---- String ---
+    let private smnd = Unsafe.smnd
+
+    let stringToReadOnlySpan (s: OCamlString) = toReadOnlySpan (s |> Unsafe.ofString)
+
+    let emptyString = smnd { return empty }
+
+    let stringToArray s = smnd { let! t = s in return! toArray t }
+
+    let cloneString s = smnd { let! t = s in return clone t }
+
+    let stringToDotNetString s = smnd { let! t = s in return! toDotNetString t }
+    //---|
 
 
 
@@ -124,15 +205,6 @@ module ByteSpans =
         builder.Append(s2.AsTemporarySpan())
         builder.DrainToArraySemgent()
 
-    let inline private bsToRbs (s: bs) : rbs = s
-        
-    [<Sealed; AbstractClass; AutoOpen>]
-    type OverloadTheory =
-
-        static member Cat<'a when 'a :> trbs> (s1: ps) = s1 |> OCamlByteSequenceSource.PinnedPointer |> cat<_, 'a>
-        static member Cat<'a when 'a :> trbs> (pinned: rbs) = toPinnedSpan pinned |> Cat<'a>
-        static member Cat<'a when 'a :> trbs> (pinned: bs) = Cat<'a> (bsToRbs pinned)
-    
     let iter (f: OCamlChar -> unit) (s: rbs) = for c in s do f c
 
     let iteri (f: OCamlInt -> OCamlChar -> unit) (s: rbs) =
