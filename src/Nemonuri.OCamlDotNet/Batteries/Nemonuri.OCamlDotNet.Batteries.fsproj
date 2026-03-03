@@ -6,7 +6,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="BatUChar.fs" />
-    <Compile Include="BatUTF8.fs" /><Compile Include="BatString.fs" /><Compile Include="BatList.fs" />
+    <Compile Include="BatUTF8.fs" /><Compile Include="BatString.fs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Stdlib\Nemonuri.OCamlDotNet.Stdlib.fsproj" />

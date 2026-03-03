@@ -3,14 +3,12 @@
 
 namespace Nemonuri.OCamlDotNet.Batteries
 
-open Nemonuri.OCamlDotNet.Forwarded
 open Nemonuri.OCamlDotNet.Primitives
 open Nemonuri.OCamlDotNet.Primitives.Operations
 
 open System.Text.Unicode
 open FSharp.NativeInterop
-open System.Collections.Immutable
-module Os = Nemonuri.OCamlDotNet.Primitives.Operations.OCamlStrings
+module Obs = Nemonuri.OCamlDotNet.Primitives.Operations.OCamlByteSpanSources
 type private Sth = Nemonuri.ByteChars.ByteStringTheory
 
 /// UTF-8 encoded Unicode strings. The type is normal string.
@@ -18,28 +16,30 @@ type private Sth = Nemonuri.ByteChars.ByteStringTheory
 module BatUTF8 =
 
     /// UTF-8 encoded Unicode strings. The type is normal string.
-    type t = String.t
+    type t = OCamlString
 
     exception Malformed_code
 
+    let inline private toSpan s = Obs.stringToReadOnlySpan s
+
     /// `length s` returns the number of Unicode characters contained in s
-    let inline length (s: t) : int = Sth.GetRuneCount(Os.toSpan s)
+    let inline length (s: t) : int = Sth.GetRuneCount(toSpan s)
 
     /// `validate s` successes if s is valid UTF-8, otherwise raises Malformed_code. 
     /// Other functions assume strings are valid UTF-8, so it is prudent to test their validity for strings from untrusted origins.
     let validate (s: t) : unit =
-        match Utf8.IsValid(Os.toSpan s) with
+        match Utf8.IsValid(toSpan s) with
         | true -> ()
         | false -> raise Malformed_code
 
     /// get s n returns n-th Unicode character of s. The call requires O(n)-time.
     let get (s: t) (n: int) : BatUChar.t =
         try
-            let success, rune = Sth.TryGetRuneAt(Os.toSpan s, n)
-            if not success then Exceptions.invalid_arg (Os.ofArray "Out of range"B) else
+            let success, rune = Sth.TryGetRuneAt(toSpan s, n)
+            if not success then Exceptions.invalid_arg (Obs.Unsafe.stringOfArray "Out of range"B) else
             rune
         with
-            | :? System.ArgumentOutOfRangeException as e -> Exceptions.invalid_arg (Os.ofDotNetString e.Message)
+            | :? System.ArgumentOutOfRangeException as e -> Exceptions.invalid_arg (Obs.stringOfDotNetString e.Message)
 
     let [<Literal>] private spanSize = 4
 
@@ -53,19 +53,19 @@ module BatUTF8 =
             let writtenLength = newRune.EncodeToUtf8 span
             builder.Append(span.Slice(0, writtenLength))           
         
-        builder.DrainToArraySemgent() |> Os.ofArraySegemnt
+        builder.DrainToArraySemgent() |> Obs.Unsafe.stringOfArraySegment
 
     /// Positions in the string represented by the number of bytes from the head. The location of the first character is 0
     type index = int
 
     /// iter f s applies f to all Unicode characters in s. The order of application is same to the order of the Unicode characters in s.
     let iter (f: BatUChar.t -> unit) (s: t) : unit =
-        let e = Sth.EnumerateRunes(Os.toSpan s)
+        let e = Sth.EnumerateRunes(toSpan s)
         for runeStep in e do
             f runeStep
 
     let iteri (f: BatUChar.t -> int -> unit) (s: t) : unit =
-        let e = Sth.EnumerateRunes(Os.toSpan s)
+        let e = Sth.EnumerateRunes(toSpan s)
         let mutable stepIndex = 0
         for runeStep in e do
             f runeStep stepIndex;
