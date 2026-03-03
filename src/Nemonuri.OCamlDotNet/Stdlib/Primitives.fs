@@ -1,95 +1,85 @@
 namespace Nemonuri.OCamlDotNet.Primitives
 
 open System
+
+[<Interface>]
+type ITemporaryReadOnlySpanSource<'T> =
+    abstract member AsTemporarySpan: unit -> ReadOnlySpan<'T>
+
+namespace Nemonuri.OCamlDotNet.Primitives.Operations
+
+module TemporaryReadOnlySpanSources =
+
+    type t<'a> = Nemonuri.OCamlDotNet.Primitives.ITemporaryReadOnlySpanSource<'a>
+
+    let inline toReadOnlySpan (s: t<'a>) = s.AsTemporarySpan()
+
+namespace Nemonuri.OCamlDotNet.Primitives
+
+open System
 open System.Diagnostics
-open Nemonuri.ByteChars
-open type System.MemoryExtensions
-open type Nemonuri.ByteChars.Extensions.UnsafePinnedSpanPointerExtensions
+open Nemonuri.OCamlDotNet.Primitives.Internals
+module U = Nemonuri.OCamlDotNet.Primitives.Internals.Operations.UnsafeOCamlByteSpanSources
 
-    exception Not_found
+exception Not_found
 
-    type OCamlChar = Microsoft.FSharp.Core.byte
-    type OCamlInt = Microsoft.FSharp.Core.int
+type OCamlChar = Microsoft.FSharp.Core.byte
+type OCamlInt = Microsoft.FSharp.Core.int
 
-    [<Interface>]
-    type ITemporaryReadOnlySpanSource<'T> =
-        abstract member AsTemporarySpan: unit -> ReadOnlySpan<'T>
+[<Struct>]
+[<CustomEquality; CustomComparison>]
+[<DebuggerDisplay("DebuggerDisplay,nq")>]
+type OCamlByteSequenceSource = internal { UnsafeSource: UnsafeOCamlByteSpanSource }
+    with
 
-#if false
-    [<Struct>]
-    type EmptyTemporaryReadOnlySpanSource<'T> =
-        member this.AsTemporarySpan() = ReadOnlySpan<'T>.Empty
-        interface ITemporaryReadOnlySpanSource<'T> with
-            member this.AsTemporarySpan (): ReadOnlySpan<'T> = this.AsTemporarySpan()
-#endif
-
-    [<RequireQualifiedAccess>]
-    [<Struct>]
-    [<CustomEquality; CustomComparison>]
-    [<DebuggerDisplay("DebuggerDisplay,nq")>]
-    type internal OCamlByteSequenceSource = 
-    | None
-    | Array of array: ArraySegment<byte>
-    | PinnedPointer of pointer: UnsafePinnedSpanPointer<byte>
-        with
-            member this.AsReadOnlySpan() : ReadOnlySpan<byte> =
-                match this with
-                | None -> ReadOnlySpan<byte>.Empty
-                | Array v -> v.AsSpan()
-                | PinnedPointer v -> v.LoadReadOnlySpan()
-            
-            member this.UnsafeAsSpan() : Span<byte> =
-                match this with
-                | None -> Span<byte>.Empty
-                | Array v -> v.AsSpan()
-                | PinnedPointer v -> v.LoadSpan()
-
-            interface IEquatable<OCamlByteSequenceSource> with
-                member this.Equals (other: OCamlByteSequenceSource): bool = 
-                    this.AsReadOnlySpan().SequenceEqual(other.AsReadOnlySpan())
-            
-            interface IComparable<OCamlByteSequenceSource> with
-                member this.CompareTo (other: OCamlByteSequenceSource): int = 
-                    this.AsReadOnlySpan().SequenceCompareTo(other.AsReadOnlySpan())
-            
-            interface IComparable with
-                member this.CompareTo (obj: obj): int = 
-                    match obj with
-                    | null -> -1
-                    | :? OCamlByteSequenceSource as other -> (this :> IComparable<OCamlByteSequenceSource>).CompareTo(other)
-                    | _ -> invalidArg (nameof obj) "Cannot compare."
-
-            override this.Equals (obj: obj): bool = 
-                match obj with 
-                | :? OCamlByteSequenceSource as v -> this.Equals(v)
-                | _ -> false
-            
-            override this.GetHashCode (): int = 
-                CommunityToolkit.HighPerformance.ReadOnlySpanExtensions.GetDjb2HashCode(this.AsReadOnlySpan())
-
-            member this.Length with get() = this.AsReadOnlySpan().Length
-
-            member this.Slice (offset: int, length: int) : OCamlByteSequenceSource =
-                Nemonuri.ByteChars.Diagnostics.Guard.GuardSliceArgumentsAreInValidRange(this.Length, offset, length)
-                match this with
-                | None -> None
-                | Array v -> ArraySegment<_>(v.Array, v.Offset + offset, length) |> Array
-                | PinnedPointer v -> v.Slice(offset, length) |> PinnedPointer
-
-            interface ITemporaryReadOnlySpanSource<byte> with
-                member this.AsTemporarySpan (): ReadOnlySpan<byte> = this.AsReadOnlySpan()
+        interface IEquatable<OCamlByteSequenceSource> with
+            member s.Equals (other: OCamlByteSequenceSource): bool = let s1 = s in Monad() { let! t1 = s1 in let! t2 = other in return! U.equal t1 t2 }
                 
-            override this.ToString (): System.String = ByteStringTheory.ByteStringToDotNetString(this.AsReadOnlySpan())
+        
+        interface IComparable<OCamlByteSequenceSource> with
+            member s.CompareTo (other: OCamlByteSequenceSource): int = let s1 = s in Monad() { let! t1 = s1 in let! t2 = other in return! U.compare t1 t2 }
+                
+        
+        interface IComparable with
+            member s.CompareTo (obj: obj): int = 
+                match obj with
+                | null -> -1
+                | :? OCamlByteSequenceSource as other -> (s :> IComparable<OCamlByteSequenceSource>).CompareTo(other)
+                | _ -> invalidArg (nameof obj) "Cannot compare."
+
+        override s.Equals (obj: obj): bool = 
+            match obj with 
+            | :? OCamlByteSequenceSource as v -> s.Equals(v)
+            | _ -> false
+        
+        override s.GetHashCode (): int = let s1 = s in Monad() { let! t1 = s1 in return! U.hash t1 }
+
+        member s.Slice (offset: int, length: int) : OCamlByteSequenceSource = let s1 = s in Monad() { let! t1 = s1 in return U.slice t1 offset length }
+
+        interface ITemporaryReadOnlySpanSource<byte> with
+            member s.AsTemporarySpan (): ReadOnlySpan<byte> = U.toReadOnlySpan s.UnsafeSource
+            
+        override s.ToString (): System.String = let s1 = s in Monad() { let! t1 = s1 in return! U.toString t1 }
+
+    end
+
+and private Monad =
+        struct
+            member inline this.ReturnFrom<'s>(s: 's) : 's = s
+            member inline this.Return(s: UnsafeOCamlByteSpanSource) : OCamlByteSequenceSource = { UnsafeSource = s }
+            member inline this.Bind<'s>(t: OCamlByteSequenceSource, sf: UnsafeOCamlByteSpanSource -> 's) : 's = t.UnsafeSource |> sf
         end
 
-    [<RequireQualifiedAccess>]
-    [<Struct>]
-    type OCamlBytes = internal { Source: OCamlByteSequenceSource } with
-        interface ITemporaryReadOnlySpanSource<byte> with
-            member this.AsTemporarySpan () = this.Source.AsReadOnlySpan()
+module Trs = Nemonuri.OCamlDotNet.Primitives.Operations.TemporaryReadOnlySpanSources
 
-    [<RequireQualifiedAccess>]
-    [<Struct>]
-    type OCamlString = internal { Source: OCamlByteSequenceSource } with
-        interface ITemporaryReadOnlySpanSource<byte> with
-            member this.AsTemporarySpan () = this.Source.AsReadOnlySpan()
+[<RequireQualifiedAccess>]
+[<Struct>]
+type OCamlBytes = internal { Source: OCamlByteSequenceSource } with
+    interface ITemporaryReadOnlySpanSource<byte> with
+        member this.AsTemporarySpan () = Trs.toReadOnlySpan this.Source
+
+[<RequireQualifiedAccess>]
+[<Struct>]
+type OCamlString = internal { Source: OCamlByteSequenceSource } with
+    interface ITemporaryReadOnlySpanSource<byte> with
+        member this.AsTemporarySpan () = Trs.toReadOnlySpan this.Source

@@ -6,6 +6,7 @@
     <NoWarn>$(NoWarn);FS0009;FS3391</NoWarn>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="Internals.fs" />
     <Compile Include="Primitives.fs" />
     <Compile Include="Primitives.Operations.fs" />
     <Compile Include="Primitives.Exceptions.fs" />
