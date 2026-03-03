@@ -31,6 +31,7 @@ type TargetToSourceMonad<'TTarget, 'TSource>(mapTo: 'TTarget -> 'TSource, mapFro
         member _.MapFrom = mapFrom
 
         member inline this.ReturnFrom<'a>(s: 'a) : 'a = s
+        member inline this.ReturnFromFinal<'a>(s: 'a) : 'a = s
         member inline this.Return(t: 'TTarget) : 'TSource = this.MapTo t
         member inline this.Bind<'a>(s: 'TSource, tf: 'TTarget -> 'a) : 'a = s |> this.MapFrom |> tf
     end
