@@ -25,15 +25,16 @@ exception Not_found
 type OCamlChar = Microsoft.FSharp.Core.byte
 type OCamlInt = Microsoft.FSharp.Core.int
 
-type TargetToSourceMonad<'TTarget, 'TSource>(mapTo: 'TTarget -> 'TSource, mapFrom: 'TSource -> 'TTarget) = 
+type TargetToSourceMonad<'TTarget, 'TSource> = 
     struct
-        member _.MapTo = mapTo
-        member _.MapFrom = mapFrom
+        val MapTo : 'TTarget -> 'TSource
+        val MapFrom : 'TSource -> 'TTarget
+        new (mapTo: 'TTarget -> 'TSource, mapFrom: 'TSource -> 'TTarget) = { MapTo = mapTo; MapFrom = mapFrom }
 
         member inline this.ReturnFrom<'a>(s: 'a) : 'a = s
         member inline this.ReturnFromFinal<'a>(s: 'a) : 'a = s
         member inline this.Return(t: 'TTarget) : 'TSource = this.MapTo t
-        member inline this.Bind<'a>(s: 'TSource, tf: 'TTarget -> 'a) : 'a = s |> this.MapFrom |> tf
+        member inline this.Bind<'a>(s: 'TSource, [<InlineIfLambda>] tf: 'TTarget -> 'a) : 'a = s |> this.MapFrom |> tf
     end
 
 [<Struct>]
