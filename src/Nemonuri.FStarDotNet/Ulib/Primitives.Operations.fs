@@ -94,7 +94,7 @@ module FStarTypeUniverses =
 
     type Monad =
         struct
-            member inline this.Bind(t1: Type0<'s1>, sf: 's1 -> Type0<'s2>) : Type0<'s2> = sf (extract t1)
+            member inline this.Bind(t1: Type0<'s1>, [<InlineIfLambda>] sf: 's1 -> Type0<'s2>) : Type0<'s2> = sf (extract t1)
             member inline this.Return(s: 's1) : Type0<'s1> = pur s
             member inline this.ReturnFrom(s: Type0<'s1>) : Type0<'s1> = s
         end
@@ -103,7 +103,7 @@ module FStarTypeUniverses =
 
     type ExtractorMonad = 
         struct
-            member inline this.Bind(t1: Type0<'s1>, sf: 's1 -> Type0<'s2>) : Type0<'s2> = monad.Bind(t1, sf)
+            member inline this.Bind(t1: Type0<'s1>, [<InlineIfLambda>] sf: 's1 -> Type0<'s2>) : Type0<'s2> = monad.Bind(t1, sf)
             member inline this.Return(s: 's1) : Type0<'s1> = monad.Return(s)
             member inline this.Run(s: Type0<'s1>) : 's1 = s |> extract
         end
@@ -112,7 +112,7 @@ module FStarTypeUniverses =
 
     type Comonad =
         struct
-            member inline this.Bind(t1: 's1, sf: Type0<'s1> -> 's2) : 's2 = sf (pur t1)
+            member inline this.Bind(t1: 's1, [<InlineIfLambda>] sf: Type0<'s1> -> 's2) : 's2 = sf (pur t1)
             member inline this.Return(s: Type0<'s1>) : 's1 = extract s
         end
 

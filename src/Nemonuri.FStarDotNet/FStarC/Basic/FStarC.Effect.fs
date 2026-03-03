@@ -21,7 +21,7 @@ namespace Nemonuri.FStarDotNet.FStarC
 open Nemonuri.FStarDotNet
 open Nemonuri.FStarDotNet.Primitives
 open Nemonuri.FStarDotNet.Primitives.Abbreviations
-open Nemonuri.OCamlDotNet.Primitives.Operations
+module Obs = Nemonuri.OCamlDotNet.Primitives.Operations.OCamlByteSpanSources
 module Fu = Nemonuri.FStarDotNet.Primitives.FStarTypeUniverses
 
 [<RequireQualifiedAccess>]
@@ -77,6 +77,6 @@ module Effect =
             e -> Fu.monad { let! t2 = s2 in return e |> Fu.pur |> t2 }
 
 
-    let Failure (msg: Prims.string) : Prims.exn = Fu.monad { let! tmsg = msg in return Operators.Failure (OCamlStrings.toDotNetString tmsg) }
+    let Failure (msg: Prims.string) : Prims.exn = Fu.monad { let! tmsg = msg in return Operators.Failure (Obs.stringToDotNetString tmsg) }
 
-    let failwith (msg: Prims.string) : ML<'a> = Fu.emonad { let! tmsg = msg in return Operators.failwith (OCamlStrings.toDotNetString tmsg) }
+    let failwith (msg: Prims.string) : ML<'a> = Fu.emonad { let! tmsg = msg in return Operators.failwith (Obs.stringToDotNetString tmsg) }

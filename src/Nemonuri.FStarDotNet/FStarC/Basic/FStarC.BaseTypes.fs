@@ -4,6 +4,7 @@
 namespace Nemonuri.FStarDotNet.FStarC
 
 open Nemonuri.FStarDotNet
+open Nemonuri.OCamlDotNet.Primitives
 
 [<RequireQualifiedAccess>]
 module BaseTypes =
@@ -11,7 +12,7 @@ module BaseTypes =
     /// This module aggregates commonly used primitive type constants into
     /// a single module, providing abbreviations for them.
 
-    type char = Prims.Type0<Core.char>
+    type char = Prims.Type0<OCamlChar>
     type float = Prims.Type0<Core.float32>
     type double = Prims.Type0<Core.double>
     type byte = Prims.Type0<Core.byte>

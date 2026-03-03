@@ -43,8 +43,6 @@ module Prims =
     open Nemonuri.FStarDotNet.Primitives.FStarKinds
     open Nemonuri.FStarDotNet.Primitives.Abstractions
     open Nemonuri.FStarDotNet.Primitives.Abbreviations
-    open System.Collections
-    open System.Collections.Generic 
     module Fv = Nemonuri.FStarDotNet.Primitives.Abstractions.FStarValues
     module AFtc = Nemonuri.FStarDotNet.Primitives.Abstractions.FStarTypeContexts
     module Ftc = Nemonuri.FStarDotNet.Primitives.FStarTypeContexts

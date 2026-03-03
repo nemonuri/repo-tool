@@ -5,6 +5,8 @@ module Nemonuri.FStarDotNet.FStarC.String
 
 open Nemonuri.FStarDotNet
 open Nemonuri.FStarDotNet.FStarC
+open Nemonuri.OCamlDotNet.Batteries
+open Nemonuri.OCamlDotNet.Zarith
 module Fu = Nemonuri.FStarDotNet.Primitives.FStarTypeUniverses
 module S = Nemonuri.OCamlDotNet.Forwarded.String
 
@@ -12,7 +14,7 @@ module String =
 
     (* The name of this file is misleading: most string functions are to be found in
     util.fsi *)
-    let make (i: Prims.int) (c: Char.char) : Prims.string =
+    let make (i: Prims.int) c : Prims.string = Fu.monad { let! ti = i in let! tc = c in return BatUTF8.init (Z.to_int ti) (fun _ -> BatUChar.chr tc ) }
 
 
     val split:   chars: list char -> s: string -> Tot (list string)
