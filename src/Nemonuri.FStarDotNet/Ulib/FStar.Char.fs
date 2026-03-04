@@ -6,7 +6,6 @@ namespace Nemonuri.FStarDotNet.FStar
 open Nemonuri.FStarDotNet
 open Nemonuri.OCamlDotNet.Zarith
 open Nemonuri.OCamlDotNet.Primitives
-open Nemonuri.FStarDotNet.Primitives.Abbreviations
 open System.Text
 module Fu = Nemonuri.FStarDotNet.Primitives.FStarTypeUniverses
 

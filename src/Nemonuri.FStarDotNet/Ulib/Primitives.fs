@@ -1,9 +1,10 @@
 namespace Nemonuri.FStarDotNet.Primitives
 
 open System
+open System.Collections.Generic
 open Nemonuri.FStarDotNet.Primitives.Abstractions
-module Ftc = Nemonuri.FStarDotNet.Primitives.Abstractions.FStarTypeContexts
-module Fv = Nemonuri.FStarDotNet.Primitives.Abstractions.FStarValues
+module Ftc = Nemonuri.FStarDotNet.Primitives.Abstractions.Operations.FStarTypeContexts
+module Fv = Nemonuri.FStarDotNet.Primitives.Abstractions.Operations.FStarValues
 module A = Nemonuri.FStarDotNet.Primitives.Abstractions.Abbreviations
 
 [<Struct>]
@@ -37,14 +38,28 @@ type FStarObject = { Witness: objnull } with
 
 
 [<Struct>]
-type FStarTypeContext<'TTail, 'THead when 'TTail :> IFStarTypeContext> = 
+[<CustomEquality; NoComparison>]
+type FStarTypeContext<'TTail, [<EqualityConditionalOn>] 'THead when 'TTail :> IFStarTypeContext> = 
     { Witness: 'THead; Pure: 'THead -> 'TTail; } with
+    member inline private _.Eq(s1: 'THead, s2: 'THead) = EqualityComparer<'THead>.Default.Equals(s1, s2)
+
     interface IFStarTypeContext<'TTail, 'THead> with
         member this.Witness = this.Witness
         member this.ToTailTypeContext (): 'TTail = Ftc.witness this |> this.Pure
     interface IFStarTypeContext with
         member this.BoxedWitness = Ftc.boxWitness this
         member this.BoxToTailTypeContext (): IFStarTypeContext = Ftc.boxTail this
+    interface IEquatable<'THead> with
+        member this.Equals (other: 'THead): bool = this.Eq(Ftc.witness this, other)
+    
+    override this.Equals (other: objnull): bool =
+        match other with
+        | :? FStarTypeContext<'TTail, 'THead> as v -> (this :> IEquatable<'THead>).Equals(Ftc.witness v)
+        | :? IFStarWitnessed<'THead> as v -> this.Eq(Ftc.witness this, v.Witness)
+        | :? 'THead as v -> this.Eq(Ftc.witness this, v)
+        | _ -> false
+    
+    override this.GetHashCode (): int = EqualityComparer<'THead>.Default.GetHashCode(Ftc.witness this)
 
 #if false
 [<Struct>]
@@ -283,7 +298,7 @@ type FStarTrivial = | FStarTrivial
 type FStarEquals<'a, 'x, '_0> = | FStarRefl
 
 type FStarDependentTuple<'TTail, 'THead, 'TTarget> = 
-    | FStarDependentTuple of 'THead * FStarKinds.KindSource<'TTail, 'THead> * Bijection<'TTarget, FStarKinds.KindSource<'TTail, 'THead>>
+    | FStarDependentTuple of 'THead * FStarKindSource<'TTail, 'THead> * Bijection<'TTarget, FStarKindSource<'TTail, 'THead>>
 
 [<AttributeUsage(AttributeTargets.Interface ||| AttributeTargets.Struct ||| AttributeTargets.Class, AllowMultiple = true)>]
 type FStarTypeProxyAttribute(proxy: System.Type) = inherit Attribute()
@@ -324,75 +339,6 @@ module Abbreviations =
 
     //type Fv<'a> = FStarLiftedValue<'a>
 
-
-(*
-module Prelude =
-    
-    open Abbreviations
-    
-    let inline impToArrow (imp: imp<'tc, 'p, 'q>) (p: 'p) : 'q = let q = imp.Invoke(p) in q
-
-    let impToTerm<'tc, 'p, 'q when 'tc :> tc>(imp : imp<'tc, 'p, 'q>) : FStarValue<'tc, 'p -> 'q> =
-        FStarValue<_,_>(imp.GetTailTypeContext(), impToArrow imp)
-
-
-
-
-    let introAxiom<'tc, 'p when 'tc :> tc and 'p : unmanaged>(prev: 'tc) = FStarTypeContext<_,_>(Unchecked.defaultof<'p>, prev)
-
-    let elemAxiom<'tc, 'p when 'tc :> tc and 'p : unmanaged>(tcp: tc<'tc, 'p>) = getTailTypeContext tcp
-
-    let introWitness<'tc, 'w when 'tc :> tc> (witness: 'w) (prev: 'tc) =
-        FStarTypeContext<_,_>(witness, prev)
-
-    let elemWitness<'tc, 'w when 'tc :> tc>(tcw: tc<'tc, 'w>) = struct (getWitness tcw, getTailTypeContext tcw)
-        
-
-    let introForall<'tc, 'p, 'q, 'imp 
-                        when 'tc :> tc 
-                        and 'imp :> imp<'tc, 'p, 'q>
-                        and 'imp : unmanaged>
-        (prev: 'tc) = 
-        introAxiom<_, 'imp> prev
-
-    let elemForall<'tc, 'p, 'q, 'imp 
-                        when 'tc :> tc 
-                        and 'imp :> imp<'tc, 'p, 'q>
-                        and 'imp : unmanaged>
-        (tcimp: tc<'tc, 'imp>) = 
-        elemAxiom<_, 'imp> tcimp
-
-    let introExists<'tc, 'p, 'q, 'imp
-                        when 'tc :> tc 
-                        and 'imp :> imp<'tc, 'p, 'q voption>
-                        and 'imp : unmanaged>
-        (witness: 'p) (prev: 'tc) = 
-        introAxiom<_, 'imp> prev
-        |> introWitness witness 
-
-    let elemExists<'tc, 'p, 'q, 'imp 
-                        when 'tc :> tc 
-                        and 'imp :> imp<'tc, 'p, 'q voption>
-                        and 'imp : unmanaged>
-        (tcimpP: tc<FStarTypeContext<'tc, 'imp>,'p>) = 
-        let struct (witness, tcimp) = elemWitness<_, _> tcimpP
-        struct (witness, elemAxiom<_,_> tcimp)
-*)
-
-
-
-(*
-    [<Interface>]
-    type IFStarTypeFunction<'tc, 'p when 'tc :> tc> =
-        inherit tc<'tc, 'p -> DependentTypeProxy<'tc, 'p>>
-        abstract member Invoke: 'p * outref<DependentTypeProxy<'tc, 'p>> -> unit
-*)
-
-(*
-    /// Proxy type should implement target interface
-    [<AttributeUsage(AttributeTargets.Interface)>]
-    type FStarRefinementProxyAttribute(proxyType: System.Type) = inherit Attribute()
-*)
 
 
 [<AttributeUsage(AttributeTargets.All)>]

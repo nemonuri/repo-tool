@@ -59,7 +59,7 @@ type OCamlByteSpanSource = internal { UnsafeSource: UnsafeOCamlByteSpanSource }
 
         override s.Equals (obj: obj): bool = 
             match obj with 
-            | :? OCamlByteSpanSource as v -> s.Equals(v)
+            | :? OCamlByteSpanSource as v -> (s :> IEquatable<OCamlByteSpanSource>).Equals(v)
             | _ -> false
         
         override s.GetHashCode (): int = let s1 = s in O.Monad { let! t1 = s1 in return! U.hash t1 }

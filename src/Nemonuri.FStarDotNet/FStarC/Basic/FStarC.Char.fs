@@ -3,11 +3,9 @@
 namespace Nemonuri.FStarDotNet.FStarC
 
 open Nemonuri.FStarDotNet
-open Nemonuri.OCamlDotNet.Primitives
-open Nemonuri.FStarDotNet.Primitives.FStarKinds
 
 [<RequireQualifiedAccess>]
 module Char =
 
-    type char = Prims.Type0<OCamlChar>
+    type char = FStar.Char.char
 

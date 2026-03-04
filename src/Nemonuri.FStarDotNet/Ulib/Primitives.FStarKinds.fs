@@ -2,6 +2,16 @@ namespace Nemonuri.FStarDotNet.Primitives
 
 open Nemonuri.FStarDotNet.Primitives.Abstractions
 
+[<Struct>]
+type FStarKindSource<'TTail, 'THead> = { Witness: 'THead }
+    with
+        interface ITypeTail<'TTail>
+        interface IFStarWitnessed<'THead> with
+            member this.Witness = this.Witness
+    end
+
+namespace Nemonuri.FStarDotNet.Primitives.Operations
+
 module FStarTypes =
 
     exception InvalidInhabitant of System.Type
@@ -13,13 +23,9 @@ module FStarTypes =
 
 module FStarKinds =
 
-    [<Struct>]
-    type KindSource<'TTail, 'THead> = { Witness: 'THead }
-        with
-            interface ITypeTail<'TTail>
-            interface IFStarWitnessed<'THead> with
-                member this.Witness = this.Witness
-        end
+    open Nemonuri.FStarDotNet.Primitives
+
+    type KindSource<'TTail, 'THead> = Nemonuri.FStarDotNet.Primitives.FStarKindSource<'TTail, 'THead>
 
     [<Struct>]
     type EnsuredBijection<'TTail, 'THead, 'TTarget> = private { Bijection: Bijection<'TTarget, KindSource<'TTail, 'THead>> }

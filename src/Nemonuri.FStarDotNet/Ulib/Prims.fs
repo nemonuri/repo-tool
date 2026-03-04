@@ -40,16 +40,16 @@ module Prims =
     open Nemonuri.OCamlDotNet.Primitives
     open Nemonuri.OCamlDotNet.Forwarded
     open Nemonuri.FStarDotNet.Primitives
-    open Nemonuri.FStarDotNet.Primitives.FStarKinds
+    open Nemonuri.FStarDotNet.Primitives.Operations.FStarKinds
     open Nemonuri.FStarDotNet.Primitives.Abstractions
     open Nemonuri.FStarDotNet.Primitives.Abbreviations
-    module Fv = Nemonuri.FStarDotNet.Primitives.Abstractions.FStarValues
-    module AFtc = Nemonuri.FStarDotNet.Primitives.Abstractions.FStarTypeContexts
-    module Ftc = Nemonuri.FStarDotNet.Primitives.FStarTypeContexts
+    module Fv = Nemonuri.FStarDotNet.Primitives.Abstractions.Operations.FStarValues
+    module AFtc = Nemonuri.FStarDotNet.Primitives.Abstractions.Operations.FStarTypeContexts
+    module Ftc = Nemonuri.FStarDotNet.Primitives.Operations.FStarTypeContexts
     module Uc = Microsoft.FSharp.Core.Operators.Unchecked
-    module Fty = Nemonuri.FStarDotNet.Primitives.FStarTypes
+    module Fty = Nemonuri.FStarDotNet.Primitives.Operations.FStarTypes
     module Fu = Nemonuri.FStarDotNet.Primitives.FStarTypeUniverses
-    module Fk = Nemonuri.FStarDotNet.Primitives.FStarKinds
+    module Fk = Nemonuri.FStarDotNet.Primitives.Operations.FStarKinds
 
 
     (***** Begin trusted primitives *****)
@@ -137,7 +137,7 @@ module Prims =
     (** A convenient abbreviation, [eqtype] is the type of types in
         universe 0 which support decidable equality *)
     [<FStarTypeProxy(typedefof<eqtype<_>>)>]
-    type eqtype = Type0
+    type eqtype = type0
     
     and eqtype<'a 
                 when 'a :> eqtype<'a> 
@@ -151,7 +151,17 @@ module Prims =
         assume it is primitive, for convenient interop with other
         languages, although it could easily be defined as an inductive type
         with two cases, [BTrue | BFalse] *)
+    let BTrue = true |> Fu.pur
+    let BFalse = false |> Fu.pur
+
     type bool = EqType<Core.bool>
+
+    let (|BTrue|BFalse|) (b: bool) = 
+        Fu.emonad {
+            match! b with
+            | true -> return BTrue
+            | false -> return BFalse
+        }
 
 
     (** [empty] is the empty inductive type. The type with no
@@ -414,7 +424,7 @@ module Prims =
                         when 'a :> typ 
                         and 'p :> typ<'a -> Type0> 
                         and 'x :> thunk<'a>> = 
-        squash<Type<'x -> KindSource<'p, 'x>>>
+        squash<Type<'x -> FStarKindSource<'p, 'x>>>
 
     [<tac_opaque; smt_theory_symbol>]
     [<FStarTypeProxy(typedefof<FStarForAll<_,_,_>>)>]
@@ -662,7 +672,7 @@ module Prims =
                                 when 'a :> typ
                                 and 'b :> typ<'a -> Type>>
             (_1: 'a) (_2: '``b _1``) : Type0<FStarDependentTuple<'b, 'a, '``b _1``>> =
-            Fu.monad { return FStarDependentTuples.create<'b,'a,'``b _1``> _1 _2 }
+            Fu.monad { return Operations.FStarDependentTuples.create<'b,'a,'``b _1``> _1 _2 }
 
         [<FStarConstructorProxy(nameof createDTuple2Aux)>]
         type DTuple2Aux<'a, 'b, '``b _1``> = Type0<FStarDependentTuple<'b, 'a, '``b _1``>>
@@ -672,7 +682,7 @@ module Prims =
     let Mkdtuple2<'a, 'b, '``b _1``
                     when 'a :> typ
                     and 'b :> typ<'a -> Type>>
-        (_1: 'a) (_2: '``b _1``) : Aux.DTuple2Aux<'a, 'b, KindSource<'b,'a>> =
+        (_1: 'a) (_2: '``b _1``) : Aux.DTuple2Aux<'a, 'b, FStarKindSource<'b,'a>> =
         Fu.monad { 
             match! Aux.createDTuple2Aux<'a, 'b, '``b _1``> _1 _2 with
             | FStarDependentTuple(hd, ks, _) -> return FStarDependentTuple (hd, ks, getIdBijection<'b,'a>)
@@ -682,7 +692,7 @@ module Prims =
     [<FStarConstructorProxy(nameof Mkdtuple2)>]
     type dtuple2<'a, 'b 
                     when 'a :> typ 
-                    and 'b :> typ<'a -> Type>> = Aux.DTuple2Aux<'a, 'b, KindSource<'b,'a>>
+                    and 'b :> typ<'a -> Type>> = Aux.DTuple2Aux<'a, 'b, FStarKindSource<'b,'a>>
 
     let (|Mkdtuple2|) (d: dtuple2<'a, 'b>) =
         Fu.emonad { match! d with | FStarDependentTuple (_1, ks, _) -> return (_1, ks) }
@@ -766,13 +776,14 @@ module Prims =
     (** [=] decidable equality on [eqtype] *)
 
     [<smt_theory_symbol>]
-    let inline op_Equality<[<unrefine>] 'a when 'a :> eqtype<'a> and 'a : equality> (x: 'a) (y: 'a) : bool = Fu.monad { return x = y }
+    let inline op_Equality<[<unrefine>] 'a when 'a : equality> (x: EqType<'a>) (y: EqType<'a>) : bool = 
+        Fu.monad { let! x' = x in let! y' = y in return x' = y' }
         
-
     (** [<>] decidable dis-equality on [eqtype] *)
 
     [<smt_theory_symbol>]
-    let op_disEquality<[<unrefine>] 'a when 'a :> eqtype<'a> and 'a : equality> (x: 'a) (y: 'a) : bool = Fu.monad { return x <> y }
+    let op_disEquality<[<unrefine>] 'a when 'a : equality> (x: EqType<'a>) (y: EqType<'a>) : bool =
+        Fu.monad { let! x' = x in let! y' = y in return x' <> y' }
 
     (** The extensible open inductive type of exceptions *)
     type exn = Type0<Core.exn>
@@ -789,6 +800,8 @@ module Prims =
 
     let Cons (hd: 'a) (tl: Type0<list<'a>>) : Type0<list<'a>> = Fu.monad { let thd = hd in let! ttl = tl in return thd::ttl }
 
+    // let singleton (hd: 'a) = Nil |> Cons hd
+
     [<FStarConstructorProxy(nameof Nil)>]
     [<FStarConstructorProxy(nameof Cons)>]
     type list<'a> = Type0<Microsoft.FSharp.Collections.list<'a>>
@@ -796,8 +809,15 @@ module Prims =
     let (|Nil|Cons|) (l: list<'a>) =
         Fu.emonad {
             match! l with
-            | [] as nil -> return Nil (Fu.monad { return nil })
+            | [] -> return Nil
             | hd::tl -> return Cons (hd, Fu.monad { return tl })
+        }
+
+    let (|Singleton|_|) (l: list<'a>) =
+        Fu.emonad {
+            match! l with
+            | [_] -> return Some l
+            | _ -> return None
         }
 
 #if false

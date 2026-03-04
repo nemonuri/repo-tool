@@ -7,33 +7,35 @@ namespace Nemonuri.FStarDotNet.FStarC
 
 open Nemonuri.FStarDotNet
 open Nemonuri.FStarDotNet.Primitives
-open Nemonuri.OCamlDotNet.Primitives
+open Nemonuri.OCamlDotNet.Forwarded
 open Nemonuri.OCamlDotNet.Primitives.Operations
 module Fu = Nemonuri.FStarDotNet.Primitives.FStarTypeUniverses
 module B = Nemonuri.FStarDotNet.FStarC.BaseTypes
-module Os = Nemonuri.OCamlDotNet.Primitives.Operations.OCamlStrings
+module Obs = Nemonuri.OCamlDotNet.Primitives.Operations.OCamlByteSpanSources
 module Ef = Nemonuri.FStarDotNet.FStarC.Effect
 module Pn = Nemonuri.FStarDotNet.FStar.Pervasives.Native
 
 module Getopt =
 
-    type FStar_opt_variant<'a> =
+    let inline private a2s s = Obs.Unsafe.stringOfArray s
+
+    type Topt_variant<'a> =
     | ZeroArgs of Ef.ML<Prims.unit -> 'a>
     | OneArg of Ef.ML<Ef.ML<Prims.string -> 'a> * Prims.string>
-    type opt_variant<'a> = Ef.ML<FStar_opt_variant<'a>>
+    type opt_variant<'a> = Ef.ML<Topt_variant<'a>>
 
     type opt'<'a> = Ef.ML<B.char * Prims.string * opt_variant<'a>>
     type opt = opt'<Prims.unit>
 
-    type FStar_parse_cmdline_res =
+    type Tparse_cmdline_res =
     | Empty
     | Error of Ef.ML<Prims.string * Prims.string> // second arg is the long name of the failed option
     | Success
-    type parse_cmdline_res = Ef.ML<FStar_parse_cmdline_res>
+    type parse_cmdline_res = Ef.ML<Tparse_cmdline_res>
 
 
-    let noshort: B.char = Fu.monad { return '\000' }
-    let nolong : Prims.string = Fu.monad { return Os.ofArray ""B }
+    let noshort: B.char = Fu.monad { return 0 }
+    let nolong : Prims.string = Fu.monad { return (a2s ""B) }
     let parse_cmdline: Prims.list<opt> -> Ef.ML<Prims.string -> parse_cmdline_res> -> parse_cmdline_res = raise (System.NotImplementedException())
     let parse_string: Prims.list<opt> -> Ef.ML<Prims.string -> parse_cmdline_res> -> Prims.string -> parse_cmdline_res = raise (System.NotImplementedException())
     let parse_list: Prims.list<opt> -> Ef.ML<Prims.string -> parse_cmdline_res> -> Prims.list<Prims.string> -> parse_cmdline_res = raise (System.NotImplementedException())
@@ -60,12 +62,12 @@ module Getopt =
             return
                 if String.length s < 2 then
                     Pn.None
-                else if String.sub s 0 2 = (Os.ofArray "--"B) then
+                else if String.sub s 0 2 = (a2s "--"B) then
                 (* long opts *)
                     let strim = String.sub s 2 ((String.length s) - 2) in
                     let o = FStar.List.tryFind (fun (_, option, _) -> option = strim) specs in
                     Pn.Some (Pn.Mktuple2 o strim)
-                else if String.sub s 0 1 = (Os.ofArray "-"B) then
+                else if String.sub s 0 1 = (a2s "-"B) then
                 (* short opts *)
                     let strim = String.sub s 1 ((String.length s) - 1) in
                     let o = FStar.List.tryFind (fun (shortoption, _, _) -> FStar.String.make Z.one shortoption = strim) specs in

@@ -141,6 +141,9 @@ module Abbreviations =
     type tcc<'t when 't :> tc> = 't -> objnull -> 't
 
 
+namespace Nemonuri.FStarDotNet.Primitives.Abstractions.Operations
+
+open Nemonuri.FStarDotNet.Primitives.Abstractions
 module A = Abbreviations
 
 module FStarTypeContexts =

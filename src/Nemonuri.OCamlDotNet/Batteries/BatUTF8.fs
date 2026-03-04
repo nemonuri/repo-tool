@@ -49,7 +49,7 @@ module BatUTF8 =
 
         for i in 0 .. len-1 do
             let newRune = f i
-            let span = System.Span<byte>(NativePtr.stackalloc<byte> spanSize |> NativePtr.toVoidPtr, spanSize)
+            let span = DotNetSpans.NativePtrToSpan(NativePtr.stackalloc<byte> spanSize, spanSize)
             let writtenLength = newRune.EncodeToUtf8 span
             builder.Append(span.Slice(0, writtenLength))           
         
