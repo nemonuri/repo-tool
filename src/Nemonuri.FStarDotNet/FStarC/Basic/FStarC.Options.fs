@@ -13,7 +13,7 @@ module Options =
 
     (* Set externally, checks if the directory exists and otherwise
     logs an issue. Cannot do it here due to circular deps. *)
-    let check_include_dir: Ef.ref<Ef.ML<(Prims.string -> Prims.unit)>> = Ef.mk_ref ( Fu.monad { return fun s -> Fu.zero } )
+    let check_include_dir: Ef.ref<Prims.string -> Prims.unit> = Ef.mk_ref ( fun s -> Fu.zero )
         
     (* Raised when a processing a pragma an a non-settable option
     appears there. *)
@@ -26,33 +26,33 @@ module Options =
             | _ -> return None
         }
     
-    type FStar_codegen_t =
+    type Tcodegen_t =
     | OCaml
     | FSharp
     | Krml
     | Plugin
     | PluginNoLib
     | Extension
-    type codegen_t = Ef.ML<FStar_codegen_t>
+    type codegen_t = Ef.ML<Tcodegen_t>
 
-    type FStar_split_queries_t = | No | OnFailure | Always
-    type split_queries_t = Ef.ML<FStar_split_queries_t>
+    type Tsplit_queries_t = | No | OnFailure | Always
+    type split_queries_t = Ef.ML<Tsplit_queries_t>
 
-    type FStar_message_format_t = | Json | Human | Github
-    type message_format_t = Ef.ML<FStar_message_format_t>
+    type Tmessage_format_t = | Json | Human | Github
+    type message_format_t = Ef.ML<Tmessage_format_t>
 
-    type FStar_option_val =
+    type Toption_val =
     | Bool of Prims.bool
     | String of Prims.string
     | Path of Prims.string
     | Int of Prims.int
     | List of Prims.list<option_val>
     | Unset
-    and option_val = Ef.ML<FStar_option_val>
+    and option_val = Ef.ML<Toption_val>
 
     type optionstate = Ef.ML<Dictionary<Prims.string, option_val>>   //Collections.Map<Core.string, option_val>
 
-    type FStar_opt_type =
+    type Topt_type =
     | Const of option_val
     // --cache_checked_modules
     | IntStr of Prims.string (* label *)
@@ -65,16 +65,16 @@ module Options =
     // --admit_except xyz
     | EnumStr of Prims.list<Prims.string>
     // --codegen OCaml
-    | OpenEnumStr of Prims.list<Prims.string> (* suggested values (not exhaustive) *) * Prims.string (* label *)
+    | OpenEnumStr of Ef.ML<Prims.list<Prims.string> (* suggested values (not exhaustive) *) * Prims.string (* label *)>
     // --debug …
-    | PostProcessed of Ef.ML<(Ef.ML<option_val -> option_val> (* validator *) * opt_type (* elem spec *))>
+    | PostProcessed of Ef.ML<(option_val -> option_val) (* validator *) * opt_type (* elem spec *)>
     // For options like --extract_module that require post-processing or validation
     | Accumulated of opt_type (* elem spec *)
     // For options like --extract_module that can be repeated (LIFO, accumulate the new element via Cons, at the head)
     | ReverseAccumulated of opt_type (* elem spec *)
     // For options like --include that can be repeated (FIFO, accumulate the new element via snoc, at the tail)
-    | WithSideEffect of Ef.ML<(Ef.ML<Prims.unit -> Prims.unit> * opt_type (* elem spec *))>
+    | WithSideEffect of Ef.ML<(Prims.unit -> Prims.unit) * opt_type (* elem spec *)>
     // For options like --version that have side effects
-    and opt_type = Ef.ML<FStar_opt_type>
+    and opt_type = Ef.ML<Topt_type>
 
     

@@ -3,9 +3,9 @@ namespace Nemonuri.FStarDotNet.Primitives
 
 type TuplePremise = 
     struct
-        static member inline AddItem(_: unit, r: 's2) = System.Tuple.Create(r)
+        static member inline AddItem(_: unit, r: 's2) = System.ValueTuple.Create(r)
 
-        static member inline AddItem(l: System.Tuple<'s1>, r: 's2) = l.Item1, r
+        static member inline AddItem(l: System.ValueTuple<'s1>, r: 's2) = l.Item1, r
 
         static member inline AddItem(l: (_*_), r: _) = 
             match l with | _1,_2 -> _1,_2, r

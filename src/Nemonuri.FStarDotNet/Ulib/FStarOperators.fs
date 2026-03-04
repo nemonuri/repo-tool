@@ -98,7 +98,7 @@ module FStarOperators =
 
     let Some v = FStar_Pervasives_Native.Some v
 
-    let (|None|Some|) x = FStar_Pervasives_Native.(|None|Some|)
+    let (|None|Some|) x = FStar_Pervasives_Native.(|None|Some|) x
 
 
 
@@ -107,6 +107,7 @@ module FStarOperators =
     let inline ( .&. ) l r = FStarTupleOperators.( .&. ) l r
 
 
-    let type0O s = Fu.pur s
 
     let (|Type0|) s = Fu.extract s
+
+    let inline ( >: ) (_: Prims.unit) (r: 'a) = r

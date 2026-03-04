@@ -70,11 +70,11 @@ module Effect =
         return Operators.exit n32
     }
 
-    let try_with (s1: ML<Prims.unit -> 'a>) (s2: ML<Prims.exn -> 'a>) : ML<'a> = 
+    let try_with (s1: Prims.unit -> 'a) (s2: Prims.exn -> 'a) : ML<'a> = 
         try
-            Fu.monad { let! t1 = s1 in return () |> Fu.pur |> t1 }
+            Fu.monad { return () |> Fu.pur |> s1 }
         with
-            e -> Fu.monad { let! t2 = s2 in return e |> Fu.pur |> t2 }
+            e -> Fu.monad { return e |> Fu.pur |> s2 }
 
 
     let Failure (msg: Prims.string) : Prims.exn = Fu.monad { let! tmsg = msg in return Operators.Failure (Obs.stringToDotNetString tmsg) }
