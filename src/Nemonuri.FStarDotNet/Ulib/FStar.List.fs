@@ -80,11 +80,11 @@ module List =
 
     /// val nth: list 'a -> int -> ML 'a
     let rec nth l n =
-        match n <. (Int 0) with
+        match n <. (intO 0) with
         | BTrue ->
             failwith "nth takes a non-negative integer as input"
         | BFalse ->
-            match n =. (Int 0) with
+            match n =. (intO 0) with
             | BTrue ->
                 match l with
                 | Nil -> failwith "not enough elements"
@@ -92,7 +92,7 @@ module List =
             | BFalse ->
                 match l with
                 | Nil -> failwith "not enough elements"
-                | Cons(_,tl) -> nth tl (n -. (Int 1))
+                | Cons(_,tl) -> nth tl (n -. (intO 1))
 
     (** Iterators **)
 
@@ -101,7 +101,7 @@ module List =
     /// val iter: ('a -> ML unit) -> list 'a -> ML unit
     let rec iter f x = 
         match x with
-        | Nil -> Unit
+        | Nil -> unitO
         | Cons(a,tl) -> let _ = f a in iter f tl
 
     (** [iteri_aux n f l] performs, for each i, [f (i+n) x] for the i-th
@@ -109,14 +109,14 @@ module List =
     /// val iteri_aux: int -> (int -> 'a -> ML unit) -> list 'a -> ML unit
     let rec iteri_aux i f x = 
         match x with
-        | Nil -> Unit
-        | Cons(a,tl) -> f i a; iteri_aux (i +. (Int 1)) f tl
+        | Nil -> unitO
+        | Cons(a,tl) -> f i a; iteri_aux (i +. (intO 1)) f tl
 
     (** [iteri_aux f l] performs, for each [i], [f i x] for the i-th
     element [x] of [l], in the order in which they appear in [l]. Named as
     in: OCaml *)
     /// val iteri: (int -> 'a -> ML unit) -> list 'a -> ML unit
-    let iteri f x = iteri_aux (Int 0) f x
+    let iteri f x = iteri_aux (intO 0) f x
 
     (** [map f l] applies [f] to each element of [l] and returns the list
     of results, in the order of the original elements in [l]. (Hides
@@ -144,7 +144,7 @@ module List =
     let rec mapi_init f l i = 
         match l with
         | Nil -> Nil
-        | Cons(hd,tl) -> (f i hd)>::(mapi_init f tl (i+.(Int 1)))
+        | Cons(hd,tl) -> (f i hd)>::(mapi_init f tl (i+.(intO 1)))
 
     (** [mapi f l] applies, for each [k], [f k] to the [k]-th element of
     [l] and returns the list of results, in the order of the original
@@ -152,7 +152,7 @@ module List =
     type-checking time, [f] to be a pure total function.) Named as in:
     OCaml *)
     /// val mapi: (int -> 'a -> ML 'b) -> list 'a -> ML (list 'b)
-    let mapi f l = mapi_init f l (Int 0)
+    let mapi f l = mapi_init f l (intO 0)
 
     (** [concatMap f l] applies [f] to each element of [l] and returns the
     concatenation of the results, in the order of the original elements of
@@ -261,16 +261,19 @@ module List =
     let rec collect f l = match l with
         | [] -> []
         | hd::tl -> append (f hd) (collect f tl)
+#endif
 
     (** [tryFind f l] returns [Some x] for some element [x] appearing in
     [l] such that [f x] holds, or [None] only if no such [x]
     exists. (Hides [List.Tot.tryFind], which requires, at type-checking
     time, [f] to be a pure total function.)  *)
-    val tryFind: ('a -> ML bool) -> list 'a -> ML (option 'a)
-    let rec tryFind p l = match l with
-        | [] -> None
-        | hd::tl -> if p hd then Some hd else tryFind p tl
+    /// val tryFind: ('a -> ML bool) -> list 'a -> ML (option 'a)
+    let rec tryFind p l = 
+        match l with
+        | Nil -> None
+        | Cons(hd,tl) -> match p hd with | BTrue -> Some hd | BFalse -> tryFind p tl
 
+#if false
     (** [tryPick f l] returns [y] for some element [x] appearing in [l]
     such that [f x = Some y] for some y, or [None] only if [f x = None]
     for all elements [x] of [l]. (Hides [List.Tot.tryPick], which

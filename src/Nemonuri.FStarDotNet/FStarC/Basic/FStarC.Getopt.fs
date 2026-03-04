@@ -6,7 +6,9 @@
 namespace Nemonuri.FStarDotNet.FStarC
 
 open Nemonuri.FStarDotNet
+open Nemonuri.FStarDotNet.FStarOperators
 open Nemonuri.FStarDotNet.Primitives
+open Nemonuri.OCamlDotNet
 open Nemonuri.OCamlDotNet.Forwarded
 open Nemonuri.OCamlDotNet.Primitives.Operations
 module Fu = Nemonuri.FStarDotNet.Primitives.FStarTypeUniverses
@@ -18,6 +20,7 @@ module Pn = Nemonuri.FStarDotNet.FStar.Pervasives.Native
 module Getopt =
 
     let inline private a2s s = Obs.Unsafe.stringOfArray s
+    let private mnd = Fu.monad
 
     type Topt_variant<'a> =
     | ZeroArgs of Ef.ML<Prims.unit -> 'a>
@@ -43,10 +46,10 @@ module Getopt =
 
    
     let bind l f =
-        Fu.monad { 
+        mnd { 
             match! l with  
             | Error _ -> return! l
-            | Success -> let! tf = f in return! tf Fu.zero
+            | Success -> let! tf = f in return! tf unitO
         }
         (* | Empty  *)
         (* ^ Empty does not occur internally. *)
@@ -55,50 +58,50 @@ module Getopt =
     * Otherwise, returns Some (o, s) where [s] is the trimmed option, and [o]
     * is the opt we found in specs (possibly None if not present, which should
     * trigger an error) *)
-    let find_matching_opt specs0 s0 : Pn.tuple2<opt Pn.option, Prims.string> Pn.option =
-        Fu.monad {
-            let! s = s0 in
-            let! specs = specs0 in
-            return
-                if String.length s < 2 then
-                    Pn.None
-                else if String.sub s 0 2 = (a2s "--"B) then
-                (* long opts *)
-                    let strim = String.sub s 2 ((String.length s) - 2) in
-                    let o = FStar.List.tryFind (fun (_, option, _) -> option = strim) specs in
-                    Pn.Some (Pn.Mktuple2 o strim)
-                else if String.sub s 0 1 = (a2s "-"B) then
-                (* short opts *)
-                    let strim = String.sub s 1 ((String.length s) - 1) in
-                    let o = FStar.List.tryFind (fun (shortoption, _, _) -> FStar.String.make Z.one shortoption = strim) specs in
-                    Pn.Some (Pn.Mktuple2 o strim)
-                else
-                    Pn.None
-        }
+    let find_matching_opt specs s : Pn.tuple2<opt Pn.option, Prims.string> Pn.option =
+        match mnd { return String.length s < 2 } with
+        | BTrue -> None
+        | BFalse -> 
+        match mnd { return String.sub s 0 2 = (a2s "--"B) } with
+        | BTrue ->
+            let strim = Fu.monad { return String.sub s 2 ((String.length s) - 2) } in
+            let o = FStar.List.tryFind (fun (Type0(_, option, _)) -> option =. strim) specs in
+            Some (o .&. strim)
+        | BFalse -> 
+        match mnd { return String.sub s 0 1 = (a2s "-"B) } with
+        | BTrue ->
+        (* short opts *)
+            let strim = Fu.monad { return String.sub s 1 ((String.length s) - 1) } in
+            let o = FStar.List.tryFind (fun (Type0(shortoption, _, _)) -> FStarC.String.make (intO 1) shortoption =. strim) specs in
+            Some (o .&. strim)
+        | BFalse ->
+            None
 
 
   (* remark: doesn't work with files starting with -- *)
-  let rec parse (opts:opt list) def ar ix max i : parse_cmdline_res =
-    if ix > max then Success
-    else
-      let arg = ((.()) ar ix) in
-      let go_on () = bind (def arg) (fun _ -> parse opts def ar (ix + 1) max (i + 1)) in
-      match find_matching_opt opts arg with
-      | None -> go_on ()
-      | Some (None, _) -> Error ("unrecognized option '" ^ arg ^ "'\n", arg)
-      | Some (Some (_, opt, p), argtrim) ->
-        begin match p with
-        | ZeroArgs f -> f (); parse opts def ar (ix + 1) max (i + 1)
-        | OneArg (f, name) ->
-          if ix + 1 > max
-          then Error ("last option '" ^ argtrim ^ "' takes an argument but has none\n", opt)
-          else
-            let r =
-                try (f ((.()) ar (ix + 1)); Success)
-                with _ -> Error ("wrong argument given to option `" ^ argtrim ^ "`\n", opt)
-            in bind r (fun () -> parse opts def ar (ix + 2) max (i + 1))
-        end
+  let rec parse (opts:opt Prims.list) def ar ix max i : parse_cmdline_res =
+    match type0O (ix > max) with
+    | BTrue -> type0O (Success)
+    | BFalse ->
+        let arg = (Array.get ar ix) in
+        let go_on (_: Prims.unit) = bind (def arg) (type0O (fun _ -> parse opts def ar (ix + 1) max (i + 1))) in
+        match find_matching_opt opts arg with
+        | None -> go_on unitO
+        | Some (None, _) -> Error (stringO "unrecognized option '"B ^. arg ^. "'\n", arg)
+        | Some (Some (_, opt, p), argtrim) ->
+            begin match p with
+            | ZeroArgs f -> f (); parse opts def ar (ix + 1) max (i + 1)
+            | OneArg (f, name) ->
+            if ix + 1 > max
+            then Error ("last option '" ^. argtrim ^. "' takes an argument but has none\n", opt)
+            else
+                let r =
+                    try (f ((.()) ar (ix + 1)); Success)
+                    with _ -> Error ("wrong argument given to option `" ^. argtrim ^. "`\n", opt)
+                in bind r (fun () -> parse opts def ar (ix + 2) max (i + 1))
+            end
 
+#if false
   let parse_array specs others args offset =
     parse specs others args offset (Array.length args - 1) 0
 
@@ -145,3 +148,4 @@ module Getopt =
 
   let cmdline () =
     Array.to_list (Sys.argv)
+#endif

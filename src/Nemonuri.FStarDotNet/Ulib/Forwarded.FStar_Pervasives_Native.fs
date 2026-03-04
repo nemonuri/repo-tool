@@ -4,6 +4,7 @@ namespace Nemonuri.FStarDotNet.Forwarded
 
 open Nemonuri.FStarDotNet
 open Nemonuri.FStarDotNet.Primitives
+open Nemonuri.FStarDotNet.Forwarded.FStarTupleOperators
 
 module Fu = Nemonuri.FStarDotNet.Primitives.FStarTypeUniverses
 
@@ -65,22 +66,29 @@ module FStar_Pervasives_Native =
 
     (** Pairs: [tuple2 a b] is can be written either as [a * b], for
         notation compatible with OCaml's. Or, better, as [a & b]. *)
-    let Mktuple2 (_1: 'a) (_2: 'b) = Fu.monad { return (_1, _2) }
+    let Mktuple2 _1 _2 = _1 .&. _2
     [<FStarConstructorProxy(nameof Mktuple2)>]
     type tuple2<'a, 'b> = Prims.Type0<'a * 'b>
-    let (|Mktuple2|) (x: tuple2<_,_>) = Fu.comonad { return x }
+    let (|Mktuple2|) x = let r: _*_ = Fu.extract x in r
         
     let fst (Mktuple2(_1, _)) = _1
     let snd (Mktuple2(_, _2)) = _2
 
 
-    let Mktuple3 _1 _2 _3 = Fu.monad { return _1, _2, _3 }
+    let Mktuple3 _1 _2 _3 = _1 .&. _2 &. _3
     [<FStarConstructorProxy(nameof Mktuple3)>]
     type tuple3<'a, 'b, 'c> = Prims.Type0<'a * 'b * 'c>
-    let (|Mktuple3|) (x: tuple3<_,_,_>) = Fu.comonad { return x }
+    let (|Mktuple3|) x = let r: _*_*_ = Fu.extract x in r
 
 
-    let Mktuple4 _1 _2 _3 _4 = Fu.monad { return _1, _2, _3, _4 }
+    let Mktuple4 _1 _2 _3 _4 = _1 .&. _2 &. _3 &. _4
     [<FStarConstructorProxy(nameof Mktuple4)>]
     type tuple4<'a, 'b, 'c, 'd> = Prims.Type0<'a * 'b * 'c * 'd>
-    let (|Mktuple4|) (x: tuple4<_,_,_,_>) = Fu.comonad { return x }
+    let (|Mktuple4|) x = let r: _*_*_*_ = Fu.extract x in r
+
+
+    let Mktuple5 _1 _2 _3 _4 _5 = _1 .&. _2 &. _3 &. _4 &. _5
+    [<FStarConstructorProxy(nameof Mktuple5)>]
+    type tuple5<'a, 'b, 'c, 'd, 'e> = Prims.Type0<'a * 'b * 'c * 'd * 'e>
+    let (|Mktuple5|) x = let r: _*_*_*_*_ = Fu.extract x in r
+
