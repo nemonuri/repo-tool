@@ -7,6 +7,6 @@
     
     
     <Compile Include="Primitives.fs" />
-    <Compile Include="KindPremise.fs" /><Compile Include="Kinds.fs" />
+    <Compile Include="KindPremise.fs" /><Compile Include="Kinds.fs" /><Compile Include="TypeRefiners.fs" />
   </ItemGroup>
 </Project>
