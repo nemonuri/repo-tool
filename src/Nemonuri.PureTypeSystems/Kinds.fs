@@ -1,35 +1,19 @@
-﻿namespace Nemonuri.PureTypeSystems
-
-
-type IKind<'THead> =
-    interface
-        abstract member TryToDotNet<'TTail>: 'THead * 'TTail -> obj option
-
-        abstract member TryFromDotNet<'TTail>: obj -> ('THead * 'TTail) option
-    end
-
-
-type App<'T> =
-    struct
-        val Witness: 'T
-        new(witness: 'T) = { Witness = witness }
-    end    
-
-
-namespace Nemonuri.PureTypeSystems.Operations
+namespace Nemonuri.PureTypeSystems
 
 module Kinds =
 
-    let inline toDotNet (kind: ^k) (head: ^h) (tail: ^t) = ((^k or ^h) : (static member ToDotNet: _*_ -> _) head, tail)
+    let pur x = Kind<_>(x)
 
-    let inline ofDotNet (kind: ^k) (dn: ^dn) = ((^k or ^h) : (static member FromDotNet: ^dn -> ^h * ^t) dn)
+    let extract (x: Kind<_>) = x.Witness
 
+    let inline toDotNet x = 
+        let inline call (p': ^p) (x': ^x) = ((^p or ^x) : (static member KindToDotNet: _ -> _) x') in
+        call Unchecked.defaultof<KindPremise> x
 
-namespace Nemonuri.PureTypeSystems.Operations.Forwarded
-
-open Nemonuri.PureTypeSystems
-
-module Apps =
-
-    let (|App|) (x: App<_>) = x.Witness
-
+    type Builder =
+        struct
+            member inline _.Return(t: ^t) = toDotNet t
+            member inline _.Bind(s: 's1, tf: Kind<'s1> -> 's2) = pur s |> tf
+        end
+    
+    let builder = Builder()

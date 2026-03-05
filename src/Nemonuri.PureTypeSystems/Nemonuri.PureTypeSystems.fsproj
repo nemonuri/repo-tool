@@ -4,9 +4,9 @@
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="Primitives.fs" /><Compile Include="Primitives.Operations.fs" />
     
-    <Compile Include="Kinds.fs" />
-    <Compile Include="AppPremise.fs" /><Compile Include="Apps.fs" />
+    
+    <Compile Include="Primitives.fs" />
+    <Compile Include="KindPremise.fs" /><Compile Include="Kinds.fs" />
   </ItemGroup>
 </Project>
