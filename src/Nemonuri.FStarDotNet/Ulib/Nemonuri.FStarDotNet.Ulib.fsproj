@@ -27,7 +27,7 @@
     <ProjectReference Include="..\..\Nemonuri.PureTypeSystems\Nemonuri.PureTypeSystems.fsproj" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="HeterogeneousCollections" />
+    <PackageReference Include="TypeEquality" />
     <PackageReference Include="FSharp.Core" />
   </ItemGroup>
 </Project>
