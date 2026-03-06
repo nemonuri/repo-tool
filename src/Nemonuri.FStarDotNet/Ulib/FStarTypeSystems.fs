@@ -1,38 +1,52 @@
 namespace Nemonuri.FStarDotNet.Primitives.FStarTypeSystems
 
-open HCollections
 open Nemonuri.PureTypeSystems
-
+module Pts = Nemonuri.PureTypeSystems.Operations
 
 [<NoEquality; NoComparison>]
-type FStarType<'TKinds, 'TDotNet, 'TRefiner when 'TRefiner :> ITypeRefiner<'TDotNet>> =
-    struct
-        val Kinds: HList<'TKinds>
-        val Witness: 'TDotNet
-        val Refiner: 'TRefiner
-        new(kinds: _, witness: _, refiner: _) = { Kinds = kinds; Witness = witness; Refiner = refiner }
+[<Struct>]
+type FStarGhostType<'TKinds, 'TRefiner when 'TRefiner :> ITypeRefiner> = { Kinds: Kind<'TKinds>; Refiner: 'TRefiner; Witness: objnull }
+    with
+        member this.Check(x: 'T) = this.Refiner.GetCondition<'T>() x
+
+        interface ITypeRefiner with
+            member this.GetCondition (): Condition<'T> = this.Check<'T>
     end
 
 [<NoEquality; NoComparison>]
-type Tautology<'T> =
-    struct
-        member _.Check(_: 'T) : bool voption = ValueSome true
+[<Struct>]
+type FStarType<'TKinds, 'TRefiner, 'TWitness when 'TRefiner :> ITypeRefiner> = { Kinds: Kind<'TKinds>; Refiner: 'TRefiner; Witness: 'TWitness }
+    with
+        member this.Check(_: 'T) = 
+            let selfCond = Pts.toSelfCondition this.Witness in
+            Pts.conditionAnd selfCond (this.Refiner.GetCondition<'TWitness>()) this.Witness
 
-        interface ITypeRefiner<'T> with
-            member this.Condition = this.Check
+        interface ITypeRefiner with
+            member this.GetCondition (): Condition<'T> = this.Check<'T>
     end
 
-type Type0<'a> = FStarType<unit, 'a, Tautology<'a>>
 
-type EqType<'a when 'a : equality> = Type0<'a>
+type Type0 = FStarGhostType<unit, Tautology>
+
+type EqType<'a when 'a : equality> = FStarType<unit, Tautology, 'a>
 
 
 module Operations =
 
-    let toFStar kinds witness refiner = FStarType<_,_,_>(kinds, witness, refiner)
+    open TypeEquality
 
-    let tautology<'a> = Tautology<'a>()
+    let unitKind = Pts.unitKind
 
-    let toType0 s = toFStar HList.empty s tautology
+    let tautology = Pts.tautology
 
+    let toFStarType kinds refiner witness = { Kinds = kinds; Refiner = refiner; Witness = witness }
+
+    let toFStarEqType (s: 'a) : EqType<'a> = toFStarType unitKind tautology s
+
+    let tryToDomain<'dom, 'x> (x: 'x) =
+        match Teq.tryRefl<'x, 'dom> with
+        | None -> None
+        | Some v -> Teq.cast v x |> Some
+    
+    let toType0 (s: objnull) : Type0 = { Kinds = unitKind; Refiner = tautology; Witness = s }
     

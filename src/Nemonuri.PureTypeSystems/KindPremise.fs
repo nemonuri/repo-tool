@@ -1,6 +1,6 @@
 namespace Nemonuri.PureTypeSystems
 
-open Nemonuri.PureTypeSystems.Primitives
+open Nemonuri.PureTypeSystems.Operations
 
 type KindPremise =
     struct
