@@ -4,13 +4,14 @@
 namespace Nemonuri.FStarDotNet.FStarC
 
 open Nemonuri.FStarDotNet
+open Nemonuri.FStarDotNet.Primitives
 
-#if false
+
 module PSMap =
 
     (* persistent (pure) string map *)
 
-    type t 'value
+    type t<'value> = 
     val empty: unit -> t 'value // GH-1161
     val add: t 'value -> string -> 'value -> t 'value
     val find_default: t 'value -> string -> 'value -> 'value
@@ -26,15 +27,14 @@ module PSMap =
 
     (* Aliases. We use inline_for_extraction so we don't have to define
     these in the underlying ML file. *)
-    inline_for_extraction type psmap = t
-    inline_for_extraction let psmap_empty () = empty ()
-    inline_for_extraction let psmap_add m k v = add m k v
-    inline_for_extraction let psmap_find_default m k v = find_default m k v
-    inline_for_extraction let psmap_try_find m k = try_find m k
-    inline_for_extraction let psmap_fold m f a = fold m f a
-    inline_for_extraction let psmap_find_map m f = find_map m f
-    inline_for_extraction let psmap_modify m k f = modify m k f
-    inline_for_extraction let psmap_merge m1 m2= merge m1 m2
-    inline_for_extraction let psmap_remove m k = remove m k
-    inline_for_extraction let psmap_iter m f = iter m f
-#endif
+    [<inline_for_extraction>] type psmap = t
+    [<inline_for_extraction>] let psmap_empty () = empty ()
+    [<inline_for_extraction>] let psmap_add m k v = add m k v
+    [<inline_for_extraction>] let psmap_find_default m k v = find_default m k v
+    [<inline_for_extraction>] let psmap_try_find m k = try_find m k
+    [<inline_for_extraction>] let psmap_fold m f a = fold m f a
+    [<inline_for_extraction>] let psmap_find_map m f = find_map m f
+    [<inline_for_extraction>] let psmap_modify m k f = modify m k f
+    [<inline_for_extraction>] let psmap_merge m1 m2= merge m1 m2
+    [<inline_for_extraction>] let psmap_remove m k = remove m k
+    [<inline_for_extraction>] let psmap_iter m f = iter m f

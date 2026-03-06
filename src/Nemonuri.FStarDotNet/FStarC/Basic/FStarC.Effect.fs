@@ -22,7 +22,6 @@ open Nemonuri.FStarDotNet
 open Nemonuri.FStarDotNet.Primitives
 open Nemonuri.FStarDotNet.Primitives.Abbreviations
 module Obs = Nemonuri.OCamlDotNet.Primitives.Operations.OCamlByteSpanSources
-module Fu = Nemonuri.FStarDotNet.Primitives.FStarTypeUniverses
 
 [<RequireQualifiedAccess>]
 module Effect =
@@ -50,33 +49,32 @@ module Effect =
     effect ML (a:Type) = ALL a (fun (p:all_post a) (_:unit) -> forall (a:result a) (h:unit). p a h)
 #endif
 
-    type ML<'a> = Prims.Type0<'a>
+    type ML<'a> = 'a
 
-    type ref<'a> = Prims.Type0<Core.ref<'a>>
+    type ref<'a> = Core.ref<'a>
 
-    let (!) (r: ref<'a>) : ML<'a> = Fu.monad { let! tr = r in return tr.Value }
+    let (!) (r: ref<'a>) : ML<'a> = r.Value
 
-    let (:=) (r: ref<'a>) (x: 'a) : ML<unit> = Fu.monad { let! tr = r in return tr.Value <- x }
+    let (:=) (r: ref<'a>) (x: 'a) : ML<unit> = r.Value <- x
         
 
-    let alloc (x: 'a) : ref<'a> = Fu.monad { return { contents = x } }
+    let alloc (x: 'a) : ref<'a> = { contents = x }
     let mk_ref x = alloc x
 
-    let raise (e: Prims.exn) : ML<'a> = Fu.emonad { let! te = e in return Operators.raise te }
+    let raise (e: Prims.exn) : ML<'a> = Operators.raise e
 
-    let exit (n: Prims.int) : ML<'a> = Fu.emonad { 
-        let! tn = n in 
-        let n32: int = tn |> bigint.op_Explicit in
-        return Operators.exit n32
-    }
+    let exit (n: Prims.int) : ML<'a> = 
+        let n32: int = n |> bigint.op_Explicit in
+        Operators.exit n32
+    
 
     let try_with (s1: Prims.unit -> 'a) (s2: Prims.exn -> 'a) : ML<'a> = 
         try
-            Fu.monad { return () |> Fu.pur |> s1 }
+            s1()
         with
-            e -> Fu.monad { return e |> Fu.pur |> s2 }
+            e -> s2 e
 
 
-    let Failure (msg: Prims.string) : Prims.exn = Fu.monad { let! tmsg = msg in return Operators.Failure (Obs.stringToDotNetString tmsg) }
+    let Failure (msg: Prims.string) : Prims.exn = Operators.Failure (Obs.stringToDotNetString msg)
 
-    let failwith (msg: Prims.string) : ML<'a> = Fu.emonad { let! tmsg = msg in return Operators.failwith (Obs.stringToDotNetString tmsg) }
+    let failwith (msg: Prims.string) : ML<'a> = Operators.failwith (Obs.stringToDotNetString msg)

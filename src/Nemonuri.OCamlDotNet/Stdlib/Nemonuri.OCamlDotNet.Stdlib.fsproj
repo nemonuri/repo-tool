@@ -12,7 +12,7 @@
     <Compile Include="Primitives.Exceptions.fs" />
     <Compile Include="Forwarded.Char.fs" />
     <Compile Include="Forwarded.Bytes.fs" />
-    <Compile Include="Forwarded.String.fs" /><Compile Include="Forwarded.Array.fs" /><Compile Include="Forwarded.Sys.fs" />
+    <Compile Include="Forwarded.String.fs" /><Compile Include="Forwarded.Array.fs" /><Compile Include="Forwarded.Sys.fs" /><Compile Include="Forwarded.Map.fs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Nemonuri.ByteChars\Nemonuri.ByteChars.csproj" />

@@ -5,10 +5,17 @@ open Nemonuri.OCamlDotNet.Zarith
 open Nemonuri.FStarDotNet.Forwarded
 
 
-
 module FStarOperators =
 
-    let toInt s = Z.of_int s
+    let inline flip f x y = f y x
+
+    let inline (</) x = (|>) x
+
+    let inline (/>) x = flip x
+
+    let toInt s : Prims.int = Z.of_int s
+
+    let toString s: Prims.string = OCamlByteSpanSources.Unsafe.stringOfArray s
 
     let ( *. ) x y = Prims.op_Multiply x y
 

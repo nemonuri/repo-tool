@@ -10,7 +10,7 @@
     <Compile Include="Primitives.TuplePremise.fs" />
     <Compile Include="Primitives.fs" />
     <Compile Include="Operations.FStarTypeContexts.fs" />
-    <Compile Include="Operations.Functions.fs" />
+    
     <Compile Include="FStarTypeUniverses.fs" /><Compile Include="FStarTypeSystems.fs" />
     <Compile Include="Prims.fs" />
     <Compile Include="Forwarded.FStar_Pervasives_Native.fs" />

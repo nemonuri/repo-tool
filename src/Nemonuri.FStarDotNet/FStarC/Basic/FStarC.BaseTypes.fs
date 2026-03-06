@@ -12,14 +12,14 @@ module BaseTypes =
     /// a single module, providing abbreviations for them.
 
     type char = FStar.Char.char
-    type float = Prims.Type0<Core.float32>
-    type double = Prims.Type0<Core.double>
-    type byte = Prims.Type0<Core.byte>
-    type int8 = Prims.Type0<System.SByte>
-    type uint8 = Prims.Type0<System.Byte>
-    type int16 = Prims.Type0<System.Int16>
-    type uint16 = Prims.Type0<System.UInt16>
-    type int32 = Prims.Type0<System.Int32>
-    type uint32 = Prims.Type0<System.UInt32>
-    type int64 = Prims.Type0<System.Int64>
-    type uint64 = Prims.Type0<System.UInt64>
+    type float = Core.float32
+    type double = Core.double
+    type byte = Core.byte
+    type int8 = System.SByte
+    type uint8 = System.Byte
+    type int16 = System.Int16
+    type uint16 = System.UInt16
+    type int32 = System.Int32
+    type uint32 = System.UInt32
+    type int64 = System.Int64
+    type uint64 = System.UInt64

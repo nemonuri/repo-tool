@@ -4,7 +4,6 @@ namespace Nemonuri.FStarDotNet.FStarC
 
 open Nemonuri.FStarDotNet
 open Nemonuri.FStarDotNet.Forwarded
-module Fu = Nemonuri.FStarDotNet.Primitives.FStarTypeUniverses
 
 module VConfig =
 
@@ -45,4 +44,4 @@ module VConfig =
     type vconfig = Effect.ML<FStar_vconfig>
 
     (** Marker to check a sigelt with a particular vconfig, not really used internally.. *)
-    let check_with (vcfg : vconfig) : Prims.unit = Fu.pur ()
+    let check_with (vcfg : vconfig) : Prims.unit = ()

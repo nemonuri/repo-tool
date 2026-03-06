@@ -4,10 +4,13 @@
 namespace Nemonuri.FStarDotNet.FStar
 
 open Nemonuri.FStarDotNet
+open Nemonuri.PureTypeSystems
 open Nemonuri.OCamlDotNet.Zarith
 open Nemonuri.OCamlDotNet.Primitives
+open Nemonuri.FStarDotNet.Primitives.FStarTypeSystems
 open System.Text
-module Fu = Nemonuri.FStarDotNet.Primitives.FStarTypeUniverses
+module Fts = Nemonuri.FStarDotNet.Primitives.FStarTypeSystems.Operations
+module Pts = Nemonuri.PureTypeSystems.Operations
 
 [<RequireQualifiedAccess>]
 module Char =
@@ -34,17 +37,32 @@ module Char =
         and not between 0xd800 and 0xe000 *)
     
     /// type char_code = n: U32.t{U32.v n < 0xd7ff \/ (U32.v n >= 0xe000 /\ U32.v n <= 0x10ffff)}
-    type char_code = Core.uint32
+    type char_code = FStarType<unit, char_code_condition, uint32>
+    and char_code_condition =
+        struct
+            member this.Check(x: 'a) = 
+                let nOpt = 
+                    match box x with
+                    | :? uint32 as v -> ValueSome v
+                    | :? ISupportWitness<uint32> as v -> ValueSome v.Witness
+                    | _ -> ValueNone
+                match nOpt with
+                | ValueNone -> Pts.triTrue
+                | ValueSome n -> ValueSome ((n < 0xd7ffu) || (n >= 0xe000u && n <= 0x10ffffu))
+                    
+            interface ITypeRefiner with
+                member this.GetCondition (): Condition<'T> = this.Check<'T>
+        end
 
     (** A primitive to extract the [char_code] of a [char] *)
 
     /// val u32_of_char: char -> Tot char_code
-    let u32_of_char (x: char) : char_code = Core.Operators.uint32 x
+    let u32_of_char (x: char) : char_code = Core.Operators.uint32 x |> Fts.toFStarType Fts.unitKind (char_code_condition())
 
 
     (** A primitive to promote a [char_code] to a [char] *)
     /// val char_of_u32: char_code -> Tot char
-    let char_of_u32 (x: char_code) : char = Core.Operators.int x
+    let char_of_u32 (x: char_code) : char = Core.Operators.int x.Witness
 
 #if false
     (** Encoding and decoding from [char] to [char_code] is the identity *)

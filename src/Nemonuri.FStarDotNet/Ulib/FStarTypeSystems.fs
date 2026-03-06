@@ -3,6 +3,11 @@ namespace Nemonuri.FStarDotNet.Primitives.FStarTypeSystems
 open Nemonuri.PureTypeSystems
 module Pts = Nemonuri.PureTypeSystems.Operations
 
+type ISupportWitness<'T> =
+    interface
+        abstract member Witness: 'T
+    end
+
 [<NoEquality; NoComparison>]
 [<Struct>]
 type FStarGhostType<'TKinds, 'TRefiner when 'TRefiner :> ITypeRefiner> = { Kinds: Kind<'TKinds>; Refiner: 'TRefiner; Witness: objnull }
@@ -11,6 +16,8 @@ type FStarGhostType<'TKinds, 'TRefiner when 'TRefiner :> ITypeRefiner> = { Kinds
 
         interface ITypeRefiner with
             member this.GetCondition (): Condition<'T> = this.Check<'T>
+        interface ISupportWitness<objnull> with
+            member this.Witness = this.Witness
     end
 
 [<NoEquality; NoComparison>]
@@ -23,6 +30,8 @@ type FStarType<'TKinds, 'TRefiner, 'TWitness when 'TRefiner :> ITypeRefiner> = {
 
         interface ITypeRefiner with
             member this.GetCondition (): Condition<'T> = this.Check<'T>
+        interface ISupportWitness<'TWitness> with
+            member this.Witness = this.Witness
     end
 
 
@@ -49,4 +58,3 @@ module Operations =
         | Some v -> Teq.cast v x |> Some
     
     let toType0 (s: objnull) : Type0 = { Kinds = unitKind; Refiner = tautology; Witness = s }
-    

@@ -387,7 +387,9 @@ module Prims =
     type has_type<'a, '_0, 'Type when '_0 :> IConstant<'a>> = 
         struct 
             interface IConstant<'_0 -> bool> with
-                member this.Value: '_0 -> bool = fun _0 -> typeof<'Type>.IsAssignableFrom(_0.GetType())
+                member this.Value: '_0 -> bool = fun _0 -> 
+                    typeof<'Type>.IsAssignableFrom(_0.GetType()) ||
+                    (match box _0 with | :? ISupportWitness<'Type> -> true | _ -> false)
         end
         
 

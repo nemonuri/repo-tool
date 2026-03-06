@@ -55,3 +55,10 @@ module String =
 
     let sub s pos len = mnd { let! t = s in return B.sub t pos len }
     
+    let uppercase_ascii s = mnd { let! s' = s in return B.uppercase_ascii s' }
+
+    let lowercase_ascii s = mnd { let! s' = s in return B.lowercase_ascii s' }
+
+    let escaped s = mnd { let! s' = s in return B.escaped s' }
+
+    let index s c = mnd { let! s' = s in return! B.index s' c }

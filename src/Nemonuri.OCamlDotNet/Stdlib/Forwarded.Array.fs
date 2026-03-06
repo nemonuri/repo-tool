@@ -11,6 +11,10 @@ module Array =
 
     let get a n = Fa.get a n
 
+    let of_list l = Fa.ofList l
+
+    let to_list a = Fa.toList a
+
     module Operators =
 
         let ( .() ) a n = get a n

@@ -42,6 +42,13 @@ module BatString =
 
         curList
 
+    /// Returns a string containing one given character.
+    ///
+    /// Example:  String.of_char 's' = "s" 
+    let of_char (c: OCamlChar) : OCamlString = [|c|] |> Obs.Unsafe.stringOfArray
+        
+        
+
 #if false
     /// The comparison function for strings, with the same specification as Pervasives.compare. Along with the type t, this function compare allows the module String to be passed as argument to the functors Set.Make and Map.Make.
     let inline compare (left: t) (right: t) = String.compare left right
@@ -58,11 +65,4 @@ module BatString =
     /// Return a copy of the argument, with special characters represented by escape sequences, following the lexical conventions of OCaml. 
     /// If there is no special character in the argument, return the original string itself, not a copy. Its inverse function is Scanf.unescaped.
     let escaped = String.escaped
-
-    /// Returns a string containing one given character.
-    ///
-    /// Example:  String.of_char 's' = "s" 
-    let of_char (c: char) : string = 
-        let charArray : char array = [|c|]
-        !>charArray
 #endif
