@@ -4,6 +4,9 @@ open Nemonuri.FStarDotNet
 open Nemonuri.FStarDotNet.Primitives
 open Nemonuri.FStarDotNet.Forwarded
 
+#if false
+
+
 [<RequireQualifiedAccess>]
 module Pervasives =
 
@@ -29,3 +32,4 @@ module Pervasives =
         type tuple3<'a,'b,'c> = F.tuple3<'a,'b,'c>
         let (|Mktuple3|) = F.(|Mktuple3|)
 
+#endif

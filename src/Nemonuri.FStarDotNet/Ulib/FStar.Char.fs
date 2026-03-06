@@ -27,24 +27,24 @@ module Char =
 #endif
 
     (** [char] is a new primitive type with decidable equality *)
-    type char = Prims.Type0<OCamlInt>
+    type char = OCamlInt
 
     (** A [char_code] is the representation of a UTF-8 char code in
         an unsigned 32-bit integer whose value is at most 0x110000,
         and not between 0xd800 and 0xe000 *)
     
     /// type char_code = n: U32.t{U32.v n < 0xd7ff \/ (U32.v n >= 0xe000 /\ U32.v n <= 0x10ffff)}
-    type char_code = Prims.Type0<Core.uint32>
+    type char_code = Core.uint32
 
     (** A primitive to extract the [char_code] of a [char] *)
 
     /// val u32_of_char: char -> Tot char_code
-    let u32_of_char (x: char) : char_code = Fu.monad { let! tx = x in return Core.Operators.uint32 tx }
+    let u32_of_char (x: char) : char_code = Core.Operators.uint32 x
 
 
     (** A primitive to promote a [char_code] to a [char] *)
     /// val char_of_u32: char_code -> Tot char
-    let char_of_u32 (x: char_code) : char = Fu.monad { let! tx = x in return Core.Operators.int tx }
+    let char_of_u32 (x: char_code) : char = Core.Operators.int x
 
 #if false
     (** Encoding and decoding from [char] to [char_code] is the identity *)
@@ -59,18 +59,18 @@ module Char =
     (** A couple of utilities to use mathematical integers rather than [U32.t]
         to represent a [char_code] *)
     /// let int_of_char (c: char) : nat = U32.v (u32_of_char c)
-    let int_of_char (c: char) : Prims.int = Fu.monad { let! tc = c in return Z.of_int tc }
+    let int_of_char (c: char) : Prims.int = Z.of_int c
 
     /// let char_of_int (i: nat{i < 0xd7ff \/ (i >= 0xe000 /\ i <= 0x10ffff)}) : char = char_of_u32 (U32.uint_to_t i)
-    let char_of_int (i: Prims.int) : char = Fu.monad { let! ti = i in return Z.to_int ti }
+    let char_of_int (i: Prims.int) : char = Z.to_int i
     
 
     (** Case conversion *)
     /// val lowercase: char -> Tot char
-    let lowercase (x: char) : char = Fu.monad { let! tx: OCamlInt = x in return Rune.ToLowerInvariant(Rune(tx)).Value }
+    let lowercase (x: char) : char = Rune.ToLowerInvariant(Rune(x)).Value
 
     /// val uppercase: char -> Tot char
-    let uppercase (x: char) : char = Fu.monad { let! tx: OCamlInt = x in return Rune.ToUpperInvariant(Rune(tx)).Value }
+    let uppercase (x: char) : char = Rune.ToUpperInvariant(Rune(x)).Value
 
 #if false
     #set-options "--admit_smt_queries true"

@@ -4,7 +4,6 @@ namespace Nemonuri.FStarDotNet.Forwarded
 
 open Nemonuri.FStarDotNet
 open Nemonuri.FStarDotNet.Primitives
-open Nemonuri.FStarDotNet.Forwarded.FStarTupleOperators
 
 module Fu = Nemonuri.FStarDotNet.Primitives.FStarTypeUniverses
 
@@ -27,19 +26,7 @@ module Fu = Nemonuri.FStarDotNet.Primitives.FStarTypeUniverses
 module FStar_Pervasives_Native =
 
     (** [option a] represents either  [Some a]-value or a non-informative [None]. *)
-    let None<'a> = Fu.monad { let r: Core.option<'a> = Core.None in return r }
-    let Some (v: 'a) = Fu.monad { return Core.Some v }
-
-    [<FStarConstructorProxy(nameof None)>]
-    [<FStarConstructorProxy(nameof Some)>]
-    type option<'a> = Prims.Type0<Core.option<'a>>
-
-    let (|None|Some|) (x: option<'a>) =
-        Fu.emonad {
-            match! x with
-            | Core.None -> return None
-            | Core.Some v -> return Some v
-        }
+    type option<'a> = Core.option<'a>
 
 
     (**** Tuples *)
@@ -66,29 +53,10 @@ module FStar_Pervasives_Native =
 
     (** Pairs: [tuple2 a b] is can be written either as [a * b], for
         notation compatible with OCaml's. Or, better, as [a & b]. *)
-    let Mktuple2 _1 _2 = _1 .&. _2
-    [<FStarConstructorProxy(nameof Mktuple2)>]
-    type tuple2<'a, 'b> = Prims.Type0<'a * 'b>
-    let (|Mktuple2|) x = let r: _*_ = Fu.extract x in r
+    let Mktuple2 _1 _2 = _1, _2
+    type tuple2<'a, 'b> = ('a * 'b)
+    let (|Mktuple2|) (x: _*_) = x
         
     let fst (Mktuple2(_1, _)) = _1
     let snd (Mktuple2(_, _2)) = _2
-
-
-    let Mktuple3 _1 _2 _3 = _1 .&. _2 &. _3
-    [<FStarConstructorProxy(nameof Mktuple3)>]
-    type tuple3<'a, 'b, 'c> = Prims.Type0<'a * 'b * 'c>
-    let (|Mktuple3|) x = let r: _*_*_ = Fu.extract x in r
-
-
-    let Mktuple4 _1 _2 _3 _4 = _1 .&. _2 &. _3 &. _4
-    [<FStarConstructorProxy(nameof Mktuple4)>]
-    type tuple4<'a, 'b, 'c, 'd> = Prims.Type0<'a * 'b * 'c * 'd>
-    let (|Mktuple4|) x = let r: _*_*_*_ = Fu.extract x in r
-
-
-    let Mktuple5 _1 _2 _3 _4 _5 = _1 .&. _2 &. _3 &. _4 &. _5
-    [<FStarConstructorProxy(nameof Mktuple5)>]
-    type tuple5<'a, 'b, 'c, 'd, 'e> = Prims.Type0<'a * 'b * 'c * 'd * 'e>
-    let (|Mktuple5|) x = let r: _*_*_*_*_ = Fu.extract x in r
 

@@ -36,7 +36,7 @@ module List =
     nonempty at type-checking time.) Named as in: OCaml, F#, Coq *)
     /// val hd: list 'a -> ML 'a
     let hd = function
-    | Cons(hd, tl) -> hd
+    | hd::tl -> hd
     | _ -> failwith "head of empty list"
 
     (** [tail l] returns [l] without its first element. Raises an
@@ -45,7 +45,7 @@ module List =
     OCaml, F#, Coq *)
     /// val tail: list 'a -> ML (list 'a)
     let tail = function
-    | Cons(hd, tl) -> tl
+    | hd::tl -> tl
     | _ -> failwith "tail of empty list"
 
     (** [tl l] returns [l] without its first element. Raises an exception
@@ -60,8 +60,8 @@ module List =
     *)
     /// val last: list 'a -> ML 'a
     let rec last = function
-    | Singleton(hd) -> hd
-    | Cons(_, tl) -> last tl
+    | [hd] -> hd
+    | _::tl -> last tl
     | _ -> failwith "last of empty list"
 
     (** [init l] returns [l] without its last element. Requires, at
@@ -69,8 +69,8 @@ module List =
     *)
     /// val init: list 'a -> ML (list 'a)
     let rec init = function
-    | Singleton(_) -> Nil
-    | Cons(hd, tl) -> hd >:: (init tl)
+    | [_] -> []
+    | hd::tl -> hd::(init tl)
     | _ -> failwith "init of empty list"
 
     (** [nth l n] returns the [n]-th element in list [l] (with the first
@@ -80,43 +80,41 @@ module List =
 
     /// val nth: list 'a -> int -> ML 'a
     let rec nth l n =
-        match n <. (intO 0) with
-        | BTrue ->
+        if n <. (toInt 0) then
             failwith "nth takes a non-negative integer as input"
-        | BFalse ->
-            match n =. (intO 0) with
-            | BTrue ->
+        else
+            if n =. (toInt 0) then
                 match l with
-                | Nil -> failwith "not enough elements"
-                | Cons(hd,_) -> hd
-            | BFalse ->
+                    | [] -> failwith "not enough elements"
+                    | hd::_ -> hd
+                else
                 match l with
-                | Nil -> failwith "not enough elements"
-                | Cons(_,tl) -> nth tl (n -. (intO 1))
+                    | [] -> failwith "not enough elements"
+                    | _::tl -> nth tl (n -. (toInt 1))
 
     (** Iterators **)
 
     (** [iter f l] performs [f x] for each element [x] of [l], in the
     order in which they appear in [l]. Named as in: OCaml, F# . *)
-    /// val iter: ('a -> ML unit) -> list 'a -> ML unit
+    ///val iter: ('a -> ML unit) -> list 'a -> ML unit
     let rec iter f x = 
         match x with
-        | Nil -> unitO
-        | Cons(a,tl) -> let _ = f a in iter f tl
+        | [] -> ()
+        | a::tl -> let _ = f a in iter f tl
 
     (** [iteri_aux n f l] performs, for each i, [f (i+n) x] for the i-th
     element [x] of [l], in the order in which they appear in [l]. *)
     /// val iteri_aux: int -> (int -> 'a -> ML unit) -> list 'a -> ML unit
     let rec iteri_aux i f x = 
         match x with
-        | Nil -> unitO
-        | Cons(a,tl) -> f i a; iteri_aux (i +. (intO 1)) f tl
+        | [] -> ()
+        | a::tl -> f i a; iteri_aux (i +. (toInt 1)) f tl
 
     (** [iteri_aux f l] performs, for each [i], [f i x] for the i-th
     element [x] of [l], in the order in which they appear in [l]. Named as
     in: OCaml *)
     /// val iteri: (int -> 'a -> ML unit) -> list 'a -> ML unit
-    let iteri f x = iteri_aux (intO 0) f x
+    let iteri f x = iteri_aux (toInt 0) f x
 
     (** [map f l] applies [f] to each element of [l] and returns the list
     of results, in the order of the original elements in [l]. (Hides
@@ -125,13 +123,13 @@ module List =
     /// val map: ('a -> ML 'b) -> list 'a -> ML (list 'b)
     let rec map f x = 
         match x with
-        | Nil -> Nil
-        | Cons(a, tl) -> f a >:: map f tl
+        | [] -> []
+        | a::tl -> f a::map f tl
 
-#if false
     (** [mapT f l] applies [f] to each element of [l] and returns the list
     of results, in the order of the original elements in [l]. Requires, at
     type-checking time, [f] to be a pure total function. *)
+#if false
     val mapT: ('a -> Tot 'b) -> list 'a -> Tot (list 'b)
     let mapT = FStar.List.Tot.map
 #endif
@@ -143,8 +141,8 @@ module List =
     /// val mapi_init: (int -> 'a -> ML 'b) -> list 'a -> int -> ML (list 'b)
     let rec mapi_init f l i = 
         match l with
-        | Nil -> Nil
-        | Cons(hd,tl) -> (f i hd)>::(mapi_init f tl (i+.(intO 1)))
+        | [] -> []
+        | hd::tl -> (f i hd)::(mapi_init f tl (i +. (toInt 1)))
 
     (** [mapi f l] applies, for each [k], [f k] to the [k]-th element of
     [l] and returns the list of results, in the order of the original
@@ -152,7 +150,7 @@ module List =
     type-checking time, [f] to be a pure total function.) Named as in:
     OCaml *)
     /// val mapi: (int -> 'a -> ML 'b) -> list 'a -> ML (list 'b)
-    let mapi f l = mapi_init f l (intO 0)
+    let mapi f l = mapi_init f l (toInt 0)
 
     (** [concatMap f l] applies [f] to each element of [l] and returns the
     concatenation of the results, in the order of the original elements of
@@ -162,11 +160,11 @@ module List =
 
     /// val concatMap: ('a -> ML (list 'b)) -> list 'a -> ML (list 'b)
     let rec concatMap f = function
-    | Nil -> Nil
-    | Cons(a,tl) ->
+    | [] -> []
+    | a::tl ->
         let fa = f a in
         let ftl = concatMap f tl in
-        fa @. ftl
+        fa @ ftl
 
     (** [map2 f l1 l2] computes [f x1 x2] for each element x1 of [l1] and
     the element [x2] of [l2] at the same position, and returns the list of
@@ -176,18 +174,18 @@ module List =
     /// val map2: ('a -> 'b -> ML 'c) -> list 'a -> list 'b -> ML (list 'c)
     let rec map2 f l1 l2 = 
         match l1, l2 with
-        | Nil, Nil -> Nil
-        | Cons(hd1,tl1), Cons(hd2,tl2) -> (f hd1 hd2)>::(map2 f tl1 tl2)
+        | [], [] -> []
+        | hd1::tl1, hd2::tl2 -> (f hd1 hd2)::(map2 f tl1 tl2)
         | _, _ -> failwith "The lists do not have the same length"
 
-#if false
     (** [map3 f l1 l2 l3] computes [f x1 x2 x3] for each element x1 of
     [l1] and the element [x2] of [l2] and the element [x3] of [l3] at the
     same position, and returns the list of such results, in the order of
     the original elements in [l1]. Raises an exception if [l1], [l2] and
     [l3] have different lengths.  Named as in: OCaml *)
-    val map3: ('a -> 'b -> 'c -> ML 'd) -> list 'a -> list 'b -> list 'c -> ML (list 'd)
-    let rec map3 f l1 l2 l3 = match l1, l2, l3 with
+    /// val map3: ('a -> 'b -> 'c -> ML 'd) -> list 'a -> list 'b -> list 'c -> ML (list 'd)
+    let rec map3 f l1 l2 l3 = 
+        match l1, l2, l3 with
         | [], [], [] -> []
         | hd1::tl1, hd2::tl2, hd3::tl3 -> (f hd1 hd2 hd3)::(map3 f tl1 tl2 tl3)
         | _, _, _ -> failwith "The lists do not have the same length"
@@ -195,18 +193,20 @@ module List =
     (** [fold_left f x [y1; y2; ...; yn]] computes (f (... (f x y1) y2)
     ... yn). (Hides [List.Tot.fold_left], which requires, at type-checking
     time, [f] to be a pure total function.) Named as in: OCaml, Coq *)
-    val fold_left: ('a -> 'b -> ML 'a) -> 'a -> list 'b -> ML 'a
-    let rec fold_left f x y = match y with
-    | [] -> x
-    | hd::tl -> fold_left f (f x hd) tl
+    /// val fold_left: ('a -> 'b -> ML 'a) -> 'a -> list 'b -> ML 'a
+    let rec fold_left f x y = 
+        match y with
+        | [] -> x
+        | hd::tl -> fold_left f (f x hd) tl
 
     (** [fold_left2 f x [y1; y2; ...; yn] [z1; z2; ...; zn]] computes (f
     (... (f x y1 z1) y2 z2 ... yn zn). Raises an exception if [y1; y2;
     ...] and [z1; z2; ...] have different lengths. (Thus, hides
     [List.Tot.fold_left2] which requires such a condition at type-checking
     time.) Named as in: OCaml *)
-    val fold_left2: ('s -> 'a -> 'b -> ML 's) -> 's -> list 'a -> list 'b -> ML 's
-    let rec fold_left2 f a l1 l2 = match l1, l2 with
+    /// val fold_left2: ('s -> 'a -> 'b -> ML 's) -> 's -> list 'a -> list 'b -> ML 's
+    let rec fold_left2 f a l1 l2 = 
+        match l1, l2 with
         | [], [] -> a
         | hd1::tl1, hd2::tl2 -> fold_left2 f (f a hd1 hd2) tl1 tl2
         | _, _ -> failwith "The lists do not have the same length"
@@ -215,10 +215,11 @@ module List =
     y)) ... )). (Hides [List.Tot.fold_right], which requires, at
     type-checking time, [f] to be a pure total function.) Named as in:
     OCaml, Coq *)
-    val fold_right: ('a -> 'b -> ML 'b) -> list 'a -> 'b -> ML 'b
-    let rec fold_right f l x = match l with
-    | [] -> x
-    | hd::tl -> f hd (fold_right f tl x)
+    /// val fold_right: ('a -> 'b -> ML 'b) -> list 'a -> 'b -> ML 'b
+    let rec fold_right f l x = 
+        match l with
+        | [] -> x
+        | hd::tl -> f hd (fold_right f tl x)
 
     (** List searching **)
 
@@ -226,7 +227,7 @@ module List =
     does not hold removed. (Hides [List.Tot.filter] which requires, at
     type-checking time, [f] to be a pure total function.) Named as in:
     OCaml, Coq *)
-    val filter: ('a -> ML bool) -> list 'a -> ML (list 'a)
+    /// val filter: ('a -> ML bool) -> list 'a -> ML (list 'a)
     let rec filter f = function
     | [] -> []
     | hd::tl -> if f hd then hd::(filter f tl) else filter f tl
@@ -235,8 +236,9 @@ module List =
     appearing in [l], [f x] holds. (Hides [List.Tot.for_all], which
     requires, at type-checking time, [f] to be a pure total function.)
     Named as in: OCaml. Similar to: List.forallb in Coq *)
-    val for_all: ('a -> ML bool) -> list 'a -> ML bool
-    let rec for_all f l = match l with
+    /// val for_all: ('a -> ML bool) -> list 'a -> ML bool
+    let rec for_all f l = 
+        match l with
         | [] -> true
         | hd::tl -> if f hd then for_all f tl else false
 
@@ -245,8 +247,9 @@ module List =
     same position, [f x1 x2] holds. Raises an exception if [l1] and [l2]
     have different lengths. Similar to: List.for_all2 in OCaml. Similar
     to: List.Forall2 in Coq (which is propositional) *)
-    val forall2: ('a -> 'b -> ML bool) -> list 'a -> list 'b -> ML bool
-    let rec forall2 f l1 l2 = match l1,l2 with
+    /// val forall2: ('a -> 'b -> ML bool) -> list 'a -> list 'b -> ML bool
+    let rec forall2 f l1 l2 = 
+        match l1,l2 with
         | [], [] -> true
         | hd1::tl1, hd2::tl2 -> if f hd1 hd2 then forall2 f tl1 tl2 else false
         | _, _ -> failwith "The lists do not have the same length"
@@ -257,11 +260,11 @@ module List =
     [List.Tot.collect] which requires, at type-checking time, [f] to be a
     pure total function.) TODO: what is the difference with [concatMap]?
     *)
-    val collect: ('a -> ML (list 'b)) -> list 'a -> ML (list 'b)
-    let rec collect f l = match l with
+    /// val collect: ('a -> ML (list 'b)) -> list 'a -> ML (list 'b)
+    let rec collect f l = 
+        match l with
         | [] -> []
-        | hd::tl -> append (f hd) (collect f tl)
-#endif
+        | hd::tl -> Microsoft.FSharp.Collections.List.append (f hd) (collect f tl)
 
     (** [tryFind f l] returns [Some x] for some element [x] appearing in
     [l] such that [f x] holds, or [None] only if no such [x]
@@ -270,16 +273,16 @@ module List =
     /// val tryFind: ('a -> ML bool) -> list 'a -> ML (option 'a)
     let rec tryFind p l = 
         match l with
-        | Nil -> None
-        | Cons(hd,tl) -> match p hd with | BTrue -> Some hd | BFalse -> tryFind p tl
+        | [] -> None
+        | hd::tl -> if p hd then Some hd else tryFind p tl
 
-#if false
     (** [tryPick f l] returns [y] for some element [x] appearing in [l]
     such that [f x = Some y] for some y, or [None] only if [f x = None]
     for all elements [x] of [l]. (Hides [List.Tot.tryPick], which
     requires, at type-checking time, [f] to be a pure total function.) *)
-    val tryPick: ('a -> ML (option 'b)) -> list 'a -> ML (option 'b)
-    let rec tryPick f l = match l with
+    /// val tryPick: ('a -> ML (option 'b)) -> list 'a -> ML (option 'b)
+    let rec tryPick f l = 
+        match l with
         | [] -> None
         | hd::tl ->
         match f hd with
@@ -290,8 +293,9 @@ module List =
     appearing in [l] such that [f x = Some y] for some [y]. (Hides
     [List.Tot.choose] which requires, at type-checking time, [f] to be a
     pure total function.) *)
-    val choose: ('a -> ML (option 'b)) -> list 'a -> ML (list 'b)
-    let rec choose f l = match l with
+    /// val choose: ('a -> ML (option 'b)) -> list 'a -> ML (list 'b)
+    let rec choose f l = 
+        match l with
         | [] -> []
         | hd::tl ->
         match f hd with
@@ -303,7 +307,7 @@ module List =
     otherwise. Both [l1] and [l2] retain the original order of [l]. (Hides
     [List.Tot.partition], which requires, at type-checking time, [f] to be
     a pure total function.) *)
-    val partition: ('a -> ML bool) -> list 'a -> ML (list 'a & list 'a)
+    /// val partition: ('a -> ML bool) -> list 'a -> ML (list 'a & list 'a)
     let rec partition f = function
     | [] -> [], []
     | hd::tl ->
@@ -317,8 +321,9 @@ module List =
     (** [zip] takes two lists [x1, ..., xn] and [y1, ..., yn] and returns
     the list of pairs [(x1, y1), ..., (xn, yn)]. Raises an exception if
     the two lists have different lengths. Named as in: Haskell *)
-    val zip: list 'a -> list 'b -> ML (list ('a & 'b))
-    let rec zip l1 l2 = match l1,l2 with
+    /// val zip: list 'a -> list 'b -> ML (list ('a & 'b))
+    let rec zip l1 l2 = 
+        match l1,l2 with
         | [], [] -> []
         | hd1::tl1, hd2::tl2 -> (hd1,hd2)::(zip tl1 tl2)
         | _, _ -> failwith "The lists do not have the same length"
@@ -330,58 +335,59 @@ module List =
     that if [compare x y > 0], then [x] appears before [y] in [l']. (Hides
     [List.Tot.sortWith], which requires, at type-checking time, [compare]
     to be a pure total function.) *)
-    val sortWith: ('a -> 'a -> ML int) -> list 'a -> ML (list 'a)
+    /// val sortWith: ('a -> 'a -> ML int) -> list 'a -> ML (list 'a)
     let rec sortWith f = function
     | [] -> []
     | pivot::tl ->
-        let hi, lo  = partition (fun x -> f pivot x > 0) tl in
+        let hi, lo  = partition (fun x -> f pivot x >. (toInt 0)) tl in
         sortWith f lo@(pivot::sortWith f hi)
 
     (** [splitAt n l] returns the pair of lists [(l1, l2)] such that [l1]
     contains the first [n] elements of [l] and [l2] contains the
     rest. Raises an exception if [l] has fewer than [n] elements. *)
-    val splitAt: nat -> list 'a -> ML (list 'a & list 'a)
+    /// val splitAt: nat -> list 'a -> ML (list 'a & list 'a)
     let rec splitAt n l =
-    if n = 0 then [], l
-    else
-        match l with
-        | []     -> failwith "splitAt index is more that list length"
-        | hd::tl ->
-            let l1, l2 = splitAt (n - 1) tl in
-            hd::l1, l2
+        if n =. (toInt 0) then [], l
+        else
+            match l with
+            | []     -> failwith "splitAt index is more that list length"
+            | hd::tl ->
+                let l1, l2 = splitAt (n -. (toInt 1)) tl in
+                hd::l1, l2
 
+#if false
     (** [filter_map f l] returns the list of [y] for all elements [x]
     appearing in [l] such that [f x = Some y] for some [y]. (Implemented
     here as a tail-recursive version of [choose] *)
-    let filter_map (f:'a -> ML (option 'b)) (l:list 'a) : ML (list 'b) =
-    let rec filter_map_acc (acc:list 'b) (l:list 'a) : ML (list 'b) =
-        match l with
-        | [] ->
-            rev acc
-        | hd :: tl ->
-            match f hd with
-            | Some hd ->
-                filter_map_acc (hd :: acc) tl
-            | None ->
-                filter_map_acc acc tl
-    in
-    filter_map_acc [] l
+    /// let filter_map (f:'a -> ML (option 'b)) (l:list 'a) : ML (list 'b) =
+    let rec filter_map_acc (acc:list<'b>) (l:list<'a>) : (list<'b>) =
+            match l with
+            | [] ->
+                rev acc
+            | hd :: tl ->
+                match f hd with
+                | Some hd ->
+                    filter_map_acc (hd :: acc) tl
+                | None ->
+                    filter_map_acc acc tl
+        in
+        filter_map_acc [] l
+#endif
 
     (** [index f l] returns the position index in list [l] of the first
     element [x] in [l] such that [f x] holds. Raises an exception if no
     such [x] exists. TODO: rename this function (it hides List.Tot.index
     which has a completely different semantics.) *)
-    val index: ('a -> ML bool) -> list 'a -> ML int
+    /// val index: ('a -> ML bool) -> list 'a -> ML int
     let index f l =
-    let rec index l i : ML int =
-        match l with
-        | [] ->
-            failwith "List.index: not found"
-        | hd :: tl ->
-            if f hd then
-            i
-            else
-            index tl (i + 1)
-    in
-    index l 0
-#endif
+        let rec index l i : Prims.int =
+            match l with
+            | [] ->
+                failwith "List.index: not found"
+            | hd :: tl ->
+                if f hd then
+                    i
+                else
+                    index tl (i +. (toInt 1))
+        in
+        index l (toInt 0)
