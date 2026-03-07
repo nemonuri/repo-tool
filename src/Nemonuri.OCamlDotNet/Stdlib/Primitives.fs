@@ -53,7 +53,7 @@ type OCamlByteSpanSource = internal { UnsafeSource: UnsafeOCamlByteSpanSource }
         interface IComparable with
             member s.CompareTo (obj: obj): int = 
                 match obj with
-                | null -> -1
+                | null -> 1
                 | :? OCamlByteSpanSource as other -> (s :> IComparable<OCamlByteSpanSource>).CompareTo(other)
                 | _ -> invalidArg (nameof obj) "Cannot compare."
 
