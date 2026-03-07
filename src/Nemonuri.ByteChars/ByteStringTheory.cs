@@ -5,6 +5,7 @@ using static Nemonuri.ByteChars.Extensions.ImmutableArrayBuilderExtensions;
 
 namespace Nemonuri.ByteChars;
 
+[Obsolete]
 public static unsafe partial class ByteStringTheory
 {
 #if NETSTANDARD2_1_OR_GREATER
@@ -234,29 +235,5 @@ public static unsafe partial class ByteStringTheory
         ImmutableByteArrayBuilderPoolTheory.Shared.Return(builder);
 
         return result;
-    }
-
-    public static ByteStringSplitEnumerator SplitByteSpan(ReadOnlySpan<byte> source, byte seperator)
-    {
-        return new 
-        (
-#if NET9_0_OR_GREATER
-            source.Split(seperator)
-#else
-            Nemonuri.NetStandards.MemorySplitTheory.Split(source, seperator)
-#endif
-        );
-    }
-
-    public static ByteStringSplitEnumerator SplitByteSpan(ReadOnlySpan<byte> source, ReadOnlySpan<byte> seperator)
-    {
-        return new 
-        (
-#if NET9_0_OR_GREATER
-            source.Split(seperator)
-#else
-            Nemonuri.NetStandards.MemorySplitTheory.Split(source, seperator)
-#endif
-        );
     }
 }

@@ -2,7 +2,7 @@ using System.Buffers;
 using System.Collections;
 namespace Nemonuri.ByteChars;
 
-public ref struct ByteCharSpanEnumerator
+public ref struct ByteCharSpanRuneEnumerator
 #if NET9_0_OR_GREATER
     : IEnumerator<Rune>
 #endif
@@ -13,14 +13,14 @@ public ref struct ByteCharSpanEnumerator
 
     public Rune Current {get; private set;}
 
-    public ByteCharSpanEnumerator(ReadOnlySpan<byte> source)
+    public ByteCharSpanRuneEnumerator(ReadOnlySpan<byte> source)
     {
         _source = source;
         _offset = 0;
         Current = default;
     }
 
-    public readonly ByteCharSpanEnumerator GetEnumerator() => this;
+    public readonly ByteCharSpanRuneEnumerator GetEnumerator() => this;
 
     public bool MoveNext()
     {

@@ -1,16 +1,50 @@
-using System.Buffers;
 using Nemonuri.FixedSizes;
+using Nemonuri.ByteChars.Internal;
 using Nemonuri.ByteChars.ByteSpans;
 using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
 using System.Text.Unicode;
-using static Nemonuri.ByteChars.ByteCharTheory;
 using Sls = Nemonuri.ByteChars.Internal.StackLimitSizePremise;
 
 namespace Nemonuri.ByteChars;
 
-static unsafe partial class ByteStringTheory
+public static class ByteCharSpanTheory
 {
+    public static ByteCharSpanSplitEnumerator SplitByteCharSpan(ReadOnlySpan<byte> source, byte seperator)
+    {
+        return new 
+        (
+#if NET9_0_OR_GREATER
+            source.Split(seperator)
+#else
+            Nemonuri.NetStandards.MemorySplitTheory.Split(source, seperator)
+#endif
+        );
+    }
+
+    public static ByteCharSpanSplitEnumerator SplitByteCharSpan(ReadOnlySpan<byte> source, ReadOnlySpan<byte> seperator)
+    {
+        return new 
+        (
+#if NET9_0_OR_GREATER
+            source.Split(seperator)
+#else
+            Nemonuri.NetStandards.MemorySplitTheory.Split(source, seperator)
+#endif
+        );
+    }
+
+    public static string ToDotNetString(ReadOnlySpan<byte> source)
+    {
+        var sb = StringBuilderPoolTheory.Shared.Get();
+        foreach (byte byteChar in source)
+        {
+            sb.Append(ByteCharTheory.ByteCharToDotNetChar(byteChar));
+        }
+        string result = sb.ToString();
+        StringBuilderPoolTheory.Shared.Return(sb);
+        return result;
+    }
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static StringBuilder AppendCharSpan(StringBuilder sb, ReadOnlySpan<char> chars)
     {
@@ -21,7 +55,7 @@ static unsafe partial class ByteStringTheory
 #endif
     }
 
-    public static bool TryAsciiByteSpanToUtf16DotNetString
+    public unsafe static bool TryAsciiByteSpanToUtf16DotNetString
     (
         ReadOnlySpan<byte> byteSpan,
         [NotNullWhen(true)] out string? dotNetString
@@ -65,22 +99,6 @@ static unsafe partial class ByteStringTheory
         return true;
     }
 
-    public static bool TryAsciiByteStringToUtf16DotNetString
-    (
-        ImmutableArray<byte> byteString,
-        [NotNullWhen(true)] out string? dotNetString
-    )
-    {
-        return TryAsciiByteSpanToUtf16DotNetString(byteString.AsSpan(), out dotNetString);
-    }
-
-    public static ImmutableArray<byte> DotNetStringToUtf8ByteString
-    (
-        string dotNetString
-    )
-    {
-        return UnicodeEncoding.UTF8.GetBytes(dotNetString).ToImmutableArray();
-    }
 
     public static ByteCharSpanRuneEnumerator EnumerateRunes(ReadOnlySpan<byte> byteCharSpan) => new(byteCharSpan);
 

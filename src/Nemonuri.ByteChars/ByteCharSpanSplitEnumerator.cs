@@ -7,14 +7,14 @@ using SpanSplitEnumerator = Nemonuri.NetStandards.MemorySplitTheory.SpanSplitEnu
 
 namespace Nemonuri.ByteChars;
 
-public readonly ref struct ByteStringSplitEnumerator
+public readonly ref struct ByteCharSpanSplitEnumerator
 #if NET9_0_OR_GREATER
  : IEnumerator<RangedReadOnlySpan<byte>>
 #endif
 {
     private readonly SpanSplitEnumerator _spanSplitEnumerator;
 
-    internal ByteStringSplitEnumerator(SpanSplitEnumerator spanSplitEnumerator)
+    internal ByteCharSpanSplitEnumerator(SpanSplitEnumerator spanSplitEnumerator)
     {
         _spanSplitEnumerator = spanSplitEnumerator;
     }
