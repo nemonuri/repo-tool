@@ -1,4 +1,5 @@
 using System.Numerics;
+using System.Globalization;
 
 
 namespace Nemonuri.ByteChars.Numerics;
@@ -31,20 +32,20 @@ public static class BigIntegerTheory
 
 
     /// <param name="integerString">Positive signed, little endian integer string.</param>
-    public static bool TryParseAsciiByteSpanToBigInteger(ReadOnlySpan<byte> digits, out BigInteger bigint)
+    public static bool TryParseFromUtf8Span(ReadOnlySpan<byte> digits, out BigInteger bigint)
     {
-        if (!ByteStringTheory.TryAsciiByteSpanToUtf16DotNetString(digits, out var dotnetString))
+        if (!Utf8SpanTheory.TryToDotNetString(digits, out var dotnetString))
         {
             bigint = default; return false;
         }
 
-        return BigInteger.TryParse(dotnetString, out bigint);
+        return BigInteger.TryParse(dotnetString, NumberStyles.Integer, CultureInfo.InvariantCulture, out bigint);
     }
 
-    public static ImmutableArray<byte> FormatBigIntegerToAsciiDecimalByteString(BigInteger bigint)
+    public static ArraySegment<byte> ToMutableByteString(BigInteger bigint)
     {
         var str = bigint.ToString("D");
-        return ByteStringTheory.DotNetStringToUtf8ByteString(str);
+        return MutableByteStringTheory.FromDotNetString(str);
     }
 
 
