@@ -5,3 +5,4 @@
 | From | To |
 | --- | --- |
 | `"[\x00-\x7F]*?"` | `(toString $&B)` |
+| `\bstring\b` | `Prims.string` |

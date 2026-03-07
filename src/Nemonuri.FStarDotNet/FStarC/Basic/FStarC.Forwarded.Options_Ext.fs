@@ -30,25 +30,6 @@ module Options_Ext =
         E <| List.fold_right (fun (k,v) m -> psmap_add m k v)
                 defaults
                 (psmap_empty ())
-    
-#if false
-    (* For boolean-like options, return true if enabled. We consider an
-    extension enabled when set to a non-empty string what is NOT "off",
-    "false", or "0" (and this comparison is case-insensitive). *)
-    val enabled (k:key) : bool
-
-    (* Get a list of all KV pairs that "begin" with k, considered
-    as a namespace. *)
-    val getns (ns:string) : list (key & value)
-
-    (* List all pairs *)
-    val all () : list (key & value)
-
-    val save () : ext_state
-    val restore (s:ext_state) : unit
-
-    val reset () : unit
-#endif
 
     let private cur_state = alloc init
 
@@ -67,7 +48,48 @@ module Options_Ext =
         in
         r
     
+    (* For boolean-like options, return true if enabled. We consider an
+    extension enabled when set to a non-empty string what is NOT "off",
+    "false", or "0" (and this comparison is case-insensitive). *)
+    /// val enabled (k:key) : bool
     let enabled (k:key) : bool =
         let v = get k in
         let v = FStarC.String.lowercase v in
         v <> (toString ""B) && not (v = (toString "off"B) || v = (toString "false"B) || v = (toString "0"B))
+
+
+    (* Find a home *)
+    let private is_prefix s1 s2 : ML<bool> =
+        let l1 = FStarC.String.length s1 in
+        let l2 = FStarC.String.length s2 in
+        l2 >=. l1 && FStarC.String.substring s2 (toInt 0) l1 = s1
+    
+    (* Get a list of all KV pairs that "begin" with k, considered
+    as a namespace. *)
+    /// val getns (ns:string) : list (key & value)
+    let getns (ns:Prims.string) : list<(key * value)> =
+        let f k v acc =
+            if (ns^.(toString ":"B)) </is_prefix/> k
+            then (k, v) :: acc
+            else acc
+        in
+        psmap_fold (!cur_state).map f []
+
+    (* List all pairs *)
+    /// val all () : list (key & value)
+    let all () : list<(key * value)> =
+        let f k v acc = (k, v) :: acc in
+        psmap_fold (!cur_state).map f []
+
+    /// val save () : ext_state
+    let save () : ext_state =
+        !cur_state
+
+    /// val restore (s:ext_state) : unit
+    let restore (s:ext_state) : unit =
+        cur_state := s;
+        ()
+
+    /// val reset () : unit
+    let reset () : unit =
+        cur_state := init
