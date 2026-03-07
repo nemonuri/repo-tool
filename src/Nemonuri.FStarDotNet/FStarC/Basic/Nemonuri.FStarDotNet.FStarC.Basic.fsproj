@@ -10,8 +10,8 @@
     <Compile Include="FStarC.String.fs" />
     <Compile Include="FStarC.Getopt.fs" />
     <Compile Include="FStarC.VConfig.fs" />
-    
     <Compile Include="FStarC.PSMap.fs" />
+    <Compile Include="FStarC.Forwarded.Options_Ext.fs" />
     <Compile Include="FStarC.Options.fs" />
   </ItemGroup>
   <ItemGroup>

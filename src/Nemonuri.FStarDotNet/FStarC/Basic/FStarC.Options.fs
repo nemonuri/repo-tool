@@ -4,13 +4,16 @@
 namespace Nemonuri.FStarDotNet.FStarC
 
 open Nemonuri.FStarDotNet
-open System.Collections.Generic
+module Effect = Nemonuri.FStarDotNet.FStarC.Effect
+open Nemonuri.FStarDotNet.FStarC.Getopt
+module BaseTypes = Nemonuri.FStarDotNet.FStarC.BaseTypes
+open Nemonuri.FStarDotNet.FStarC.VConfig
 
 module Options =
 
     (* Set externally, checks if the directory exists and otherwise
     logs an issue. Cannot do it here due to circular deps. *)
-    let check_include_dir : ref<Prims.string -> unit> = Effect.mk_ref (fun (s:Prims.string) -> ())
+    let check_include_dir : Effect.ref<Prims.string -> unit> = Effect.mk_ref (fun (s:Prims.string) -> ())
 
     (* Raised when a processing a pragma an a non-settable option
     appears there. *)
@@ -38,7 +41,7 @@ module Options =
     | List of list<option_val>
     | Unset
 
-    type optionstate = PSMap.t option_val
+    type optionstate = PSMap.t<option_val>
 
     type opt_type =
     | Const of option_val

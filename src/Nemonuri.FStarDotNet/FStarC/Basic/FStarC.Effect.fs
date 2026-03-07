@@ -23,7 +23,6 @@ open Nemonuri.FStarDotNet.Primitives
 open Nemonuri.FStarDotNet.Primitives.Abbreviations
 module Obs = Nemonuri.OCamlDotNet.Primitives.Operations.OCamlByteSpanSources
 
-[<RequireQualifiedAccess>]
 module Effect =
 
 #if false
