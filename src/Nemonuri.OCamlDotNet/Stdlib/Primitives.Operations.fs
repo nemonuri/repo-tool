@@ -1,4 +1,4 @@
-namespace Nemonuri.OCamlDotNet.Primitives.Operations
+namespace Nemonuri.OCamlDotNet.Primitives
 
 open System
 open Nemonuri.ByteChars
@@ -7,7 +7,6 @@ open type System.MemoryExtensions
 open type System.Linq.ImmutableArrayExtensions
 open Microsoft.FSharp.NativeInterop
 open Nemonuri.OCamlDotNet.Primitives
-
 
 
 module DotNetArrays =
@@ -28,38 +27,13 @@ type DotNetSpans =
 
     static member inline NativePtrToSpan(ptr: nativeptr<'T>, length: int) = Span<'T>(ptr |> NativePtr.toVoidPtr, length)
 
-#if false
-module internal OCamlByteSequenceSources =
-
-    module internal Unsafe =
-
-        let sourceToBytes (source: OCamlByteSequenceSource) = { OCamlBytes.Source = source }
-
-        let sourceOfBytes (bytes: OCamlBytes) = bytes.Source
-
-        let sourceToString (source: OCamlByteSequenceSource) = { OCamlString.Source = source }
-
-        let sourceOfString (str: OCamlString) = str.Source
-
-    let empty = OCamlByteSequenceSource.None
-
-    let ofArraySegemnt (source: ArraySegment<OCamlChar>) = source |> OCamlByteSequenceSource.Array
-
-    let ofArray (source: OCamlChar array) = source |> ArraySegment<_> |> ofArraySegemnt
-    
-    let inline toSpan (source: OCamlByteSequenceSource) = source.AsReadOnlySpan()
-
-    let inline unsafeToSpan (source: OCamlByteSequenceSource) = source.UnsafeAsSpan()
-
-    let inline clone (source: OCamlByteSequenceSource) = (toSpan source).ToArray() |> ofArray
-#endif
 
 module OCamlByteSpanSources =
 
     type t = OCamlByteSpanSource
     type OCamlBytes = Nemonuri.OCamlDotNet.Primitives.OCamlBytes
     type OCamlString = Nemonuri.OCamlDotNet.Primitives.OCamlString
-    module U = Nemonuri.OCamlDotNet.Primitives.Internals.Operations.UnsafeOCamlByteSpanSources
+    module U = Nemonuri.OCamlDotNet.Primitives.Internals.UnsafeOCamlByteSpanSources
 
     let private mnd = OCamlByteSpanSource.Monad
 
@@ -188,15 +162,14 @@ module OCamlByteSpanSources =
 
 module ByteSpans =
 
-    open type Nemonuri.ByteChars.Extensions.UnsafePinnedSpanPointerExtensions
-    open type Nemonuri.ByteChars.ByteCharTheory
+    open Nemonuri.ByteChars.ByteSpans
     type private bs = Span<OCamlChar>
     type private rbs = ReadOnlySpan<OCamlChar>
-    type private ps = Nemonuri.ByteChars.UnsafePinnedSpanPointer<OCamlChar>
     type private trbs = ITemporaryReadOnlySpanSource<OCamlChar>
     type private bd = Nemonuri.ByteChars.ArrayBuilder<OCamlChar>
     type private Cc = Nemonuri.ByteChars.ByteCharConstants
     type private Cth = Nemonuri.ByteChars.ByteCharTheory
+    type private Sth = Nemonuri.ByteChars.ByteCharSpanSourceTheory
     type private Dns = DotNetSpans
 
     let [<Literal>] StackAllocThreshold = 256
@@ -369,22 +342,22 @@ module ByteSpans =
 
     let uppercase_ascii (s: rbs) = 
         let mutable result = spanToArraySegement s
-        UpdateToUpperCase<ByteArraySegmentPremise,_>(&result)
+        Sth.UpdateToUpperCase<ByteArraySegmentPremise,_>(&result)
         result
 
     let lowercase_ascii (s: rbs) = 
         let mutable result = spanToArraySegement s
-        UpdateToLowerCase<ByteArraySegmentPremise,_>(&result)
+        Sth.UpdateToLowerCase<ByteArraySegmentPremise,_>(&result)
         result
     
     let capitalize_ascii (s: rbs) = 
         let mutable result = spanToArraySegement s
-        UpdateToCapitalizdAscii<ByteArraySegmentPremise,_>(&result)
+        Sth.UpdateToCapitalizdAscii<ByteArraySegmentPremise,_>(&result)
         result
     
     let uncapitalize_ascii (s: rbs) = 
         let mutable result = spanToArraySegement s
-        UpdateToUncapitalizdAscii<ByteArraySegmentPremise,_>(&result)
+        Sth.UpdateToUncapitalizdAscii<ByteArraySegmentPremise,_>(&result)
         result
 
     let starts_with (prefix: rbs) (s: rbs) = prefix.StartsWith(s)

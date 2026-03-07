@@ -2,10 +2,9 @@ namespace Nemonuri.OCamlDotNet.Forwarded
 
 open System;
 open Nemonuri.OCamlDotNet.Primitives
-open Nemonuri.OCamlDotNet.Primitives.Operations
 open type System.MemoryExtensions
-module O = Nemonuri.OCamlDotNet.Primitives.Operations.OCamlByteSpanSources
-module Ou = Nemonuri.OCamlDotNet.Primitives.Operations.OCamlByteSpanSources.Unsafe
+module O = Nemonuri.OCamlDotNet.Primitives.OCamlByteSpanSources
+module Ou = Nemonuri.OCamlDotNet.Primitives.OCamlByteSpanSources.Unsafe
 module B = Nemonuri.OCamlDotNet.Forwarded.Bytes
 module Bs = ByteSpans
 

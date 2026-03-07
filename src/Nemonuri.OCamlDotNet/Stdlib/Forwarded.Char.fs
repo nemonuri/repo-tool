@@ -2,7 +2,7 @@
 namespace Nemonuri.OCamlDotNet.Forwarded
 
 open Nemonuri.OCamlDotNet.Primitives
-module O = Nemonuri.OCamlDotNet.Primitives.Operations.OCamlByteSpanSources
+module O = Nemonuri.OCamlDotNet.Primitives.OCamlByteSpanSources
 
 module Char =
 

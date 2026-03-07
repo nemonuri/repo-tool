@@ -1,10 +1,10 @@
 
 namespace Nemonuri.OCamlDotNet.Batteries
 
+open Nemonuri.ByteChars
 open Nemonuri.OCamlDotNet.Primitives
-open type Nemonuri.ByteChars.ByteStringTheory
 module S = Nemonuri.OCamlDotNet.Forwarded.String
-module Obs = Nemonuri.OCamlDotNet.Primitives.Operations.OCamlByteSpanSources
+module Obs = Nemonuri.OCamlDotNet.Primitives.OCamlByteSpanSources
 
 /// String operations.
 /// 
@@ -33,7 +33,7 @@ module BatString =
     /// Example: String.split_on_string "bc" "abcabcabc" = ["a"; "a"; "a"; ""]
     let split_on_string (sep: OCamlString) (s: OCamlString) : OCamlString list = 
         let sepLength = S.length sep
-        let mutable e = SplitByteSpan(toSpan s, toSpan sep)
+        let mutable e = ByteCharSpanTheory.SplitByteCharSpan(toSpan s, toSpan sep)
         let mutable curList : OCamlString list = []
         while e.MoveNext() do
             let rrs = e.Current

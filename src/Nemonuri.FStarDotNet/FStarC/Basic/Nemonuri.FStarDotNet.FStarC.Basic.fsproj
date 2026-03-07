@@ -5,7 +5,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="FStarC.Effect.fs" />
-    <Compile Include="FStarC.Json.fs" />
+    <Compile Include="FStarC.Json.fs" /><Compile Include="FStarC.Format.fs" />
     <Compile Include="FStarC.Char.fs" />
     <Compile Include="FStarC.BaseTypes.fs" />
     <Compile Include="FStarC.Util.fs" />
@@ -22,5 +22,6 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Ulib\Nemonuri.FStarDotNet.Ulib.fsproj" />
+    <ProjectReference Include="..\..\..\Nemonuri.ByteChars.Json\Nemonuri.ByteChars.Json.csproj" />
   </ItemGroup>
 </Project>

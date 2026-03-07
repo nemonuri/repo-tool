@@ -4,9 +4,8 @@ namespace Nemonuri.OCamlDotNet.Zarith
 open System.Numerics
 open type System.Linq.ImmutableArrayExtensions
 open Nemonuri.OCamlDotNet.Primitives
-open Nemonuri.OCamlDotNet.Primitives.Operations
-open type Nemonuri.ByteChars.Numerics.BigIntegerTheory
-module Obs = Nemonuri.OCamlDotNet.Primitives.Operations.OCamlByteSpanSources
+open Nemonuri.ByteChars.Numerics
+module Obs = Nemonuri.OCamlDotNet.Primitives.OCamlByteSpanSources
 
 module Z =
 
@@ -54,7 +53,7 @@ module Z =
     /// Otherwise, base 10 is assumed. (Unlike C, a lone 0 prefix does not denote octal.) 
     /// Raises an Invalid_argument exception if the string is not a syntactically correct representation of an integer.
     let of_string (s: OCamlString) : t = 
-        let success, n = TryParseAsciiByteSpanToBigInteger(Obs.stringToReadOnlySpan s)
+        let success, n = BigIntegerTheory.TryParseUtf8Span(Obs.stringToReadOnlySpan s)
         if not success then Exceptions.invalid_arg (Obs.Unsafe.stringOfArray "invalid argument"B) else
         n
 
@@ -67,7 +66,7 @@ module Z =
 
 
     /// Gives a human-readable, decimal string representation of the argument.
-    let to_string (n: t) : OCamlString = FormatBigIntegerToAsciiDecimalByteString n |> _.ToArray() |> Obs.Unsafe.stringOfArray
+    let to_string (n: t) : OCamlString = BigIntegerTheory.ToMutableByteString n |> Obs.Unsafe.stringOfArraySegment
 
 
 

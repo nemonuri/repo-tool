@@ -1,6 +1,6 @@
 namespace Nemonuri.FStarDotNet
 
-open Nemonuri.OCamlDotNet.Primitives.Operations
+open Nemonuri.OCamlDotNet.Primitives
 open Nemonuri.OCamlDotNet.Zarith
 open Nemonuri.OCamlDotNet.Forwarded
 

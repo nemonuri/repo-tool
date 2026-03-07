@@ -5,7 +5,7 @@ namespace Nemonuri.FStarDotNet.FStarC
 open Nemonuri.FStarDotNet
 open Nemonuri.FStarDotNet.Primitives
 open Nemonuri.FStarDotNet.Primitives.Abbreviations
-module Obs = Nemonuri.OCamlDotNet.Primitives.Operations.OCamlByteSpanSources
+module Obs = Nemonuri.OCamlDotNet.Primitives.OCamlByteSpanSources
 
 module Effect =
 

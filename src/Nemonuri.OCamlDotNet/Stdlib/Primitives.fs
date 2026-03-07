@@ -6,19 +6,17 @@ open System
 type ITemporaryReadOnlySpanSource<'T> =
     abstract member AsTemporarySpan: unit -> ReadOnlySpan<'T>
 
-namespace Nemonuri.OCamlDotNet.Primitives.Operations
-
 module TemporaryReadOnlySpanSources =
 
-    type t<'a> = Nemonuri.OCamlDotNet.Primitives.ITemporaryReadOnlySpanSource<'a>
+    type t<'a> = ITemporaryReadOnlySpanSource<'a>
 
     let inline toReadOnlySpan (s: t<'a>) = s.AsTemporarySpan()
 
-namespace Nemonuri.OCamlDotNet.Primitives
+
 
 open System
 open Nemonuri.OCamlDotNet.Primitives.Internals
-module U = Nemonuri.OCamlDotNet.Primitives.Internals.Operations.UnsafeOCamlByteSpanSources
+module U = Nemonuri.OCamlDotNet.Primitives.Internals.UnsafeOCamlByteSpanSources
 
 exception Not_found
 
@@ -74,7 +72,7 @@ and private OCamlByteSpanSourceMonad = TargetToSourceMonad<UnsafeOCamlByteSpanSo
 and private O = OCamlByteSpanSource
 
 
-module Trs = Nemonuri.OCamlDotNet.Primitives.Operations.TemporaryReadOnlySpanSources
+module Trs = TemporaryReadOnlySpanSources
 
 [<Struct>]
 type OCamlBytes = internal { Source: OCamlByteSpanSource } with

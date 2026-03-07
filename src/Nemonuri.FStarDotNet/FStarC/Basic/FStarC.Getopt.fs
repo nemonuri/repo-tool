@@ -11,8 +11,7 @@ open Nemonuri.FStarDotNet.FStarOperators
 open Nemonuri.OCamlDotNet.Primitives
 open Nemonuri.OCamlDotNet.Forwarded
 open Nemonuri.OCamlDotNet.Forwarded.Array.Operators
-open Nemonuri.OCamlDotNet.Primitives.Operations
-module Obs = Nemonuri.OCamlDotNet.Primitives.Operations.OCamlByteSpanSources
+module Obs = Nemonuri.OCamlDotNet.Primitives.OCamlByteSpanSources
 module Ef = Nemonuri.FStarDotNet.FStarC.Effect
 module OCamlStrings = Nemonuri.OCamlDotNet.Forwarded.String
 

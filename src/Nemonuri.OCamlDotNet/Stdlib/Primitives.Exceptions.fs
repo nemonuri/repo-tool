@@ -1,7 +1,6 @@
 namespace Nemonuri.OCamlDotNet.Primitives
 
-open Nemonuri.OCamlDotNet.Primitives.Operations
-module O = Nemonuri.OCamlDotNet.Primitives.Operations.OCamlByteSpanSources
+module O = Nemonuri.OCamlDotNet.Primitives.OCamlByteSpanSources
 
 module Exceptions =
 

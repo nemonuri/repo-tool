@@ -1,7 +1,10 @@
 namespace Nemonuri.OCamlDotNet.Primitives.Internals
 
 open System
+open System.Diagnostics
 open Nemonuri.ByteChars
+open type System.MemoryExtensions
+open type Nemonuri.ByteChars.Extensions.UnsafePinnedSpanPointerExtensions
 
 [<Struct>]
 type internal UnsafeOCamlByteSpanSource =
@@ -10,14 +13,6 @@ type internal UnsafeOCamlByteSpanSource =
 | PinnedPointer of pointer: UnsafePinnedSpanPointer<byte>
 
 
-namespace Nemonuri.OCamlDotNet.Primitives.Internals.Operations
-
-open System
-open System.Diagnostics
-open Nemonuri.ByteChars
-open type System.MemoryExtensions
-open type Nemonuri.ByteChars.Extensions.UnsafePinnedSpanPointerExtensions
-open Nemonuri.OCamlDotNet.Primitives.Internals
 
 module internal UnsafeOCamlByteSpanSources =
 
@@ -60,6 +55,6 @@ module internal UnsafeOCamlByteSpanSources =
         | Array v -> ArraySegment<_>(v.Array, v.Offset + offset, sliceLength) |> ofArraySegment
         | PinnedPointer v -> v.Slice(offset, sliceLength) |> PinnedPointer
     
-    let toDotNetString (s: t) : string = ByteStringTheory.ByteStringToDotNetString(toSpan s)
+    let toDotNetString (s: t) : string = ByteCharSpanTheory.ToDotNetString(toSpan s)
 
-    let ofDotNetString (s: string) : t = MutableByteStringTheory.FromDotNetStringWithEncoding(s) |> ofArraySegment
+    let ofDotNetString (s: string) : t = MutableByteStringTheory.FromDotNetStringWithUtf8Encoding(s) |> ofArraySegment
