@@ -781,6 +781,10 @@ module Prims =
         match l with
         | [] -> Nil
         | hd::tl -> Cons (hd, tl)
+    
+    let isNil = function | Nil -> true | Cons _ -> false
+    let isCons = function | Nil -> false | Cons _ -> true
+    
 
 
 #if false

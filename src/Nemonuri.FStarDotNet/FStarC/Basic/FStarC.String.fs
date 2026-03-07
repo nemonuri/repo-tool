@@ -8,8 +8,8 @@ open Nemonuri.OCamlDotNet.Batteries
 open Nemonuri.OCamlDotNet.Zarith
 open Nemonuri.FStarDotNet.FStarOperators
 module S = Nemonuri.OCamlDotNet.Forwarded.String
+module List = Nemonuri.OCamlDotNet.Forwarded.List
 
-[<RequireQualifiedAccess>]
 module String =
 
     (* The name of this file is misleading: most string functions are to be found in
@@ -30,7 +30,7 @@ module String =
             | [] -> acc
             | sep::seps ->
                 let usep = BatUTF8.init 1 (fun _ -> BatUChar.chr sep) in
-                let l = FStar.List.concatMap (fun x -> batstring_nsplit x usep)  acc in
+                let l = List.flatten (List.map (fun x -> batstring_nsplit x usep) acc)  in
                 repeat_split l seps in
         repeat_split [s] seps
     

@@ -26,7 +26,7 @@ module Options_Ext =
         ((toString "prune_decls"B), (toString "true"B))
     ]
 
-    let init : ext_state =
+    let private init : ext_state =
         E <| List.fold_right (fun (k,v) m -> psmap_add m k v)
                 defaults
                 (psmap_empty ())

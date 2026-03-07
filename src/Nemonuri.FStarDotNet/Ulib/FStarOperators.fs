@@ -2,7 +2,7 @@ namespace Nemonuri.FStarDotNet
 
 open Nemonuri.OCamlDotNet.Primitives.Operations
 open Nemonuri.OCamlDotNet.Zarith
-open Nemonuri.FStarDotNet.Forwarded
+open Nemonuri.OCamlDotNet.Forwarded
 
 
 module FStarOperators =
@@ -38,6 +38,9 @@ module FStarOperators =
     let ( <>. ) x y = Prims.op_disEquality x y
 
     let ( ^. ) s1 s2 = Prims.op_Hat s1 s2
+
+    let (|ToString|_|) (b: byte array) (s: Prims.string) = toString b </String.equal/> s
+
 
 #if false
     

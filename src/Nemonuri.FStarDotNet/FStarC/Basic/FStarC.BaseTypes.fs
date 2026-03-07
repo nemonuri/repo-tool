@@ -5,7 +5,6 @@ namespace Nemonuri.FStarDotNet.FStarC
 
 open Nemonuri.FStarDotNet
 
-[<RequireQualifiedAccess>]
 module BaseTypes =
 
     /// This module aggregates commonly used primitive type constants into
