@@ -32,7 +32,7 @@ public static class BigIntegerTheory
 
 
     /// <param name="integerString">Positive signed, little endian integer string.</param>
-    public static bool TryParseFromUtf8Span(ReadOnlySpan<byte> digits, out BigInteger bigint)
+    public static bool TryParseUtf8Span(ReadOnlySpan<byte> digits, out BigInteger bigint)
     {
         if (!Utf8SpanTheory.TryToDotNetString(digits, out var dotnetString))
         {

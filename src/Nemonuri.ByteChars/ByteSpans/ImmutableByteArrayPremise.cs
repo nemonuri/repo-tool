@@ -2,6 +2,7 @@ using Nemonuri.ByteChars.Internal;
 
 namespace Nemonuri.ByteChars.ByteSpans;
 
+[Obsolete]
 public readonly unsafe struct ImmutableByteArrayPremise : IByteSpanSourcePremise<ImmutableArray<byte>>
 {
     public bool LessThanOrEqualAll(ImmutableArray<byte> left, ImmutableArray<byte> right) => 
