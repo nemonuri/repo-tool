@@ -1,6 +1,8 @@
-using Fst = Nemonuri.ByteChars.FixedSizeTheory;
+using Nemonuri.Enumerators;
 
-namespace Nemonuri.ByteChars;
+namespace Nemonuri.FixedSizes;
+
+using Fst = FixedSizeTheory;
 
 public readonly ref struct FixedSizeReadOnlyChunkSpan<TSize, T>
      where TSize : unmanaged, IFixedSizePremise

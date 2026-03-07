@@ -1,8 +1,10 @@
+using Bp = Nemonuri.ByteChars.ByteSpans.BytePremise;
+using System.Diagnostics;
+
 namespace Nemonuri.ByteChars;
 
-using System.Diagnostics;
 using B = ByteCharConstants;
-using Bp = ByteCharTheory.BytePremise;
+
 
 
 public static partial class ByteCharTheory
@@ -123,7 +125,7 @@ public static partial class ByteCharTheory
         }
     }
 
-    private static void UpdateIntegerToHexadecimalDigit_HexBaseCharRequired(ref byte integer, byte hexBaseChar)
+    internal static void UpdateIntegerToHexadecimalDigit_HexBaseCharRequired(ref byte integer, byte hexBaseChar)
     {
         integer = IntegerToHexadecimalDigit_BaseCharRequired(integer, hexBaseChar);
     }

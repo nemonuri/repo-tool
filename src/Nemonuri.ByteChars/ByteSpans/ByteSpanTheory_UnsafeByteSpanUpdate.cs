@@ -1,10 +1,11 @@
 using static Nemonuri.ByteChars.Internal.ByteVectorTheory;
 using static Nemonuri.ByteChars.Extensions.GuardExtensions;
 using Vs = Nemonuri.ByteChars.Internal.ByteVectorSizePremise;
+using Nemonuri.FixedSizes;
 
-namespace Nemonuri.ByteChars.Internal;
+namespace Nemonuri.ByteChars.ByteSpans;
 
-static partial class ByteCharSpanTheory
+static partial class ByteSpanTheory
 {
 #if !NET8_0_OR_GREATER
     internal static unsafe void UnsafeByteSpanUpdate
@@ -15,7 +16,7 @@ static partial class ByteCharSpanTheory
         delegate*<Vector<byte>, Vector<byte>, Vector<byte>> vectorOp
     )
     {
-        if (TryGetConstant(right, out var rConstant))
+        if (TryGetElementFromSingleton(right, out var rConstant))
         {
             static void ByteFallback(Span<byte> spanL, byte constR, delegate*<byte, byte, byte> byteOp0)
             {

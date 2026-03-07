@@ -1,4 +1,4 @@
-namespace Nemonuri.ByteChars;
+namespace Nemonuri.Enumerators;
 
 public interface ISupportEnumeratorState
 {

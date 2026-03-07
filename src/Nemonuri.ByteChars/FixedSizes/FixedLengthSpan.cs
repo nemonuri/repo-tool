@@ -1,6 +1,6 @@
-using static Nemonuri.ByteChars.FixedSizeTheory;
+namespace Nemonuri.FixedSizes;
 
-namespace Nemonuri.ByteChars;
+using static FixedSizeTheory;
 
 public readonly ref struct FixedLengthSpan<TSize, T>
     where TSize : unmanaged, IFixedSizePremise

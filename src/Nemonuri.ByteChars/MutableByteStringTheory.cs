@@ -1,3 +1,4 @@
+using Nemonuri.FixedSizes;
 using Sls = Nemonuri.ByteChars.Internal.StackLimitSizePremise;
 
 namespace Nemonuri.ByteChars;

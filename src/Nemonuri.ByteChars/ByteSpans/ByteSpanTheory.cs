@@ -1,18 +1,23 @@
 using static Nemonuri.ByteChars.Extensions.GuardExtensions;
 using static Nemonuri.ByteChars.Internal.ByteVectorTheory;
-using Vp = Nemonuri.ByteChars.ByteCharTheory.ByteVectorPremise;
-using Bp = Nemonuri.ByteChars.ByteCharTheory.BytePremise;
+using Vp = Nemonuri.ByteChars.ByteSpans.ByteVectorPremise;
+using Bp = Nemonuri.ByteChars.ByteSpans.BytePremise;
 using Vs = Nemonuri.ByteChars.Internal.ByteVectorSizePremise;
 using Sls = Nemonuri.ByteChars.Internal.StackLimitSizePremise;
+using Nemonuri.ByteChars.Internal;
+using Nemonuri.FixedSizes;
 
-namespace Nemonuri.ByteChars.Internal;
+namespace Nemonuri.ByteChars.ByteSpans;
 
-internal static partial class ByteCharSpanTheory
+public static partial class ByteSpanTheory
 {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static bool TryGetConstant(ReadOnlySpan<byte> bytes, out byte constant)
+    public static bool IsSingleton(ReadOnlySpan<byte> bytes) => bytes.Length == 1;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool TryGetElementFromSingleton(ReadOnlySpan<byte> bytes, out byte constant)
     {
-        if (bytes.Length == 1)
+        if (IsSingleton(bytes))
         {
             constant = bytes[0];
             return true;
@@ -32,10 +37,12 @@ internal static partial class ByteCharSpanTheory
     private static Vector<byte> GetVectorConstant(byte value) => (new Vp()).GetTemporaryConstant(value);
 #endif
 
-    internal static bool LessThanOrEqualAll(ReadOnlySpan<byte> left, ReadOnlySpan<byte> right)
+    // public static bool LessThanOrEqualAll(ReadOnlySpan<byte> left, byte right) => LessThanOrEqualAll(left, stackalloc byte[] { right });
+
+    public static bool LessThanOrEqualAll(ReadOnlySpan<byte> left, ReadOnlySpan<byte> right)
     {
 #if NET8_0_OR_GREATER
-        if (TryGetConstant(right, out var rConstant))
+        if (TryGetElementFromSingleton(right, out var rConstant))
         {
             var sr = Sls.SplitSpan(left);
             Span<byte> dest = stackalloc byte[Sls.GetFixedSize()];
@@ -78,7 +85,7 @@ internal static partial class ByteCharSpanTheory
             return true;
         }
 #else
-        if (TryGetConstant(right, out var rConstant))
+        if (TryGetElementFromSingleton(right, out var rConstant))
         {
             static bool ByteFallback(ReadOnlySpan<byte> spanL, byte constR)
             {
@@ -145,9 +152,11 @@ internal static partial class ByteCharSpanTheory
 #endif
     }
 
-    internal static bool EqualsAll(ReadOnlySpan<byte> left, ReadOnlySpan<byte> right)
+    // public static bool EqualsAll(ReadOnlySpan<byte> left, byte right) => EqualsAll(left, stackalloc byte[] { right });
+
+    public static bool EqualsAll(ReadOnlySpan<byte> left, ReadOnlySpan<byte> right)
     {
-        if (TryGetConstant(right, out var rConstant))
+        if (TryGetElementFromSingleton(right, out var rConstant))
         {
 #if NET8_0_OR_GREATER
             return left.IndexOfAnyExcept(rConstant) == -1;
@@ -187,10 +196,12 @@ internal static partial class ByteCharSpanTheory
         }
     }
 
-    internal static void Add(Span<byte> left, ReadOnlySpan<byte> right)
+    // public static void Add(Span<byte> left, byte right) => Add(left, stackalloc byte[] { right });
+
+    public static void Add(Span<byte> left, ReadOnlySpan<byte> right)
     {
 #if NET8_0_OR_GREATER
-        if (TryGetConstant(right, out var rConstant))
+        if (TryGetElementFromSingleton(right, out var rConstant))
         {
             TensorPrimitives.Add(left, rConstant, left);
         }
@@ -209,10 +220,12 @@ internal static partial class ByteCharSpanTheory
 #endif
     }
 
-    internal static void Subtract(Span<byte> left, ReadOnlySpan<byte> right)
+    // public static void Subtract(Span<byte> left, byte right) => Subtract(left, stackalloc byte[] { right });
+
+    public static void Subtract(Span<byte> left, ReadOnlySpan<byte> right)
     {
 #if NET8_0_OR_GREATER
-        if (TryGetConstant(right, out var rConstant))
+        if (TryGetElementFromSingleton(right, out var rConstant))
         {
             TensorPrimitives.Subtract(left, rConstant, left);
         }
@@ -231,10 +244,12 @@ internal static partial class ByteCharSpanTheory
 #endif
     }
 
-    internal static void Modulus(Span<byte> left, ReadOnlySpan<byte> right)
+    // public static void Modulus(Span<byte> left, byte right) => Modulus(left, stackalloc byte[] { right });
+
+    public static void Modulus(Span<byte> left, ReadOnlySpan<byte> right)
     {
 #if NET8_0_OR_GREATER
-        if (TryGetConstant(right, out var rConstant))
+        if (TryGetElementFromSingleton(right, out var rConstant))
         {
             TensorPrimitives.Remainder(left, rConstant, left);
         }

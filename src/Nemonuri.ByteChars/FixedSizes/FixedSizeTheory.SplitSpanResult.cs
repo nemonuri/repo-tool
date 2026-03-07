@@ -1,29 +1,29 @@
-namespace Nemonuri.ByteChars;
+namespace Nemonuri.FixedSizes;
 
 public static partial class FixedSizeTheory
 {
-    public readonly ref struct SplitReadOnlySpanResult<TSize, T>
+    public readonly ref struct SplitSpanResult<TSize, T>
         where TSize : unmanaged, IFixedSizePremise
     {
-        internal SplitReadOnlySpanResult(FixedSizeReadOnlyChunkSpan<TSize, T> chunks, ReadOnlySpan<T> remainder)
+        internal SplitSpanResult(FixedSizeChunkSpan<TSize, T> chunks, Span<T> remainder)
         {
             Chunks = chunks;
             Remainder = remainder;
         }
 
-        public FixedSizeReadOnlyChunkSpan<TSize, T> Chunks {get;}
+        public FixedSizeChunkSpan<TSize, T> Chunks {get;}
 
-        public ReadOnlySpan<T> Remainder {get;}
+        public Span<T> Remainder {get;}
 
         public readonly Enumerator GetEnumerator() => new (this);
 
-        public ref struct Enumerator
+        public readonly ref struct Enumerator
         {
-            private readonly SplitReadOnlySpanResult<TSize, T> _source;
-            private readonly FixedSizeReadOnlyChunkSpan<TSize, T>.Enumerator _chunkEnumerator;
+            private readonly SplitSpanResult<TSize, T> _source;
+            private readonly FixedSizeChunkSpan<TSize, T>.Enumerator _chunkEnumerator;
             
 
-            internal Enumerator(SplitReadOnlySpanResult<TSize, T> source)
+            internal Enumerator(SplitSpanResult<TSize, T> source)
             {
                 _source = source;
                 _chunkEnumerator = _source.Chunks.GetEnumerator();
@@ -45,7 +45,7 @@ public static partial class FixedSizeTheory
                 }
             }
 
-            public readonly ReadOnlySpan<T> Current
+            public readonly Span<T> Current
             {
                 get
                 {

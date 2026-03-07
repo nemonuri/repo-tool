@@ -2,8 +2,6 @@ namespace Nemonuri.ByteChars;
 
 public static class ByteStringConstants
 {
-    internal const int StackAllocThreshold = 256; // .NET 공식은 보통 256 바이트를 사용한다. 이유가 있겠지.
-
 /**
 https://learn.microsoft.com/en-us/dotnet/api/system.array?view=netstandard-2.0
 

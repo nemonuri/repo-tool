@@ -1,4 +1,6 @@
 using System.Buffers;
+using Nemonuri.FixedSizes;
+using Nemonuri.ByteChars.ByteSpans;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Text.Unicode;

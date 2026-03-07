@@ -1,10 +1,10 @@
-using System.Numerics;
+using Nemonuri.FixedSizes;
 
 namespace Nemonuri.ByteChars.Internal;
 
 internal readonly struct StackLimitSizePremise : IFixedSizePremise
 {
-    public readonly int FixedSize => ByteStringConstants.StackAllocThreshold;
+    public readonly int FixedSize => InternalConstants.StackAllocThreshold;
 }
 
 internal readonly struct ByteVectorSizePremise : IFixedSizePremise

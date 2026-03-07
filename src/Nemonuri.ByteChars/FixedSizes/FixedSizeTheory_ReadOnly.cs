@@ -1,4 +1,4 @@
-namespace Nemonuri.ByteChars;
+namespace Nemonuri.FixedSizes;
 
 public static partial class FixedSizeTheory
 {

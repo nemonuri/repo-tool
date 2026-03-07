@@ -1,3 +1,4 @@
+using Nemonuri.FixedSizes;
 using Nemonuri.ByteChars.Internal;
 using Sls = Nemonuri.ByteChars.Internal.StackLimitSizePremise;
 using static Nemonuri.ByteChars.Extensions.ImmutableArrayBuilderExtensions;
