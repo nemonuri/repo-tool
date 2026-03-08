@@ -130,6 +130,22 @@ public static partial class ByteCharTheory
         integer = IntegerToHexadecimalDigit_BaseCharRequired(integer, hexBaseChar);
     }
 
+    public static void UpdateIntegerToLowerHexadecimalDigit(ref byte integer) => Bp.UpdateIntegerToLowerHexadecimalDigit(ref integer);
+
+    public static byte IntegerToLowerHexadecimalDigit(byte integer)
+    {
+        UpdateIntegerToLowerHexadecimalDigit(ref integer);
+        return integer;
+    }
+
+    public static void UpdateIntegerToUpperHexadecimalDigit(ref byte integer) => Bp.UpdateIntegerToUpperHexadecimalDigit(ref integer);
+
+    public static byte IntegerToUpperHexadecimalDigit(byte integer)
+    {
+        UpdateIntegerToUpperHexadecimalDigit(ref integer);
+        return integer;
+    }
+
     public static byte ToUpperCase(byte byteChar) =>
         IsLower(byteChar) ? UncheckedSubtract(byteChar, B.AsciiUpperToLowerDistance) : byteChar;
 

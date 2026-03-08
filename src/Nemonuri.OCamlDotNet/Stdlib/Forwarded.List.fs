@@ -38,4 +38,6 @@ module List =
     let map f l = Fl.map f l
 
     let fold_right (f: 'a -> 'acc -> 'acc) (l: 'a list) (init: 'acc) : 'acc = Fl.foldBack f l init
+
+    let mem a set = Fl.contains a set
     

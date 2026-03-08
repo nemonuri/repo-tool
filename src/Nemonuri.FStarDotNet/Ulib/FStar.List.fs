@@ -40,6 +40,8 @@ module List =
 
             let rev l = FStar_List_Tot_Base.rev l
 
+            let length l = FStar_List_Tot_Base.length l
+
     (** Base operations **)
 
     (** [hd l] returns the first element of [l]. Raises an exception if

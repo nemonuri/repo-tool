@@ -168,7 +168,7 @@ val colorize_magenta : string -> string
     let print_raw s = Out_channel.set_binary_mode stdout true; pr "%s" s; flush stdout
     let print_string s = (!current_printer).printer_prinfo s
     let print_generic label to_string to_json a = (!current_printer).printer_prgeneric label (fun () -> to_string a) (fun () -> to_json a)
-    let print_any s = (!current_printer).printer_prinfo (s.ToString() |> Obs.stringOfDotNetString (* ad-hoc *))
+    let print_any s = (!current_printer).printer_prinfo (JsonSerializers.serialize s)
 
 
     (* restore pre-2.11 BatString.nsplit behavior,

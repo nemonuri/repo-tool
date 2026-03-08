@@ -47,7 +47,8 @@ module BatString =
     /// Example:  String.of_char 's' = "s" 
     let of_char (c: OCamlChar) : OCamlString = [|c|] |> Obs.Unsafe.stringOfArray
         
-        
+    /// tail r pos returns the string containing all but the pos first characters of r
+    let tail (r: OCamlString) (pos: OCamlInt) = S.sub r pos (S.length r - pos)
 
 #if false
     /// The comparison function for strings, with the same specification as Pervasives.compare. Along with the type t, this function compare allows the module String to be passed as argument to the functors Set.Make and Map.Make.

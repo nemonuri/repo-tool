@@ -5,8 +5,11 @@
     <NoWarn>$(NoWarn);FS3391</NoWarn>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="BatPervasives.fs" />
     <Compile Include="BatUChar.fs" />
-    <Compile Include="BatUTF8.fs" /><Compile Include="BatString.fs" />
+    <Compile Include="BatUTF8.fs" />
+    <Compile Include="BatString.fs" />
+    <Compile Include="BatChar.fs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Stdlib\Nemonuri.OCamlDotNet.Stdlib.fsproj" />

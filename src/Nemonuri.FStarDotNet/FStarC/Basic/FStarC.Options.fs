@@ -1,4 +1,6 @@
 #nowarn "25" // Incomplete pattern matches
+#nowarn "1173"
+#nowarn "1174"
 
 // reference: https://github.com/FStarLang/FStar/blob/v2025.12.15/src/basic/FStarC.Options.fsti
 // reference: https://github.com/FStarLang/FStar/blob/v2025.12.15/src/basic/FStarC.Options.fst
@@ -6,14 +8,20 @@
 namespace Nemonuri.FStarDotNet.FStarC
 
 open Nemonuri.FStarDotNet
+open Nemonuri.FStarDotNet.FStar
+open Nemonuri.FStarDotNet.FStar.Pervasives.Native
 open Nemonuri.OCamlDotNet.Forwarded
 open Nemonuri.FStarDotNet.FStarOperators
 open Nemonuri.FStarDotNet.FStarC.Effect
+open Nemonuri.FStarDotNet.FStarC.PSMap
 open Nemonuri.FStarDotNet.FStarC.Getopt
 open Nemonuri.FStarDotNet.FStarC.BaseTypes
 open Nemonuri.FStarDotNet.FStarC.VConfig
 open Nemonuri.FStarDotNet.FStarC.String
 open Nemonuri.FStarDotNet.FStarC.Util
+open Nemonuri.FStarDotNet.FStarC.Class.Deq
+open Nemonuri.FStarDotNet.FStarC.Class.Show
+open Microsoft.FSharp.Core.Operators.Unchecked
 
 module Options =
 
@@ -70,7 +78,7 @@ module Options =
     | Bool of bool
     | String of Prims.string
     | Path of Prims.string
-    | Int of int
+    | Int of Prims.int
     | List of list<option_val>
     | Unset
 
@@ -446,9 +454,26 @@ val set_vconfig : vconfig -> unit
         let lev::_ = !history in
         List.length lev
 
+    let snapshot ()    = Common.snapshot (toString "Options"B) push history ()
+    let rollback depth = Common.rollback (toString "Options"B) pop  history depth
+
+    let set_option k v =
+        let map : optionstate = peek() in
+        if k = (toString "report_assumes"B)
+        then 
+            match psmap_try_find map k with
+            | Some (String (ToString "error"B)) ->
+                //It's already set to error; ignore any attempt to change it
+                ()
+            | _ -> fstar_options := psmap_add map k v
+        else fstar_options := psmap_add map k v
+
+    let set_option' (k,v) =  set_option k v
+    let set_admit_smt_queries (b:bool) = set_option (toString "admit_smt_queries"B) (Bool b)
+
 
     let private defaults = [
-        ((toString "abort_on"B)                                  , Int 0);
+        ((toString "abort_on"B)                                  , Int (toInt 0));
         ((toString "admit_except"B)                              , Unset);
         ((toString "admit_smt_queries"B)                         , Bool false);
         ((toString "already_cached"B)                            , Unset);
@@ -490,8 +515,8 @@ val set_vconfig : vconfig -> unit
         ((toString "ide_id_info_off"B)                           , Bool false);
         ((toString "ifuel"B)                                     , Unset);
         ((toString "include"B)                                   , List []);
-        ((toString "initial_fuel"B)                              , Int 2);
-        ((toString "initial_ifuel"B)                             , Int 1);
+        ((toString "initial_fuel"B)                              , Int (toInt 2));
+        ((toString "initial_ifuel"B)                             , Int (toInt 1));
         ((toString "keep_query_captions"B)                       , Bool true);
         ((toString "krmloutput"B)                                , Unset);
         ((toString "lang_extensions"B)                           , List []);
@@ -507,8 +532,8 @@ val set_vconfig : vconfig -> unit
         ((toString "log_failing_queries"B)                       , Bool false);
         ((toString "log_queries"B)                               , Bool false);
         ((toString "log_types"B)                                 , Bool false);
-        ((toString "max_fuel"B)                                  , Int 8);
-        ((toString "max_ifuel"B)                                 , Int 2);
+        ((toString "max_fuel"B)                                  , Int (toInt 8));
+        ((toString "max_ifuel"B)                                 , Int (toInt 2));
         ((toString "message_format"B)                            , String (toString "auto"B));
         ((toString "MLish"B)                                     , Bool false);
         ((toString "MLish_effect"B)                              , String (toString "FStar.Effect"B));
@@ -540,10 +565,10 @@ val set_vconfig : vconfig -> unit
         ((toString "profile_group_by_decl"B)                     , Bool false);
         ((toString "profile"B)                                   , Unset);
         ((toString "proof_recovery"B)                            , Bool false);
-        ((toString "quake_hi"B)                                  , Int 1);
-        ((toString "quake"B)                                     , Int 0);
+        ((toString "quake_hi"B)                                  , Int (toInt 1));
+        ((toString "quake"B)                                     , Int (toInt 0));
         ((toString "quake_keep"B)                                , Bool false);
-        ((toString "quake_lo"B)                                  , Int 1);
+        ((toString "quake_lo"B)                                  , Int (toInt 1));
         ((toString "query_cache"B)                               , Bool false);
         ((toString "query_stats"B)                               , Bool false);
         ((toString "read_checked_file"B)                         , Unset);
@@ -567,7 +592,7 @@ val set_vconfig : vconfig -> unit
         ((toString "tactics_info"B)                              , Bool false);
         ((toString "__tactics_nbe"B)                             , Bool false);
         ((toString "tactic_trace"B)                              , Bool false);
-        ((toString "tactic_trace_d"B)                            , Int 0);
+        ((toString "tactic_trace_d"B)                            , Int (toInt 0));
         ((toString "tcnorm"B)                                    , Bool true);
         ((toString "timing"B)                                    , Bool false);
         ((toString "trace_error"B)                               , Bool false);
@@ -587,9 +612,202 @@ val set_vconfig : vconfig -> unit
         ((toString "warn_error"B)                                , List []);
         ((toString "z3cliopt"B)                                  , List []);
         ((toString "z3refresh"B)                                 , Bool false);
-        ((toString "z3rlimit_factor"B)                           , Int 1);
-        ((toString "z3rlimit"B)                                  , Int 5);
-        ((toString "z3seed"B)                                    , Int 0);
+        ((toString "z3rlimit_factor"B)                           , Int (toInt 1));
+        ((toString "z3rlimit"B)                                  , Int (toInt 5));
+        ((toString "z3seed"B)                                    , Int (toInt 0));
         ((toString "z3smtopt"B)                                  , List []);
         ((toString "z3version"B)                                 , String (toString "4.13.3"B));
     ]
+
+    let init () =
+        Debug.disable_all ();
+        Ext.reset ();
+        fstar_options := psmap_empty ();
+        defaults |> List.iter set_option'                          //initialize it with the default values
+
+    let clear () =
+        history := [[]];
+        init()
+
+    (* Run it now. *)
+    let _ = clear ()
+
+    let get_option s =
+        match psmap_try_find (peek ()) s with
+        | None -> failwith ((toString "Impossible: option "B) ^.s^. (toString " not found"B))
+        | Some s -> s
+
+    let rec option_val_to_string (v:option_val) : Prims.string =
+        match v with
+        | Bool b -> (toString "Bool "B) ^. (defaultof<showable_bool> :> showable<bool>).show b
+        | String s -> (toString "String "B) ^. (defaultof<showable_string> :> showable<Prims.string>).show s
+        | Path s -> (toString "Path "B) ^. (defaultof<showable_string> :> showable<Prims.string>).show s
+        | Int i -> (toString "Int "B) ^. (defaultof<showable_int> :> showable<Prims.int>).show i
+        | List vs -> (toString "List "B) ^. Common.string_of_list option_val_to_string vs
+        | Unset -> (toString "Unset"B)
+
+    type showable_option_val =
+        struct
+            interface showable<option_val> with
+                member _.show v = option_val_to_string v
+        end
+    
+
+    let rec eq_option_val (v1: option_val) (v2: option_val) : bool =
+        match v1, v2 with
+        | Bool x1, Bool x2 -> x1 </(defaultof<deq_bool> :> deq<bool>).(=?)/> x2
+        | String x1, String x2 -> x1 </(defaultof<deq_string> :> deq<Prims.string>).(=?)/> x2
+        | Path x1, Path x2 -> x1 </(defaultof<deq_string> :> deq<Prims.string>).(=?)/> x2
+        | Int x1, Int x2 -> x1 </(defaultof<deq_int> :> deq<Prims.int>).(=?)/> x2
+        | Unset, Unset -> true
+        | List x1, List x2 ->
+            Common.eq_list eq_option_val x1 x2
+        | _, _ -> false
+
+    type deq_option_val =
+        struct
+            interface deq<option_val> with
+                member _.(=?) x y = eq_option_val x y
+        end
+
+    let rec list_try_find ( _0: #deq<'a> ) (k : 'a) (l : list<'a * 'b>)
+        : option<'b>
+        =
+            match l with
+            | [] -> None
+            | (k', v') :: l' ->
+                if k </_0.(=?)/> k'
+                then Some v'
+                else list_try_find _0 k l'
+
+    [<NoEquality; NoComparison>]
+    type private ListMonad =
+        struct
+            member inline _.Return(x: 'a) = [x]
+            member inline _.ReturnFrom(x: list<'a>) = x
+            member inline _.Bind(x: list<'a>, f: 'a -> list<'b>) : list<'b> = List.concatMap f x
+        end
+
+    let show_options () =
+        let s = peek () in
+        let kvs : list<Prims.string * option_val> =
+            ListMonad() {
+                let! k = Common.psmap_keys s in
+                (* verify_module is only set internally. *)
+                if k = (toString "verify_module"B) then return! [] else
+                let v = Some'v <| psmap_try_find s k in
+                let v0 = list_try_find defaultof<deq_string> k defaults in
+                if v0 </(defaultof<deq_option<option_val,deq_option_val>> :> deq<option<option_val>>).(=?)/> (Some v) then
+                    return! []
+                else
+                    return (k, v)
+            }
+        in
+        let rec show_optionval v =
+            match v with
+            | String s -> (toString "\""B) ^. s ^. (toString "\""B) // FIXME: proper escape
+            | Bool b -> (defaultof<showable_bool> :> showable<bool>).show b
+            | Int i -> (defaultof<showable_int> :> showable<Prims.int>).show i
+            | Path s -> s
+            | List s -> List.map show_optionval s |> String.concat (toString ","B)
+            | Unset -> (toString "<unset>"B)
+        in
+        let show1 (k, v) =
+            Format.fmt2 (toString "--%s %s"B) k (show_optionval v)
+        in
+        kvs |> List.map show1 |> String.concat (toString "\n"B)
+
+    let set_verification_options o =
+        (* This are all the options restored when processing a check_with
+            attribute. All others are unchanged. We do this for two reasons:
+            1) It's unsafe to just set everything (e.g. verify_module would
+                    cause lax verification, so we need to filter some stuff out).
+            2) So we don't propagate meaningless debugging options, which
+                    is probably not intended.
+        *)
+        let verifopts = [
+            (toString "initial_fuel"B);
+            (toString "max_fuel"B);
+            (toString "initial_ifuel"B);
+            (toString "max_ifuel"B);
+            (toString "detail_errors"B);
+            (toString "detail_hint_replay"B);
+            (toString "no_smt"B);
+            (toString "quake"B);
+            (toString "retry"B);
+            (toString "smtencoding.elim_box"B);
+            (toString "smtencoding.nl_arith_repr"B);
+            (toString "smtencoding.l_arith_repr"B);
+            (toString "smtencoding.valid_intro"B);
+            (toString "smtencoding.valid_elim"B);
+            (toString "tcnorm"B);
+            (toString "no_plugins"B);
+            (toString "no_tactics"B);
+            (toString "z3cliopt"B);
+            (toString "z3smtopt"B);
+            (toString "z3refresh"B);
+            (toString "z3rlimit"B);
+            (toString "z3rlimit_factor"B);
+            (toString "z3seed"B);
+            (toString "z3version"B);
+            (toString "trivial_pre_for_unannotated_effectful_fns"B);
+        ] in
+        List.iter (fun k -> set_option k (psmap_try_find o k |> Some'v)) verifopts
+
+    let lookup_opt s c =
+        c (get_option s)
+
+
+    let file_list_ : ref<list<Prims.string>> = mk_ref []
+#if false
+    (* In `parse_filename_arg specs arg`:
+
+        * `arg` is a filename argument to be parsed. If `arg` is of the
+            form `@file`, then `file` is a response file, from which further
+            arguments (including further options) are read. Nested response
+            files (@ response file arguments within response files) are
+            supported.
+
+        * `specs` is the list of option specifications (- and --)
+
+        * `enable_filenames` is a boolean, true if non-response file
+        * filenames should be handled.
+
+    *)
+
+    let rec parse_filename_arg specs enable_filenames arg =
+        if Util.starts_with arg (toString "@"B)
+        then begin
+            // read and parse a response file
+            let filename = Util.substring_from arg (toInt 1) in
+            let lines = Util.file_get_lines filename in
+            Getopt.parse_list specs (parse_filename_arg specs enable_filenames) lines
+        end else begin
+            if enable_filenames
+            then file_list_ := !file_list_ @ [arg];
+            Success
+        end
+
+    (* A copy of the optionstate right after parsing the command line,
+    so we can reset back to it. *)
+    let parsed_args_state : ref<option<history1>> = mk_ref None
+
+    let parse_cmd_line () =
+        let res = Getopt.parse_cmdline all_specs_getopt (parse_filename_arg all_specs_getopt true) in
+        let res =
+            if res = Success
+            then set_error_flags()
+            else res
+        in
+        (* Set the include path, and check that they exist. We do the existence check
+        here, and not in the handler for --include, to respect a --warn_error ignoring
+        this warning. *)
+        let () =
+            let paths = as_list as_string (get_option (toString "include"B)) in
+            paths |> List.iter (fun p -> !check_include_dir p);
+            Find.set_include_path (Find.get_include_path () @ paths);
+            ()
+        in
+        parsed_args_state := Some (snapshot_all ());
+        res, !file_list_
+#endif

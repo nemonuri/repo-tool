@@ -94,3 +94,11 @@ module Json =
         match jsonNode_of_json js with
         | Null -> Nemonuri.OCamlDotNet.Forwarded.String.empty
         | NonNull v -> v.ToJsonString() |> Obs.stringOfDotNetString
+
+module internal JsonSerializers =
+    
+    open System.Text.Json.Serialization
+
+    let options = JsonFSharpOptions.Default().ToJsonSerializerOptions()
+
+    let serialize (a: 'a) = JsonSerializer.SerializeToUtf8Bytes<'a>(a, options) |> OCamlByteSpanSources.Unsafe.stringOfArray

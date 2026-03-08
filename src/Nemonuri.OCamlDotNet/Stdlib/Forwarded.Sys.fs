@@ -7,3 +7,11 @@ module Sys =
 
     let argv: array<OCamlString> = System.Environment.GetCommandLineArgs() |> Collections.Array.map OCamlByteSpanSources.stringOfDotNetString
     
+    type signal = int 
+
+    type signal_behavior = 
+    | Signal_default
+    | Signal_ignore
+    | Signal_handle of (signal -> unit)
+
+    // let signal (s: signal)

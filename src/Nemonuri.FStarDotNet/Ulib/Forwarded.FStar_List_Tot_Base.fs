@@ -4,6 +4,8 @@
 
 namespace Nemonuri.FStarDotNet.Forwarded
 
+open Nemonuri.FStarDotNet.FStarOperators
+
 module FStar_List_Tot_Base =
 
     (**
@@ -16,6 +18,14 @@ module FStar_List_Tot_Base =
         match l with
         | [] -> true
         | _ -> false
+
+    (** [length l] returns the total number of elements in [l]. Named as
+    in: OCaml, F#, Coq *)
+    /// val length: list 'a -> Tot nat
+    let rec length = function
+        | [] -> (toInt 0)
+        | _::tl -> (toInt 1) +. length tl
+
 
     (** [existsb f l] returns [true] if, and only if, there exists some
     element [x] in [l] such that [f x] holds. *)

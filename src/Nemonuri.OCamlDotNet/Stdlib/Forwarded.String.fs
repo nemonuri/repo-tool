@@ -48,9 +48,14 @@ module String =
 
     type t = OCamlString
 
+    let equal (l: t) (r: t) = O.stringEqual l r
+
     let compare (l: t) (r: t) = O.stringCompare l r
 
-    let equal (l: t) (r: t) = O.stringEqual l r
+    let starts_with prefix s  = mnd { let! prefix' = prefix in let! s' = s in return! B.starts_with prefix' s' }
+
+    let ends_with prefix s  = mnd { let! prefix' = prefix in let! s' = s in return! B.ends_with prefix' s' }
+    
 
     let sub s pos len = mnd { let! t = s in return B.sub t pos len }
     
@@ -61,3 +66,5 @@ module String =
     let escaped s = mnd { let! s' = s in return B.escaped s' }
 
     let index s c = mnd { let! s' = s in return! B.index s' c }
+
+    
