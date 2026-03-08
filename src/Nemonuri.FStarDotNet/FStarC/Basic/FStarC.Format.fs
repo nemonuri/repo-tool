@@ -5,12 +5,16 @@ namespace Nemonuri.FStarDotNet.FStarC
 
 (* Formatting/printing utils *)
 
+open Nemonuri.OCamlDotNet.Zarith
+open Nemonuri.OCamlDotNet.Forwarded
+open Nemonuri.OCamlDotNet.Forwarded.Out_channel
 open Nemonuri.OCamlDotNet.Batteries
 open Nemonuri.FStarDotNet
 open Nemonuri.FStarDotNet.FStarOperators
 open Nemonuri.FStarDotNet.FStarC.Effect
 open Nemonuri.FStarDotNet.FStarC.Json
 module Obs = Nemonuri.OCamlDotNet.Primitives.OCamlByteSpanSources
+module Ofd = Nemonuri.OCamlDotNet.Primitives.OCamlFileDescriptors
 
 module Format =
 
@@ -123,10 +127,10 @@ val colorize_yellow : string -> string
 val colorize_cyan : string -> string
 val colorize_green : string -> string
 val colorize_magenta : string -> string
+#endif
 
 
-
-    let private stdout_isatty () = Some (not System.Console.IsOutputRedirected)
+    let private stdout_isatty () = Some (Unix.isatty Unix.stdout)
 
     (* NOTE: this is deciding whether or not to color by looking
         at stdout_isatty(), which may be a wrong choice if
@@ -147,24 +151,25 @@ val colorize_magenta : string -> string
     let colorize_green   = colorize ((toString "\x1b[32;1m"B), (toString "\x1b[0m"B))
     let colorize_magenta = colorize ((toString "\x1b[35;1m"B), (toString "\x1b[0m"B))
 
-    let pr = Printf.printf
-    let fpr = Printf.fprintf
 
-    let private flush (tw: System.IO.TextWriter) = tw.Flush()
+    let private pr = Core.Printf.printf
+    let private fpr = Core.Printf.fprintf
 
     let default_printer =
         {   printer_prinfo = (fun s -> pr "%s" (s |> Obs.stringToDotNetString); flush stdout);
-            printer_prwarning = (fun s -> fpr stderr "%s" (colorize_yellow s |> Obs.stringToDotNetString); flush stdout; flush stderr);
-            printer_prerror = (fun s -> fpr stderr "%s" (colorize_red s |> Obs.stringToDotNetString); flush stdout; flush stderr);
+            printer_prwarning = (fun s -> use stderrTw = (stderr |> Ofd.outChannelToTextWriter) in fpr stderrTw "%s" (colorize_yellow s |> Obs.stringToDotNetString); flush stdout; stderrTw.Flush());
+            printer_prerror = (fun s -> use stderrTw = (stderr |> Ofd.outChannelToTextWriter) in fpr stderrTw "%s" (colorize_red s |> Obs.stringToDotNetString); flush stdout; stderrTw.Flush());
             printer_prgeneric = fun label get_string get_json -> pr "%s: %s" (label |> Obs.stringToDotNetString) (get_string () |> Obs.stringToDotNetString)}
 
     let current_printer = ref default_printer
     let set_printer printer = current_printer := printer
 
-    let print_raw s = set_binary_mode_out stdout true; pr "%s" s; flush stdout
+
+    let print_raw s = Out_channel.set_binary_mode stdout true; pr "%s" s; flush stdout
     let print_string s = (!current_printer).printer_prinfo s
     let print_generic label to_string to_json a = (!current_printer).printer_prgeneric label (fun () -> to_string a) (fun () -> to_json a)
-    let print_any s = (!current_printer).printer_prinfo (Marshal.to_string s [])
+    let print_any s = (!current_printer).printer_prinfo (s.ToString() |> Obs.stringOfDotNetString (* ad-hoc *))
+
 
     (* restore pre-2.11 BatString.nsplit behavior,
         see https://github.com/ocaml-batteries-team/batteries-included/issues/845 *)
@@ -172,17 +177,21 @@ val colorize_magenta : string -> string
         if s = (toString ""B) then [] else BatString.split_on_string t s
 
     let fmt (fmt:Prims.string) (args:Prims.string list) =
-        let frags = batstring_nsplit fmt "%s" in
-        if BatList.length frags <> BatList.length args + 1 then
-            failwith ("Not enough arguments to format Prims.string " ^fmt^ " : expected " ^ (Stdlib.string_of_int (BatList.length frags)) ^ " got [" ^ (BatString.concat ", " args) ^ "] frags are [" ^ (BatString.concat ", " frags) ^ "]")
+        let frags = batstring_nsplit fmt (toString "%s"B) in
+        if List.length frags <> List.length args + 1 then
+            failwith 
+              ((toString "Not enough arguments to format Prims.string "B) ^. 
+                    fmt ^. (toString " : expected "B) ^. (Int.to_string (List.length frags)) ^. 
+                    (toString " got ["B) ^. (String.concat (toString ", "B) args) ^. 
+                    (toString "] frags are ["B) ^. (String.concat (toString ", "B) frags) ^. (toString "]"B))
         else
-            let open FStarC_StringBuffer in
-            let sbldr = create (Z.of_int 80) in
-            ignore (add (List.hd frags) sbldr);
-            BatList.iter2
-                    (fun frag arg -> sbldr |> add arg |> add frag |> ignore)
+            let sbldr = StringBuffer.create (Z.of_int 80) in
+            ignore (StringBuffer.add (List.hd frags) sbldr);
+            List.iter2
+                    (fun frag arg -> sbldr |> StringBuffer.add arg |> StringBuffer.add frag |> ignore)
                     (List.tl frags) args;
-            contents sbldr
+            StringBuffer.contents sbldr
+
 
     let fmt1 f a = fmt f [a]
     let fmt2 f a b = fmt f [a;b]
@@ -211,5 +220,3 @@ val colorize_magenta : string -> string
     let print2_warning a b c = print_warning (fmt2 a b c)
     let print3_warning a b c d = print_warning (fmt3 a b c d)
 
-
-#endif

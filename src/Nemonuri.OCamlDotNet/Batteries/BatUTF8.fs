@@ -43,7 +43,7 @@ module BatUTF8 =
 
     /// `init len f` returns a new string which contains `len` Unicode characters. The i-th Unicode character is initialized by `f i`
     let init (len: int) (f: int -> BatUChar.t) : t =
-        let builder = Nemonuri.ByteChars.ArrayBuilder<byte>(len)
+        let builder = Nemonuri.Collections.DrainableArrayBuilder<byte>(len)
 
         for i in 0 .. len-1 do
             let newRune = f i

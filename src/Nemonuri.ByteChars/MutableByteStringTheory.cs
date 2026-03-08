@@ -1,3 +1,4 @@
+using Nemonuri.Collections;
 using Nemonuri.FixedSizes;
 using Sls = Nemonuri.ByteChars.Internal.StackLimitSizePremise;
 
@@ -7,7 +8,7 @@ public static unsafe partial class MutableByteStringTheory
 {
     private static void UnsafeUpdateBuilderWithAux<TAux>
     (
-        ArrayBuilder<byte> builder,
+        DrainableArrayBuilder<byte> builder,
         TAux aux,
         delegate*<Span<byte>, TAux, void> updater
     )
@@ -34,7 +35,7 @@ public static unsafe partial class MutableByteStringTheory
         }
         else
         {
-            var builder = new ArrayBuilder<byte>(length);
+            var builder = new DrainableArrayBuilder<byte>(length);
             UnsafeUpdateBuilderWithAux(builder, aux, updater);
             return builder.DrainToArraySemgent();
         }
@@ -42,7 +43,7 @@ public static unsafe partial class MutableByteStringTheory
 
     private static void UnsafeUpdateBuilderWithAuxReadOnlySpan<TAux>
     (
-        ArrayBuilder<byte> builder,
+        DrainableArrayBuilder<byte> builder,
         ReadOnlySpan<TAux> auxSpan,
         delegate*<Span<byte>, ReadOnlySpan<TAux>, void> updater
     )
@@ -68,7 +69,7 @@ public static unsafe partial class MutableByteStringTheory
         }
         else
         {
-            var builder = new ArrayBuilder<byte>(length);
+            var builder = new DrainableArrayBuilder<byte>(length);
             UnsafeUpdateBuilderWithAuxReadOnlySpan(builder, auxSpan, updater);
             return builder.DrainToArraySemgent();
         }

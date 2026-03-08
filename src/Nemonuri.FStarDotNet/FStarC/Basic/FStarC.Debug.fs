@@ -116,8 +116,7 @@ val set_level_extreme () : unit
 
     let tag (s:Prims.string) =
         if any () then
-            // Format.print_string ((toString "DEBUG:"B) ^.  s ^. (toString "\n"B))
-            ()
+            Format.print_string ((toString "DEBUG:"B) ^.  s ^. (toString "\n"B))
 
     let enable () = anyref := true
 

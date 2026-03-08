@@ -9,4 +9,9 @@ internal static class InternalConstants
     /// Microsoft 는 주로 256 byte를 사용한다. 이유가 있겠지.
     /// </remarks>
     internal const int StackAllocThreshold = 256;
+
+    /// <summary>
+    /// "-2147483648"
+    /// </summary>
+    internal const int MaxDecimalInt32ByteStringLength = 11;
 }

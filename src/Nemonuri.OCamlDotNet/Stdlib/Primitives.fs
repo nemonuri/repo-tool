@@ -1,6 +1,8 @@
 namespace Nemonuri.OCamlDotNet.Primitives
 
 open System
+open Nemonuri.OCamlDotNet.Primitives.Internals
+module U = Nemonuri.OCamlDotNet.Primitives.Internals.UnsafeOCamlByteSpanSources
 
 [<Interface>]
 type ITemporaryReadOnlySpanSource<'T> =
@@ -12,11 +14,6 @@ module TemporaryReadOnlySpanSources =
 
     let inline toReadOnlySpan (s: t<'a>) = s.AsTemporarySpan()
 
-
-
-open System
-open Nemonuri.OCamlDotNet.Primitives.Internals
-module U = Nemonuri.OCamlDotNet.Primitives.Internals.UnsafeOCamlByteSpanSources
 
 exception Not_found
 
@@ -83,3 +80,7 @@ type OCamlBytes = internal { Source: OCamlByteSpanSource } with
 type OCamlString = internal { Source: OCamlByteSpanSource } with
     interface ITemporaryReadOnlySpanSource<byte> with
         member this.AsTemporarySpan () = Trs.toReadOnlySpan this.Source
+
+[<Struct>]
+[<NoEquality; NoComparison>]
+type OCamlBuffer = internal { Value: Nemonuri.Collections.DrainableArrayBuilder<byte> }

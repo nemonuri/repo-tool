@@ -1,4 +1,4 @@
-namespace Nemonuri.ByteChars;
+namespace Nemonuri.Collections;
 
 /**
 - Reference: https://github.com/dotnet/runtime/blob/v10.0.3/src/coreclr/tools/Common/System/Collections/Generic/ArrayBuilder.cs
@@ -8,12 +8,12 @@ using System.Runtime.CompilerServices;
 using Debug = System.Diagnostics.Debug;
 
 
-public struct ArrayBuilder<T>
+public struct DrainableArrayBuilder<T>
 {
     private T[]? _items;
     private int _count;
 
-    public ArrayBuilder(int capacity)
+    public DrainableArrayBuilder(int capacity)
     {
         _items = new T[capacity];
     }
@@ -91,6 +91,12 @@ public struct ArrayBuilder<T>
         Append(newItems, 0, newItems.Length);
     }
 
+    public void Clear()
+    {
+        AsSpan().Clear();
+        _count = 0;
+    }
+
 #nullable disable
     public void Append(T[] newItems, int offset, int length)
     {
@@ -116,7 +122,7 @@ public struct ArrayBuilder<T>
         _count += length;
     }
 
-    public void Append(ArrayBuilder<T> newItems)
+    public void Append(DrainableArrayBuilder<T> newItems)
     {
         if (newItems.Count == 0)
             return;

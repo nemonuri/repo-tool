@@ -5,7 +5,9 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="FStarC.Effect.fs" />
-    <Compile Include="FStarC.Json.fs" /><Compile Include="FStarC.Format.fs" />
+    <Compile Include="FStarC.Json.fs" />
+    <Compile Include="FStarC.StringBuffer.fs" />
+    <Compile Include="FStarC.Format.fs" />
     <Compile Include="FStarC.Char.fs" />
     <Compile Include="FStarC.BaseTypes.fs" />
     <Compile Include="FStarC.Util.fs" />
