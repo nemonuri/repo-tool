@@ -19,6 +19,7 @@
 namespace Nemonuri.FStarDotNet.FStar
 
 open Nemonuri.FStarDotNet
+open Nemonuri.FStarDotNet.Forwarded
 open Nemonuri.FStarDotNet.FStarOperators
 
 (**
@@ -28,6 +29,16 @@ F* standard library List module.
 *)
 [<RequireQualifiedAccess>]
 module List =
+
+    module Tot =
+
+        module Base =
+
+            let existsb f l = FStar_List_Tot_Base.existsb f l
+
+            let rev_acc l acc = FStar_List_Tot_Base.rev_acc l acc
+
+            let rev l = FStar_List_Tot_Base.rev l
 
     (** Base operations **)
 
@@ -355,15 +366,16 @@ module List =
                 let l1, l2 = splitAt (n -. (toInt 1)) tl in
                 hd::l1, l2
 
-#if false
+
     (** [filter_map f l] returns the list of [y] for all elements [x]
     appearing in [l] such that [f x = Some y] for some [y]. (Implemented
     here as a tail-recursive version of [choose] *)
     /// let filter_map (f:'a -> ML (option 'b)) (l:list 'a) : ML (list 'b) =
-    let rec filter_map_acc (acc:list<'b>) (l:list<'a>) : (list<'b>) =
+    let filter_map (f:'a -> option<'b>) (l:list<'a>) : list<'b> =
+        let rec filter_map_acc (acc:list<'b>) (l:list<'a>) : list<'b> =
             match l with
             | [] ->
-                rev acc
+                Tot.Base.rev acc
             | hd :: tl ->
                 match f hd with
                 | Some hd ->
@@ -372,7 +384,7 @@ module List =
                     filter_map_acc acc tl
         in
         filter_map_acc [] l
-#endif
+
 
     (** [index f l] returns the position index in list [l] of the first
     element [x] in [l] such that [f x] holds. Raises an exception if no

@@ -25,6 +25,10 @@ module FStarOperators =
 
     let ( +. ) x y = Prims.op_Addition x y
 
+    let ( %. ) x y = Prims.op_Modulus x y
+
+    let ( /. ) x y = Prims.op_Division x y
+
     let ( ~-. ) x  = Prims.op_Minus x 
 
     let ( <=. ) x y = Prims.(<=) x y

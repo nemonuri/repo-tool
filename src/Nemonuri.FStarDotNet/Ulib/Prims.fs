@@ -41,6 +41,7 @@ module Prims =
     open Nemonuri.FStarDotNet.Primitives
     open Nemonuri.OCamlDotNet.Primitives
     open Nemonuri.OCamlDotNet.Forwarded
+    open Nemonuri.OCamlDotNet.Zarith
 #if false
     open Nemonuri.FStarDotNet.Primitives.Operations.FStarKinds
     open Nemonuri.FStarDotNet.Primitives.Abstractions
@@ -56,6 +57,7 @@ module Prims =
     open Nemonuri.PureTypeSystems
     open Nemonuri.FStarDotNet.Primitives.FStarTypeSystems
     open Nemonuri.FStarDotNet.Primitives.FStarTypeSystems.Operations
+    module Obs = Nemonuri.OCamlDotNet.Primitives.OCamlByteSpanSources
     module Pts = Nemonuri.PureTypeSystems.Operations
 
 
@@ -858,17 +860,21 @@ module Prims =
     /// OCaml and to .NET BigInteger in F#. Both the modulus and division
     /// operations are Euclidean and are mapped to the corresponding
     /// theory symbols in the SMT encoding
+#endif
 
     (** Euclidean modulus *)
 
+    /// let op_Modulus: int -> nonzero -> Tot int
     [<smt_theory_symbol>]
-    let op_Modulus: int -> nonzero -> Tot int
+    let op_Modulus x y = Z.erem x y
 
     (** Euclidean division, written [/] *)
 
+    /// let op_Division: int -> nonzero -> Tot int
     [<smt_theory_symbol>]
-    let op_Division: int -> nonzero -> Tot int
+    let op_Division x y = Z.ediv x y
 
+#if false
     (** [pow2 x] is [2^x]:
 
         TODO: maybe move this to FStar.Int *)
@@ -876,21 +882,29 @@ module Prims =
         match x with
         | 0 -> 1
         | _ -> 2 `op_Multiply` (pow2 (x - 1))
+#endif
 
     (** [min] computes the minimum of two [int]s *)
     let min x y = if x <= y then x else y
 
     (** [abs] computes the absolute value of an [int] *)
-    let abs (x: int) : Tot int = if x >= 0 then x else - x
+    let abs (x: int) : int = if x >= (Z.of_int 0) then x else - x
+
 
     (** A primitive printer for booleans:
 
         TODO: unnecessary, this could easily be defined *)
-    let string_of_bool: bool -> Tot string
+    /// let string_of_bool: bool -> Tot string
+    let string_of_bool (b: bool) : string =
+        match b with
+        | true -> (Obs.Unsafe.stringOfArray "true"B)
+        | false -> (Obs.Unsafe.stringOfArray "false"B)
 
     (** A primitive printer for [int] *)
-    let string_of_int: int -> Tot string
+    /// let string_of_int: int -> Tot string
+    let string_of_int (n: int) : string = Nemonuri.ByteChars.Numerics.BigIntegerTheory.ToMutableByteString(n) |> Obs.Unsafe.stringOfArraySegment
 
+#if false
     (** THIS IS MEANT TO BE KEPT IN SYNC WITH FStar.CheckedFiles.fs
         Incrementing this forces all .checked files to be invalidated *)
     irreducible

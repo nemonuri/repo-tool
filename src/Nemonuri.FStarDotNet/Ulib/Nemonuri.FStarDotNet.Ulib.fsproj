@@ -10,14 +10,14 @@
     <Compile Include="Primitives.TuplePremise.fs" />
     <Compile Include="Primitives.fs" />
     <Compile Include="Operations.FStarTypeContexts.fs" />
-    
-    <Compile Include="FStarTypeUniverses.fs" /><Compile Include="FStarTypeSystems.fs" />
+    <Compile Include="FStarTypeUniverses.fs" />
+    <Compile Include="FStarTypeSystems.fs" />
     <Compile Include="Prims.fs" />
     <Compile Include="Forwarded.FStar_Pervasives_Native.fs" />
-    
     <Compile Include="FStarOperators.fs" />
     <Compile Include="FStar.Pervasives.fs" />
     <Compile Include="FStar.Char.fs" />
+    <Compile Include="Forwarded.FStar_List_Tot_Base.fs" />
     <Compile Include="FStar.List.fs" />
   </ItemGroup>
   <ItemGroup>

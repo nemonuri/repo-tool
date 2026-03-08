@@ -1,3 +1,5 @@
+#nowarn "25"    // Incomplete pattern matches
+
 // reference: https://github.com/FStarLang/FStar/blob/v2025.12.15/ulib/FStar.Pervasives.Native.fst
 
 namespace Nemonuri.FStarDotNet.Forwarded
@@ -28,6 +30,8 @@ module FStar_Pervasives_Native =
     (** [option a] represents either  [Some a]-value or a non-informative [None]. *)
     type option<'a> = Core.option<'a>
 
+    let Some'v (o: option<'a>)  = match o with | Some v -> v
+
 
     (**** Tuples *)
 
@@ -53,10 +57,12 @@ module FStar_Pervasives_Native =
 
     (** Pairs: [tuple2 a b] is can be written either as [a * b], for
         notation compatible with OCaml's. Or, better, as [a & b]. *)
-    let Mktuple2 _1 _2 = _1, _2
     type tuple2<'a, 'b> = ('a * 'b)
-    let (|Mktuple2|) (x: _*_) = x
-        
-    let fst (Mktuple2(_1, _)) = _1
-    let snd (Mktuple2(_, _2)) = _2
+    let Mktuple2 _1 _2 = _1, _2
+    let Mktuple2'_1 (_1,_2) = _1
+    let Mktuple2'_2 (_1,_2) = _2
+    
+
+    let fst x = Mktuple2'_1 x
+    let snd x = Mktuple2'_2 x
 

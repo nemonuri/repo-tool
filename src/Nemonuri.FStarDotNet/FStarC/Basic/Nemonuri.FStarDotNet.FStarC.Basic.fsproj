@@ -4,7 +4,7 @@
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="FStarC.Effect.fs" />
+    <Compile Include="FStarC.Effect.fs" /><Compile Include="FStarC.Class.Deq.fs" /><Compile Include="FStarC.Order.fs" /><Compile Include="FStarC.Class.Ord.fs" /><Compile Include="FStarC.Class.Show.fs" /><Compile Include="FStarC.Timing.fs" />
     <Compile Include="FStarC.SMap.fs" />
     <Compile Include="FStarC.Json.fs" />
     <Compile Include="FStarC.StringBuffer.fs" />

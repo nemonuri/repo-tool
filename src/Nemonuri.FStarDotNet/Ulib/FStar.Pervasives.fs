@@ -1,35 +1,27 @@
+#nowarn "25"    // Incomplete pattern matches
+
+// reference: https://github.com/FStarLang/FStar/blob/v2025.12.15/ulib/FStar.Pervasives.fsti
+
 namespace Nemonuri.FStarDotNet.FStar
 
 open Nemonuri.FStarDotNet
 open Nemonuri.FStarDotNet.Primitives
 open Nemonuri.FStarDotNet.Forwarded
 
-#if false
 
-
-[<RequireQualifiedAccess>]
 module Pervasives =
 
     module Native =
 
-        module F = FStar_Pervasives_Native
+        type option<'a> = FStar_Pervasives_Native.option<'a>
 
-        let None<'a> = F.None<'a>
-        let Some = F.Some
+        let Some'v o = FStar_Pervasives_Native.Some'v o
 
-        type option<'a> = F.option<'a>
+    (** Values of type [a] or type [b] *)
+    type either<'a,'b> =
+    | Inl of v : 'a
+    | Inr of v : 'b
 
-        let (|None|Some|) = F.(|None|Some|)
+    let Inl'v (Inl(v)) = v
+    let Inr'v (Inr(v)) = v
 
-        let Mktuple2 = F.Mktuple2
-        type tuple2<'a,'b> = F.tuple2<'a,'b>
-        let (|Mktuple2|) = F.(|Mktuple2|)
-
-        let fst = F.fst
-        let snd = F.snd
-
-        let Mktuple3 = F.Mktuple3
-        type tuple3<'a,'b,'c> = F.tuple3<'a,'b,'c>
-        let (|Mktuple3|) = F.(|Mktuple3|)
-
-#endif

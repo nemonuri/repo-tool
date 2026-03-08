@@ -4,8 +4,12 @@
 namespace Nemonuri.FStarDotNet.FStarC
 
 open Nemonuri.FStarDotNet
+open Nemonuri.FStarDotNet.FStar.Pervasives
+open Nemonuri.FStarDotNet.FStar.Pervasives.Native
 open Nemonuri.FStarDotNet.FStarOperators
 open Nemonuri.FStarDotNet.FStarC.Effect
+open Nemonuri.FStarDotNet.FStarC.Class.Show
+open Microsoft.FSharp.Core.Operators.Unchecked
 
 module Stats =
 
@@ -22,36 +26,31 @@ module Stats =
     let ever_enabled = alloc false
 
 #if false
-    (* Count the time taken by `f ()` under a given stats key. *)
-    val record
-        (key : Prims.string)
-        (f : unit -> 'a)
-        : 'a
 
-    (* Generates a message with a table for all stat keys. *)
-    val print_all () : Prims.string
+
+
 #endif
 
     type stat = {
-        ns_tree  : int;
-        ns_exn   : int;
-        ns_sub   : int;
-        ncalls   : int;
+        ns_tree  : Prims.int;
+        ns_exn   : Prims.int;
+        ns_sub   : Prims.int;
+        ncalls   : Prims.int;
     }
 
     //instance _ : monoid stat = {
     let private mzero = {
-            ns_tree = 0;
-            ns_exn = 0;
-            ns_sub = 0;
-            ncalls = 0;
+            ns_tree = (toInt 0);
+            ns_exn = (toInt 0);
+            ns_sub = (toInt 0);
+            ncalls = (toInt 0);
         }
     let private mplus = (fun s1 s2 ->
             {
-                ns_tree  = s1.ns_tree + s2.ns_tree;
-                ns_exn   = s1.ns_exn + s2.ns_exn;
-                ns_sub   = s1.ns_sub + s2.ns_sub;
-                ncalls   = s1.ncalls + s2.ncalls;
+                ns_tree  = s1.ns_tree +. s2.ns_tree;
+                ns_exn   = s1.ns_exn +. s2.ns_exn;
+                ns_sub   = s1.ns_sub +. s2.ns_sub;
+                ncalls   = s1.ncalls +. s2.ncalls;
             })
     //}
 
@@ -109,7 +108,7 @@ module Stats =
             | k_par::_ -> add k_par { mzero with ns_sub = ns }
             end
         );
-        add key { mzero with ncalls = 1 };
+        add key { mzero with ncalls = (toInt 1) };
         match resexn with
         | Inr r ->
             r
@@ -117,6 +116,11 @@ module Stats =
             add key { mzero with ns_exn = ns };
             raise e
 
+    (* Count the time taken by `f ()` under a given stats key. *)
+    /// val record
+    ///     (key : Prims.string)
+    ///     (f : unit -> 'a)
+    ///     : 'a
     let record key f =
         if !enabled then
             do_record key f
@@ -130,24 +134,27 @@ module Stats =
     let max x y =
         if x >. y then x else y
 
+    (* Generates a message with a table for all stat keys. *)
+    /// val print_all () : Prims.string
     let print_all () : Prims.string =
         let keys = SMap.keys st in
-        let points = List.map (fun k -> k, snd <| Some?.v <| SMap.try_find st k) keys in
+        let points = List.map (fun k -> k, snd <| (Some'v <| SMap.try_find st k)) keys in // F* 와 F# 은, <| 우선순위가 묘하게 다르구나.
         (* Sort by (point) time. *)
         let points =
             points |>
             Class.Ord.sort_by (fun (_, s1) (_, s2) ->
-                (s2.ns_tree - s2.ns_sub) `Class.Ord.cmp` (s1.ns_tree - s1.ns_sub))
+                (s2.ns_tree -. s2.ns_sub) </(defaultof<Class.Ord.ord_int> :> Class.Ord.ord<Prims.int>).cmp/> (s1.ns_tree -. s1.ns_sub))
         in
         let longest_key = FStar.List.fold_left (fun acc (k, _) -> max acc (String.length k)) (toInt 20) points in
         let pr1 (p : (Prims.string * stat)) : Prims.string =
             let k, st = p in
+            let show' n = (defaultof<showable_int> :> showable<Prims.int>).show n in
             Format.fmt5 (toString "  %s  %s %s ms %s ms %s ms"B)
                 (lpad longest_key k)
-                (lpad (toInt 8) (show st.ncalls))
-                (lpad (toInt 6) (show (st.ns_tree  / 1000000)))
-                (lpad (toInt 6) (show ((st.ns_tree - st.ns_sub) / 1000000)))
-                (lpad (toInt 6) (show (st.ns_exn   / 1000000)))
+                (lpad (toInt 8) (show' st.ncalls))
+                (lpad (toInt 6) (show' (st.ns_tree  /. (toInt 1000000))))
+                (lpad (toInt 6) (show' ((st.ns_tree -. st.ns_sub) /. (toInt 1000000))))
+                (lpad (toInt 6) (show' (st.ns_exn   /. (toInt 1000000))))
         in
         Format.fmt5 
             (toString "  %s  %s %s %s %s"B) 
