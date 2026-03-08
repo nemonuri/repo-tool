@@ -17,6 +17,8 @@ module FStarOperators =
 
     let toString s: Prims.string = OCamlByteSpanSources.Unsafe.stringOfArray s
 
+    let toChar (s: byte) = Core.Operators.int s
+
     let ( *. ) x y = Prims.op_Multiply x y
 
     let ( -. ) x y = Prims.op_Subtraction x y

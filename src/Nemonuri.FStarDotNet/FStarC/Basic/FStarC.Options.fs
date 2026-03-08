@@ -1,3 +1,5 @@
+#nowarn "25" // Incomplete pattern matches
+
 // reference: https://github.com/FStarLang/FStar/blob/v2025.12.15/src/basic/FStarC.Options.fsti
 // reference: https://github.com/FStarLang/FStar/blob/v2025.12.15/src/basic/FStarC.Options.fst
 
@@ -338,6 +340,113 @@ val set_vconfig : vconfig -> unit
         | List ls -> List.flatten <| List.map (fun l -> split (as_string l) (toString ","B)) ls
         | _ -> failwith     (toString "Impos: expected String (comma list)"B)
     
+    (* The option state is a stack of stacks. Why? First, we need to
+    * support #push-options and #pop-options, which provide the user with
+    * a stack-like option control, useful for rlimits and whatnot. Second,
+    * there's the interactive mode, which allows to traverse a file and
+    * backtrack over it, and must update this state accordingly. So for
+    * instance consider the following code:
+    *
+    *   1. #push-options "A"
+    *   2. let f = ...
+    *   3. #pop-options
+    *
+    * Running in batch mode starts with a singleton stack, then pushes,
+    * then pops. In the interactive mode, say we go over line 1. Then
+    * our current state is a stack with two elements (original state and
+    * state+"A"), but we need the previous state too to backtrack if we run
+    * C-c C-p or whatever. We can also go over line 3, and still we need
+    * to keep track of everything to backtrack. After processing the lines
+    * one-by-one in the interactive mode, the stacks are: (top at the head)
+    *
+    *      (orig)
+    *      (orig + A) (orig)
+    *      (orig)
+    *
+    * No stack should ever be empty! Any of these failwiths should never be
+    * triggered externally. IOW, the API should protect this invariant.
+    *
+    * We also keep a snapshot of the stateful modules that are modified by
+    * changing options. Currently: Debug, Ext (extension options) and Stats.
+    *)
+    type history1 =
+        Debug.saved_state *
+        Ext.ext_state *
+        bool * (* value of Stats.enabled *)
+        optionstate
+
+    let fstar_options : ref<optionstate> = mk_ref (PSMap.empty ())
+
+    let snapshot_all () : history1 =
+        (Debug.snapshot (), Ext.save (), !Stats.enabled, !fstar_options)
+
+    let restore_all (h : history1) : unit =
+        let dbg, ext, stats, opts = h in
+        Debug.restore dbg;
+        Ext.restore ext;
+        Stats.enabled := stats;
+        fstar_options := opts
+
+
+    let history : ref<list<list<history1>>> =
+        mk_ref [] // IRRELEVANT: see clear() below
+
+    let peek () = !fstar_options
+
+    let internal_push () =
+        let lev1::rest = !history in
+        let newhd = snapshot_all () in
+        history := (newhd :: lev1) :: rest
+
+    let internal_pop () =
+        let lev1::rest = !history in
+        match lev1 with
+        | [] -> false
+        | snap :: lev1' ->
+            restore_all snap;
+            history := lev1' :: rest;
+            true
+
+    let push () = // already signal-atomic
+        (* This turns a stack like
+
+                    4
+                    3
+                    2 1      current:5
+        into:
+                    5
+                4 4
+                3 3
+                2 2 1      current:5
+
+        i.e.  current state does not change, and
+        current minor stack does not change. The
+        "next" previous stack (now with 2,3,4,5)
+        has a copy of 5 at the top so we can restore regardless
+        of what we do in the current stack or the current state. *)
+
+        internal_push ();
+        let lev1::_ = !history in
+        history := lev1 :: !history;
+        ignore (internal_pop());
+        ()
+
+    let pop () = // already signal-atomic
+        match !history with
+        | [] -> failwith (toString "TOO MANY POPS!"B)
+        | _::levs ->
+            history := levs;
+            if not (internal_pop ()) then
+                failwith (toString "aaa!!!"B)
+
+    let set o =
+        fstar_options := o
+
+    let depth () =
+        let lev::_ = !history in
+        List.length lev
+
+
     let private defaults = [
         ((toString "abort_on"B)                                  , Int 0);
         ((toString "admit_except"B)                              , Unset);

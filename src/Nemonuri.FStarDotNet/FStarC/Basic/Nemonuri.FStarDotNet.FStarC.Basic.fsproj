@@ -5,6 +5,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="FStarC.Effect.fs" />
+    <Compile Include="FStarC.SMap.fs" />
     <Compile Include="FStarC.Json.fs" />
     <Compile Include="FStarC.StringBuffer.fs" />
     <Compile Include="FStarC.Format.fs" />
@@ -12,6 +13,7 @@
     <Compile Include="FStarC.BaseTypes.fs" />
     <Compile Include="FStarC.Util.fs" />
     <Compile Include="FStarC.String.fs" />
+    <Compile Include="FStarC.Stats.fs" />
     <Compile Include="FStarC.Getopt.fs" />
     <Compile Include="FStarC.VConfig.fs" />
     <Compile Include="FStarC.PSMap.fs" />

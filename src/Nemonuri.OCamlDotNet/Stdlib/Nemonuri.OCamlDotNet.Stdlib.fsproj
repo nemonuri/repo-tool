@@ -7,6 +7,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Internals.fs" />
+    <Compile Include="HashMultiMap.fs" />
     <Compile Include="Primitives.fs" />
     <Compile Include="OCamlFileDescriptors.fs" />
     <Compile Include="Primitives.Operations.fs" />
@@ -23,6 +24,7 @@
     <Compile Include="Forwarded.Sys.fs" />
     <Compile Include="Forwarded.Int.fs" />
     <Compile Include="Forwarded.Map.fs" />
+    <Compile Include="Forwarded.Hashtbl.fs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Nemonuri.ByteChars\Nemonuri.ByteChars.csproj" />
