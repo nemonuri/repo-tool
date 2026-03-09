@@ -11,7 +11,7 @@ module Bs = ByteSpans
 /// https://ocaml.org/manual/5.4/api/String.html
 module String =
     
-    let private mnd = TargetToSourceMonad<OCamlBytes, OCamlString>(B.unsafe_to_string, B.unsafe_of_string)
+    let internal mnd = TargetToSourceMonad<OCamlBytes, OCamlString>(B.unsafe_to_string, B.unsafe_of_string)
 
 
     let make (n: OCamlInt) (c: OCamlChar) : OCamlString = mnd { return B.make n c }

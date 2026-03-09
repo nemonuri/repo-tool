@@ -646,6 +646,7 @@ val set_vconfig : vconfig -> unit
         | List vs -> (toString "List "B) ^. Common.string_of_list option_val_to_string vs
         | Unset -> (toString "Unset"B)
 
+    [<NoEquality; NoComparison>]
     type showable_option_val =
         struct
             interface showable<option_val> with
@@ -664,6 +665,7 @@ val set_vconfig : vconfig -> unit
             Common.eq_list eq_option_val x1 x2
         | _, _ -> false
 
+    [<NoEquality; NoComparison>]
     type deq_option_val =
         struct
             interface deq<option_val> with
@@ -756,6 +758,237 @@ val set_vconfig : vconfig -> unit
 
     let lookup_opt s c =
         c (get_option s)
+
+
+    let get_abort_on                ()      = lookup_opt (toString "abort_on"B)                 as_int
+    let get_admit_smt_queries       ()      = lookup_opt (toString "admit_smt_queries"B)        as_bool
+    let get_admit_except            ()      = lookup_opt (toString "admit_except"B)             (as_option as_string)
+    let get_compat_pre_core         ()      = lookup_opt (toString "compat_pre_core"B)          (as_option as_int)
+
+    let get_compat_pre_typed_indexed_effects ()  = lookup_opt (toString "compat_pre_typed_indexed_effects"B) as_bool
+    let get_disallow_unification_guards  ()      = lookup_opt (toString "disallow_unification_guards"B)      as_bool
+
+    let get_already_cached          ()      = lookup_opt (toString "already_cached"B)           (as_option (as_list as_string))
+    let get_cache_checked_modules   ()      = lookup_opt (toString "cache_checked_modules"B)    as_bool
+    let get_cache_off               ()      = lookup_opt (toString "cache_off"B)                as_bool
+    let get_print_cache_version     ()      = lookup_opt (toString "print_cache_version"B)      as_bool
+    let get_cmi                     ()      = lookup_opt (toString "cmi"B)                      as_bool
+    let get_codegen                 ()      = lookup_opt (toString "codegen"B)                  (as_option as_string)
+    let get_codegen_lib             ()      = lookup_opt (toString "codegen-lib"B)              (as_list as_string)
+    let get_defensive               ()      = lookup_opt (toString "defensive"B)                as_string
+    let get_dep                     ()      = lookup_opt (toString "dep"B)                      (as_option as_string)
+    let get_detail_errors           ()      = lookup_opt (toString "detail_errors"B)            as_bool
+    let get_detail_hint_replay      ()      = lookup_opt (toString "detail_hint_replay"B)       as_bool
+    let get_dump_ast                ()      = lookup_opt (toString "dump_ast"B)                 as_bool
+    let get_dump_module             ()      = lookup_opt (toString "dump_module"B)              (as_list as_string)
+    let get_eager_subtyping         ()      = lookup_opt (toString "eager_subtyping"B)          as_bool
+    let get_error_contexts          ()      = lookup_opt (toString "error_contexts"B)           as_bool
+    let get_expose_interfaces       ()      = lookup_opt (toString "expose_interfaces"B)        as_bool
+    let get_message_format          ()      = lookup_opt (toString "message_format"B)           as_string
+    let get_extract                 ()      = lookup_opt (toString "extract"B)                  (as_option (as_list as_string))
+    let get_extract_module          ()      = lookup_opt (toString "extract_module"B)           (as_list as_string)
+    let get_extract_namespace       ()      = lookup_opt (toString "extract_namespace"B)        (as_list as_string)
+    let get_force                   ()      = lookup_opt (toString "force"B)                    as_bool
+    let get_help                    ()      = lookup_opt (toString "help"B)                     as_bool
+    let get_hide_uvar_nums          ()      = lookup_opt (toString "hide_uvar_nums"B)           as_bool
+    let get_hint_info               ()      = lookup_opt (toString "hint_info"B)                as_bool
+    let get_hint_dir                ()      = lookup_opt (toString "hint_dir"B)                 (as_option as_string)
+    let get_hint_file               ()      = lookup_opt (toString "hint_file"B)                (as_option as_string)
+    let get_ide                     ()      = lookup_opt (toString "ide"B)                      as_bool
+    let get_ide_id_info_off         ()      = lookup_opt (toString "ide_id_info_off"B)          as_bool
+    let get_print                   ()      = lookup_opt (toString "print"B)                    as_bool
+    let get_print_in_place          ()      = lookup_opt (toString "print_in_place"B)           as_bool
+    let get_initial_fuel            ()      = lookup_opt (toString "initial_fuel"B)             as_int
+    let get_initial_ifuel           ()      = lookup_opt (toString "initial_ifuel"B)            as_int
+    let get_keep_query_captions     ()      = lookup_opt (toString "keep_query_captions"B)      as_bool
+    let get_lang_extensions         ()      = lookup_opt (toString "lang_extensions"B)                     (as_list as_string)
+    let get_lax                     ()      = lookup_opt (toString "lax"B)                      as_bool
+    let get_load                    ()      = lookup_opt (toString "load"B)                     (as_list as_string)
+    let get_load_cmxs               ()      = lookup_opt (toString "load_cmxs"B)                (as_list as_string)
+    let get_log_queries             ()      = lookup_opt (toString "log_queries"B)              as_bool
+    let get_log_failing_queries     ()      = lookup_opt (toString "log_failing_queries"B)      as_bool
+    let get_log_types               ()      = lookup_opt (toString "log_types"B)                as_bool
+    let get_max_fuel                ()      = lookup_opt (toString "max_fuel"B)                 as_int
+    let get_max_ifuel               ()      = lookup_opt (toString "max_ifuel"B)                as_int
+    let get_MLish                   ()      = lookup_opt (toString "MLish"B)                    as_bool
+    let get_MLish_effect            ()      = lookup_opt (toString "MLish_effect"B)             as_string
+    let get_no_extract              ()      = lookup_opt (toString "no_extract"B)               (as_list as_string)
+    let get_no_location_info        ()      = lookup_opt (toString "no_location_info"B)         as_bool
+    let get_no_prelude              ()      = lookup_opt (toString "no_prelude"B)               as_bool
+    let get_no_plugins              ()      = lookup_opt (toString "no_plugins"B)               as_bool
+    let get_no_smt                  ()      = lookup_opt (toString "no_smt"B)                   as_bool
+    let get_normalize_pure_terms_for_extraction
+                                    ()      = lookup_opt (toString "normalize_pure_terms_for_extraction"B) as_bool
+    let get_output_to               ()      = lookup_opt (toString "output_to"B)                (as_option as_string)
+    let get_krmloutput              ()      = lookup_opt (toString "krmloutput"B)               (as_option as_string)
+    let get_output_deps_to          ()      = lookup_opt (toString "output_deps_to"B)           (as_option as_string)
+    let get_ugly                    ()      = lookup_opt (toString "ugly"B)                     as_bool
+    let get_prims                   ()      = lookup_opt (toString "prims"B)                    (as_option as_string)
+    let get_print_bound_var_types   ()      = lookup_opt (toString "print_bound_var_types"B)    as_bool
+    let get_print_effect_args       ()      = lookup_opt (toString "print_effect_args"B)        as_bool
+    let get_print_expected_failures ()      = lookup_opt (toString "print_expected_failures"B)  as_bool
+    let get_print_full_names        ()      = lookup_opt (toString "print_full_names"B)         as_bool
+    let get_print_implicits         ()      = lookup_opt (toString "print_implicits"B)          as_bool
+    let get_print_universes         ()      = lookup_opt (toString "print_universes"B)          as_bool
+    let get_print_z3_statistics     ()      = lookup_opt (toString "print_z3_statistics"B)      as_bool
+    let get_prn                     ()      = lookup_opt (toString "prn"B)                      as_bool
+    let get_proof_recovery          ()      = lookup_opt (toString "proof_recovery"B)           as_bool
+    let get_quake_lo                ()      = lookup_opt (toString "quake_lo"B)                 as_int
+    let get_quake_hi                ()      = lookup_opt (toString "quake_hi"B)                 as_int
+    let get_quake_keep              ()      = lookup_opt (toString "quake_keep"B)               as_bool
+    let get_query_cache             ()      = lookup_opt (toString "query_cache"B)              as_bool
+    let get_query_stats             ()      = lookup_opt (toString "query_stats"B)              as_bool
+    let get_read_checked_file       ()      = lookup_opt (toString "read_checked_file"B)        (as_option as_string)
+    let get_read_krml_file          ()      = lookup_opt (toString "read_krml_file"B)           (as_option as_string)
+    let get_list_plugins            ()      = lookup_opt (toString "list_plugins"B)             as_bool
+    let get_locate                  ()      = lookup_opt (toString "locate"B)                   as_bool
+    let get_locate_lib              ()      = lookup_opt (toString "locate_lib"B)               as_bool
+    let get_locate_ocaml            ()      = lookup_opt (toString "locate_ocaml"B)             as_bool
+    let get_locate_file             ()      = lookup_opt (toString "locate_file"B)              (as_option as_string)
+    let get_expand_include          ()      = lookup_opt (toString "expand_include"B)           (as_option as_string)
+    let get_locate_z3               ()      = lookup_opt (toString "locate_z3"B)                (as_option as_string)
+    let get_record_hints            ()      = lookup_opt (toString "record_hints"B)             as_bool
+    let get_record_options          ()      = lookup_opt (toString "record_options"B)           as_bool
+    let get_retry                   ()      = lookup_opt (toString "retry"B)                    as_bool
+    let get_reuse_hint_for          ()      = lookup_opt (toString "reuse_hint_for"B)           (as_option as_string)
+    let get_report_assumes          ()      = lookup_opt (toString "report_assumes"B)           (as_option as_string)
+    let get_silent                  ()      = lookup_opt (toString "silent"B)                   as_bool
+    let get_smt                     ()      = lookup_opt (toString "smt"B)                      (as_option as_string)
+    let get_smtencoding_elim_box    ()      = lookup_opt (toString "smtencoding.elim_box"B)     as_bool
+    let get_smtencoding_nl_arith_repr ()    = lookup_opt (toString "smtencoding.nl_arith_repr"B) as_string
+    let get_smtencoding_l_arith_repr()      = lookup_opt (toString "smtencoding.l_arith_repr"B) as_string
+    let get_smtencoding_valid_intro ()      = lookup_opt (toString "smtencoding.valid_intro"B)  as_bool
+    let get_smtencoding_valid_elim  ()      = lookup_opt (toString "smtencoding.valid_elim"B)   as_bool
+    let get_split_queries           ()      = lookup_opt (toString "split_queries"B)            as_string
+    let get_stats                   ()      = lookup_opt (toString "stats"B)                    as_bool
+    let get_tactic_raw_binders      ()      = lookup_opt (toString "tactic_raw_binders"B)       as_bool
+    let get_tactics_failhard        ()      = lookup_opt (toString "tactics_failhard"B)         as_bool
+    let get_tactics_info            ()      = lookup_opt (toString "tactics_info"B)             as_bool
+    let get_tactic_trace            ()      = lookup_opt (toString "tactic_trace"B)             as_bool
+    let get_tactic_trace_d          ()      = lookup_opt (toString "tactic_trace_d"B)           as_int
+    let get_tactics_nbe             ()      = lookup_opt (toString "__tactics_nbe"B)            as_bool
+    let get_tcnorm                  ()      = lookup_opt (toString "tcnorm"B)                   as_bool
+    let get_timing                  ()      = lookup_opt (toString "timing"B)                   as_bool
+    let get_trace_error             ()      = lookup_opt (toString "trace_error"B)              as_bool
+    let get_unthrottle_inductives   ()      = lookup_opt (toString "unthrottle_inductives"B)    as_bool
+    let get_unsafe_tactic_exec      ()      = lookup_opt (toString "unsafe_tactic_exec"B)       as_bool
+    let get_use_eq_at_higher_order  ()      = lookup_opt (toString "use_eq_at_higher_order"B)   as_bool
+    let get_use_hints               ()      = lookup_opt (toString "use_hints"B)                as_bool
+    let get_use_hint_hashes         ()      = lookup_opt (toString "use_hint_hashes"B)          as_bool
+    let get_use_native_tactics      ()      = lookup_opt (toString "use_native_tactics"B)       (as_option as_string)
+    let get_no_tactics              ()      = lookup_opt (toString "no_tactics"B)               as_bool
+    let get_using_facts_from        ()      = lookup_opt (toString "using_facts_from"B)         (as_option (as_list as_string))
+    let get_verify_module           ()      = lookup_opt (toString "verify_module"B)            (as_list as_string)
+    let get_version                 ()      = lookup_opt (toString "version"B)                  as_bool
+    let get_warn_default_effects    ()      = lookup_opt (toString "warn_default_effects"B)     as_bool
+    let get_z3cliopt                ()      = lookup_opt (toString "z3cliopt"B)                 (as_list as_string)
+    let get_z3smtopt                ()      = lookup_opt (toString "z3smtopt"B)                 (as_list as_string)
+    let get_z3refresh               ()      = lookup_opt (toString "z3refresh"B)                as_bool
+    let get_z3rlimit                ()      = lookup_opt (toString "z3rlimit"B)                 as_int
+    let get_z3rlimit_factor         ()      = lookup_opt (toString "z3rlimit_factor"B)          as_int
+    let get_z3seed                  ()      = lookup_opt (toString "z3seed"B)                   as_int
+    let get_z3version               ()      = lookup_opt (toString "z3version"B)                as_string
+    let get_no_positivity           ()      = lookup_opt (toString "__no_positivity"B)          as_bool
+    let get_warn_error              ()      = lookup_opt (toString "warn_error"B)               (as_list as_string)
+    let get_use_nbe                 ()      = lookup_opt (toString "use_nbe"B)                  as_bool
+    let get_use_nbe_for_extraction  ()      = lookup_opt (toString "use_nbe_for_extraction"B)                  as_bool
+    let get_trivial_pre_for_unannotated_effectful_fns
+                                    ()      = lookup_opt (toString "trivial_pre_for_unannotated_effectful_fns"B)    as_bool
+    let get_profile                 ()      = lookup_opt (toString "profile"B)                  (as_option (as_list as_string))
+    let get_profile_group_by_decl   ()      = lookup_opt (toString "profile_group_by_decl"B)    as_bool
+    let get_profile_component       ()      = lookup_opt (toString "profile_component"B)        (as_option (as_list as_string))
+
+    // See comment in the interface file
+    let _version = mk_ref (toString ""B)
+    let _platform = mk_ref (toString ""B)
+    let _compiler = mk_ref (toString ""B)
+    let _date = mk_ref (toString " not set"B)
+    let _commit = mk_ref (toString ""B)
+
+
+    let display_version () =
+        Format.print_string (Format.fmt6 (toString "F* %s\nplatform=%s\nsystem=%s\ncompiler=%s\ndate=%s\ncommit=%s\n"B)
+                                            !_version !_platform (show FStarC.Platform.system) !_compiler !_date !_commit)
+
+    let bold_doc (d:Pprint.document) : Pprint.document =
+        let open FStarC.Pprint in
+        (* very hacky, this would make no sense for documents going elsewhere
+        other than stdout *)
+        if Format.stdout_isatty () = Some true
+        then fancystring (toString "\x1b[39;1m"B) 0 ^^ d ^^ fancystring (toString "\x1b[0m"B) 0
+        else d
+
+    let display_debug_keys () =
+        let keys = Debug.list_all_toggles () in
+        keys |> List.sortWith String.compare |> List.iter (fun s -> Format.print_string (s ^. (toString "\n"B)))
+
+    let usage_for (o : opt & Pprint.document) : Pprint.document =
+        let open FStarC.Pprint in
+        let open FStarC.Errors.Msg in
+        let ((short, flag, p), explain) = o in
+        let arg =
+            match p with
+            | ZeroArgs _ -> empty
+            | OneArg (_, argname) -> blank 1 ^^ doc_of_string argname
+        in
+        let short_opt =
+            if short <> noshort
+            then [doc_of_string ((toString "-"B) ^. String.make 1 short) ^^ arg]
+            else []
+        in
+        let long_opt =
+            if flag <> (toString ""B)
+            then [doc_of_string ((toString "--"B) ^. flag) ^^ arg]
+            else []
+        in
+        group (bold_doc (separate (comma ^^ blank 1) (short_opt @ long_opt))) ^^ hardline ^^
+        group (blank 4 ^^ align explain) ^^ hardline
+
+    let display_usage_aux (specs : list (opt & Pprint.document)) : unit =
+        let open FStarC.Pprint in
+        let open FStarC.Errors.Msg in
+        let text (s:string) : document = flow (break_ 1) (words s) in
+        let d : document =
+            doc_of_string (toString "fstar.exe [options] file[s] [@respfile...]"B) ^/^
+            doc_of_string (Format.fmt1 (toString "  %srespfile: read command-line options from respfile\n"B) (Format.colorize_bold (toString "@"B))) ^/^
+            List.fold_right (fun o rest -> usage_for o ^^ rest) specs empty
+        in
+        Format.print_string (pretty_string (float_of_string (toString "1.0"B)) 80 d)
+
+    let mk_spec (o : char & string & opt_variant option_val) : opt =
+            let ns, name, arg = o in
+            let arg =
+                    match arg with
+                    | ZeroArgs f ->
+                        let g () = set_option name (f()) in
+                        ZeroArgs g
+
+                    | OneArg (f, d) ->
+                        let g x = set_option name (f x) in
+                        OneArg (g, d) in
+            ns, name, arg
+
+    let accumulated_option name value =
+            let prev_values = Option.dflt [] (lookup_opt name (as_option as_list')) in
+            List (value :: prev_values)
+
+    let reverse_accumulated_option name value =
+            let prev_values = Option.dflt [] (lookup_opt name (as_option as_list')) in
+            List (prev_values @ [value])
+
+    let accumulate_string name post_processor value =
+            set_option name (accumulated_option name (String (post_processor value)))
+
+    let add_extract_module s =
+            accumulate_string (toString "extract_module"B) String.lowercase s
+
+    let add_extract_namespace s =
+            accumulate_string (toString "extract_namespace"B) String.lowercase s
+
+    let add_verify_module s =
+            accumulate_string (toString "verify_module"B) String.lowercase s
+
+
 
 
     let file_list_ : ref<list<Prims.string>> = mk_ref []

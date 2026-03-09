@@ -7,6 +7,12 @@
 | `"[\x00-\x7F]*?"` | `(toString $&B)` |
 | `\bstring\b` | `Prims.string` |
 
+## System.Int32 literal → Prims.int literal
+
+| From | To |
+| --- | --- |
+| `\d+` | `(toInt $&)` |
+
 ## Indent 2 → Indent 4
 
 | From | To |

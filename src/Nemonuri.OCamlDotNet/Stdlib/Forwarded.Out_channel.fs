@@ -1,7 +1,10 @@
 namespace Nemonuri.OCamlDotNet.Forwarded
 
+open System
 open Nemonuri.OCamlDotNet.Primitives
 module Unix = Nemonuri.OCamlDotNet.Forwarded.Unix
+module Ofd = Nemonuri.OCamlDotNet.Primitives.OCamlFileDescriptors
+module Obs = Nemonuri.OCamlDotNet.Primitives.OCamlByteSpanSources
 
 /// reference: https://ocaml.org/manual/5.4/api/Out_channel.html
 module Out_channel =
@@ -19,12 +22,23 @@ module Out_channel =
     | Open_text  (* open in text mode (may perform conversions). *)
     | Open_nonblock (* open in non-blocking mode. *)
 
-    let stdout = { FileDescriptor = Unix.stdout; BinaryMode = true }
+    let inline private fd (oc: t) = oc.FileDescriptor
 
-    let stderr = { FileDescriptor = Unix.stderr; BinaryMode = true }
+    let stdout = { FileDescriptor = Unix.stdout; BinaryMode = false }
+
+    let stderr = { FileDescriptor = Unix.stderr; BinaryMode = false }
 
     let set_binary_mode (oc: t) (b: bool) = oc.BinaryMode <- b
 
     let is_binary_mode (oc: t) = oc.BinaryMode
 
-    let flush (oc: t) = oc |> OCamlFileDescriptors.outChannelToStream |> _.Flush()
+    let flush (oc: t) = Ofd.flush oc.FileDescriptor
+
+    let output_char (oc: t) (c: OCamlChar) = Ofd.writeByteCharWithEncodingIfNotStdIn (fd oc) c Console.OutputEncoding
+
+    let output_byte (oc: t) (n: OCamlInt) = output_char oc (byte n)
+
+    let output_bytes (oc: t) (b: OCamlBytes) = Ofd.writeByteCharSpanWithEncodingIfNotStdIn (fd oc) (Obs.bytesToReadOnlySpan b) Console.OutputEncoding
+
+    let output_string (oc: t) (s: OCamlString) = String.mnd { let! s' = s in return! output_bytes oc s' }
+    

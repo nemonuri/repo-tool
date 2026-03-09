@@ -20,30 +20,35 @@ module Deq =
     
     let (<>?) (_0: #deq<'a>) (x: 'a) (y: 'a) = not (_0.(=?) x y)
 
+    [<NoEquality; NoComparison>]
     type deq_int =
         struct
             interface deq<Prims.int> with
                 member this.(=?) (x: Prims.int) (y: Prims.int): bool = x =. y
         end
 
+    [<NoEquality; NoComparison>]
     type deq_bool =
         struct
             interface deq<bool> with
                 member this.(=?) x y: bool = x =. y
         end
 
+    [<NoEquality; NoComparison>]
     type deq_unit =
         struct
             interface deq<unit> with
                 member this.(=?) x y: bool = x =. y
         end
 
+    [<NoEquality; NoComparison>]
     type deq_string =
         struct
             interface deq<Prims.string> with
                 member this.(=?) x y: bool = x =. y
         end
     
+    [<NoEquality; NoComparison>]
     type deq_option<'a, '_1 when '_1 :> deq<'a> and '_1 : unmanaged> =
         struct
             interface deq<option<'a>> with
@@ -60,12 +65,14 @@ module Deq =
         | x::xs, y::ys -> x </eq.(=?)/> y && eqList eq xs ys
         | _, _ -> false
     
+    [<NoEquality; NoComparison>]
     type deq_list<'a, 'd when 'd :> deq<'a> and 'd : unmanaged> =
         struct
             interface deq<list<'a>> with
                 member this.(=?) x y = eqList defaultof<'d> x y
         end
     
+    [<NoEquality; NoComparison>]
     type deq_either<'a, 'b, 'd1, 'd2 
                         when 'd1 :> deq<'a> and 'd1 : unmanaged
                         and 'd2 :> deq<'b> and 'd2 : unmanaged> =

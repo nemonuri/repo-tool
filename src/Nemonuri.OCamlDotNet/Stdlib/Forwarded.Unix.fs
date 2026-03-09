@@ -2,7 +2,10 @@ namespace Nemonuri.OCamlDotNet.Forwarded
 
 open System.IO
 open System.Diagnostics
+open Nemonuri.ByteChars.IO
 open Nemonuri.OCamlDotNet.Primitives
+module Obs = Nemonuri.OCamlDotNet.Primitives.OCamlByteSpanSources
+module Ofd = Nemonuri.OCamlDotNet.Primitives.OCamlFileDescriptors
 
 /// https://ocaml.org/manual/5.4/api/Unix.html
 module Unix =
@@ -82,21 +85,18 @@ module Unix =
 
     type file_descr = OCamlFileDescriptor
 
-    let stdin = 
-        let strm =
-            try
-                System.Console.OpenStandardInput()
-            with
-                | :? System.PlatformNotSupportedException as e -> Debug.WriteLine(e.Message); Stream.Null
-                | e -> Debug.WriteLine(e.ToString()); Stream.Null
-        in
-        Console (strm, In) 
+    let stdin = StandardReader StandardIOTheory.Input
     
-    let stdout = (System.Console.OpenStandardOutput(), Out) |> Console
+    let stdout = StandardWriter (StandardIOTheory.Output, Output)
 
-    let stderr = (System.Console.OpenStandardError(), Error) |> Console
+    let stderr = StandardWriter (StandardIOTheory.Error, Error)
 
     let isatty (fd: file_descr) = 
         match fd with
-        | Console _ -> true
+        | StandardReader _ | StandardWriter _ -> true
         | _ -> false
+
+    let single_write (fd: file_descr) (buf: OCamlBytes) (pos: OCamlInt) (len: OCamlInt) = 
+        let rbs = (Obs.bytesToReadOnlySpan buf).Slice(pos, len) in
+        Ofd.writeByteSpanIfNotStdIn fd rbs
+        rbs.Length

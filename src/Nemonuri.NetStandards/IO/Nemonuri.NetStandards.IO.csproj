@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFrameworks>netstandard2.0</TargetFrameworks>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <LangVersion>14</LangVersion>
+        <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
+        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    </PropertyGroup>
+
+    <Choose>
+        <When Condition="$(TargetFramework) == 'netstandard2.0'">
+            <ItemGroup>
+                <PackageReference Include="System.Memory" />
+            </ItemGroup>
+            <PropertyGroup>
+            </PropertyGroup>
+        </When>
+    </Choose>
+
+</Project>

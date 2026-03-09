@@ -6,6 +6,7 @@
     <NoWarn>$(NoWarn);FS0009;FS3391</NoWarn>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="Encodings.fs" />
     <Compile Include="Internals.fs" />
     <Compile Include="HashMultiMap.fs" />
     <Compile Include="Primitives.fs" />

@@ -6,6 +6,7 @@
   </Folder>
   <Folder Name="/Nemonuri.NetStandards/">
     <Project Path="Nemonuri.NetStandards/Core/Nemonuri.NetStandards.Core.csproj" />
+    <Project Path="Nemonuri.NetStandards/IO/Nemonuri.NetStandards.IO.csproj" />
     <Project Path="Nemonuri.NetStandards/Text/Nemonuri.NetStandards.Text.csproj" />
     <Project Path="Nemonuri.NetStandards/Numerics/Nemonuri.NetStandards.Numerics.csproj" />
     <Project Path="Nemonuri.NetStandards/Memory/Nemonuri.NetStandards.Memory.csproj" />

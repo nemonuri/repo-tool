@@ -1,3 +1,4 @@
+using Nemonuri.ByteChars.Internal;
 using Nemonuri.Collections;
 using Nemonuri.FixedSizes;
 using Sls = Nemonuri.ByteChars.Internal.StackLimitSizePremise;
@@ -117,7 +118,4 @@ public static unsafe partial class MutableByteStringTheory
         Encoding ensuredEncoding = encoding ?? Encoding.Default;
         return new(ensuredEncoding.GetBytes(dotNetString));
     }
-
-    public static ArraySegment<byte> FromDotNetStringWithUtf8Encoding(string? dotNetString) => FromDotNetStringWithEncoding(dotNetString, Encoding.UTF8);
 }
-

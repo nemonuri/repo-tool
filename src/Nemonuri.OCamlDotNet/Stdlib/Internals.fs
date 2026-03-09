@@ -3,6 +3,7 @@ namespace Nemonuri.OCamlDotNet.Primitives.Internals
 open System
 open System.Diagnostics
 open Nemonuri.ByteChars
+open Nemonuri.OCamlDotNet.Primitives
 open type System.MemoryExtensions
 open type Nemonuri.ByteChars.Extensions.UnsafePinnedSpanPointerExtensions
 
@@ -57,4 +58,4 @@ module internal UnsafeOCamlByteSpanSources =
     
     let toDotNetString (s: t) : string = ByteCharSpanTheory.ToDotNetString(toSpan s)
 
-    let ofDotNetString (s: string) : t = MutableByteStringTheory.FromDotNetStringWithUtf8Encoding(s) |> ofArraySegment
+    let ofDotNetString (s: string) : t = MutableByteStringTheory.FromDotNetStringWithEncoding(s, Encodings.utf8NoBom) |> ofArraySegment
