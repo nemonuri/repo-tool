@@ -3,12 +3,14 @@
     - Modifier: Nemonuri
 *)
 
-namespace Nemonuri.OCamlDotNet.PPrint
+namespace Nemonuri.OCamlDotNet
 
+open Nemonuri.PureTypeSystems
 open Nemonuri.OCamlDotNet.Forwarded
 open Nemonuri.OCamlDotNet.Primitives
 open Nemonuri.OCamlDotNet.Primitives.Operators
 open Nemonuri.OCamlDotNet.Forwarded.Out_channel
+open Microsoft.FSharp.Core.Operators.Unchecked
 
 module Obs = Nemonuri.OCamlDotNet.Primitives.OCamlByteSpanSources
 
@@ -782,41 +784,48 @@ module PPrintEngine =
     (* We now instantiate the renderers for the three kinds of output channels. *)
 
     (* This is just boilerplate. *)
+    type RENDERER<'channel, 'document> = 
+        interface
+            abstract member pretty: float -> int -> 'channel -> 'document -> unit
+            abstract member compact: 'channel -> 'document -> unit
+        end
+
+    type MakeRenderer<'channel, 'output when 'output :> IConstant<'channel -> output> and 'output : unmanaged>
+        = 
+        struct
+            static member pretty rfrac width channel doc = pretty (defaultof<'output>.Value channel) (initial rfrac width) 0 false doc
+            static member compact channel doc = compact (defaultof<'output>.Value channel) doc
+
+            interface RENDERER<'channel, document> with
+                member _.pretty rfrac width channel doc = MakeRenderer<'channel, 'output>.pretty rfrac width channel doc
+                member _.compact channel doc = MakeRenderer<'channel, 'output>.compact channel doc
+        end
+    
+
+    type ToChannel = MakeRenderer<OCamlOutChannel, ToChannel'output>
+    and ToChannel'output =
+        struct
+            member _.output (channel: OCamlOutChannel) : output = new buffering (new channel_output (channel))
+
+            interface IConstant<OCamlOutChannel -> output> with
+                member this.Value = this.output
+        end
+    
+    type ToBuffer = MakeRenderer<Buffer.t, ToBuffer'output>
+    and ToBuffer'output =
+        struct
+            member _.output (buffer: Buffer.t) : output = new buffering (new buffer_output (buffer))
+
+            interface IConstant<Buffer.t -> output> with
+                member this.Value = this.output
+        end
+
 #if false
-    module type RENDERER = sig
-        type channel
-        type document
-        val pretty: float -> int -> channel -> document -> unit
-        val compact: channel -> document -> unit
-    end
-
-    module MakeRenderer (X : sig
-        type channel
-        val output: channel -> output
-    end)
-    : RENDERER with type channel = X.channel and type document = document
-    = struct
-        type channel = X.channel
-        type nonrec document = document
-        let pretty rfrac width channel doc = pretty (X.output channel) (initial rfrac width) 0 false doc
-        let compact channel doc = compact (X.output channel) doc
-    end
-
-    module ToChannel =
-        MakeRenderer(struct
-            type channel = out_channel
-            let output channel = new buffering (new channel_output channel)
-        end)
-
-    module ToBuffer =
-        MakeRenderer(struct
-            type channel = Buffer.t
-            let output buffer = new buffering (new buffer_output buffer)
-        end)
 
     module ToFormatter =
         MakeRenderer(struct
             type channel = Format.formatter
             let output fmt = new buffering (new formatter_output fmt)
         end)
+
 #endif

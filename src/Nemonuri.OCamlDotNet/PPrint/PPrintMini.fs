@@ -3,7 +3,7 @@
     - Modifier: Nemonuri
 *)
 
-namespace Nemonuri.OCamlDotNet.PPrint
+namespace Nemonuri.OCamlDotNet
 
 open Nemonuri.OCamlDotNet.Forwarded
 open Nemonuri.OCamlDotNet.Primitives

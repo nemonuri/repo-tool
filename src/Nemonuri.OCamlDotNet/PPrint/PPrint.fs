@@ -3,17 +3,16 @@
     - Modifier: Nemonuri
 *)
 
-namespace Nemonuri.OCamlDotNet.PPrint
+namespace Nemonuri.OCamlDotNet
 
 
 open Nemonuri.OCamlDotNet.Forwarded
 open Nemonuri.OCamlDotNet.Primitives
 open Nemonuri.OCamlDotNet.Primitives.Operators
 module Obsu = Nemonuri.OCamlDotNet.Primitives.OCamlByteSpanSources.Unsafe
-open Nemonuri.OCamlDotNet.PPrint.PPrintEngine
+open Nemonuri.OCamlDotNet.PPrintEngine
 
-[<AutoOpen>]
-module Pervasives =
+module PPrint =
 
     (******************************************************************************)
     (*                                                                            *)
