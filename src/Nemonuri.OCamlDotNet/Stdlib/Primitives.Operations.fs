@@ -85,6 +85,8 @@ module OCamlByteSpanSources =
 
     let toReadOnlySpan (s: t) = TemporaryReadOnlySpanSources.toReadOnlySpan s
 
+    let referenceEqual (s1: t) (s2: t) = mnd { let! s1' = s1 in let! s2' = s2 in return! U.referenceEqual s1' s2' }
+
     let empty = mnd { return U.empty }
 
     let toArray (s: t) = (Unsafe.toSpan s).ToArray()
@@ -109,6 +111,8 @@ module OCamlByteSpanSources =
     let private bmnd = Unsafe.bmnd
 
     let bytesToReadOnlySpan (s: OCamlBytes) = toReadOnlySpan (s |> Unsafe.ofBytes)
+
+    let bytesReferenceEqual s1 s2 = bmnd { let! s1' = s1 in let! s2' = s2 in return! referenceEqual s1' s2' }
 
     let emptyBytes = bmnd { return empty }
 
@@ -135,6 +139,8 @@ module OCamlByteSpanSources =
     let private smnd = Unsafe.smnd
 
     let stringToReadOnlySpan (s: OCamlString) = toReadOnlySpan (s |> Unsafe.ofString)
+
+    let stringReferenceEqual s1 s2 = smnd { let! s1' = s1 in let! s2' = s2 in return! referenceEqual s1' s2' }
 
     let emptyString = smnd { return empty }
 

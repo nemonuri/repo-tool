@@ -17,11 +17,11 @@ open Nemonuri.FStarDotNet.FStarC.PSMap
 open Nemonuri.FStarDotNet.FStarC.Getopt
 open Nemonuri.FStarDotNet.FStarC.BaseTypes
 open Nemonuri.FStarDotNet.FStarC.VConfig
-open Nemonuri.FStarDotNet.FStarC.String
 open Nemonuri.FStarDotNet.FStarC.Util
 open Nemonuri.FStarDotNet.FStarC.Class.Deq
 open Nemonuri.FStarDotNet.FStarC.Class.Show
 open Microsoft.FSharp.Core.Operators.Unchecked
+module String = Nemonuri.FStarDotNet.FStarC.String
 
 module Options =
 
@@ -908,8 +908,9 @@ val set_vconfig : vconfig -> unit
 
     let display_version () =
         Format.print_string (Format.fmt6 (toString "F* %s\nplatform=%s\nsystem=%s\ncompiler=%s\ndate=%s\ncommit=%s\n"B)
-                                            !_version !_platform (show FStarC.Platform.system) !_compiler !_date !_commit)
+                                            !_version !_platform ((defaultof<FStarC.Platform.showable_sys> :> showable<FStarC.Platform.Base.sys>).show FStarC.Platform.Base.system) !_compiler !_date !_commit)
 
+#if false
     let bold_doc (d:Pprint.document) : Pprint.document =
         let open FStarC.Pprint in
         (* very hacky, this would make no sense for documents going elsewhere
@@ -917,6 +918,7 @@ val set_vconfig : vconfig -> unit
         if Format.stdout_isatty () = Some true
         then fancystring (toString "\x1b[39;1m"B) 0 ^^ d ^^ fancystring (toString "\x1b[0m"B) 0
         else d
+#endif
 
     let display_debug_keys () =
         let keys = Debug.list_all_toggles () in

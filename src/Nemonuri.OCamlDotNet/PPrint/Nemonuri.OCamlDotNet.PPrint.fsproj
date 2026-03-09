@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>netstandard2.0;netstandard2.1</TargetFrameworks>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="PPrintMini.fs" /><Compile Include="PPrintEngine.fs" /><Compile Include="PPrint.fs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Stdlib\Nemonuri.OCamlDotNet.Stdlib.fsproj" />
+  </ItemGroup>
+
+</Project>

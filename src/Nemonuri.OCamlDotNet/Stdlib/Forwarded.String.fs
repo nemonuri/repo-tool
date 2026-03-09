@@ -67,4 +67,18 @@ module String =
 
     let index s c = mnd { let! s' = s in return! B.index s' c }
 
+    let index_opt s c = mnd { let! s' = s in return! B.index_opt s' c }
+
+    let rindex s c = mnd { let! s' = s in return! B.rindex s' c }
+
+    let rindex_opt s c = mnd { let! s' = s in return! B.rindex_opt s' c }
+
+    let index_from s c = mnd { let! s' = s in return! B.index_from s' c }
+
+    let index_from_opt s c = mnd { let! s' = s in return! B.index_from_opt s' c }
+
+    let rindex_from s c = mnd { let! s' = s in return! B.rindex_from s' c }
+
+    let rindex_from_opt s c = mnd { let! s' = s in return! B.rindex_from_opt s' c }
+
     

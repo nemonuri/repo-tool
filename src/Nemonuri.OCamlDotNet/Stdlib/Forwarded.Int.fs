@@ -14,3 +14,7 @@ module Int =
     let max_int = Core.int.MaxValue
 
     let min_int = Core.int.MinValue
+
+    let to_float (x: OCamlInt) = float x
+
+    let of_float (x: float) = int x

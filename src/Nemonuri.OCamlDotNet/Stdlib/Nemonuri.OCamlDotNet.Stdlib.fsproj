@@ -11,12 +11,12 @@
     <Compile Include="HashMultiMap.fs" />
     <Compile Include="Primitives.fs" />
     <Compile Include="OCamlFileDescriptors.fs" />
-    <Compile Include="Primitives.Operations.fs" />
+    <Compile Include="Primitives.Operations.fs" /><Compile Include="Primitives.Operators.fs" />
     <Compile Include="Primitives.Exceptions.fs" />
-    <Compile Include="Forwarded.Buffer.fs" />
     <Compile Include="Forwarded.Char.fs" />
     <Compile Include="Forwarded.Bytes.fs" />
     <Compile Include="Forwarded.String.fs" />
+    <Compile Include="Forwarded.Buffer.fs" />
     <Compile Include="Forwarded.Array.fs" />
     <Compile Include="Forwarded.List.fs" />
     <Compile Include="Forwarded.Unix.fs" />

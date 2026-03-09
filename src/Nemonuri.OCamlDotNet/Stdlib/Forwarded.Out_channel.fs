@@ -34,11 +34,18 @@ module Out_channel =
 
     let flush (oc: t) = Ofd.flush oc.FileDescriptor
 
-    let output_char (oc: t) (c: OCamlChar) = Ofd.writeByteCharWithEncodingIfNotStdIn (fd oc) c Console.OutputEncoding
+    let private getEncoding (oc: t) = if is_binary_mode oc then Encodings.utf8NoBom :> System.Text.Encoding else Console.OutputEncoding
+
+    let output_char (oc: t) (c: OCamlChar) = Ofd.writeByteCharWithEncodingIfNotStdIn (fd oc) c (getEncoding oc)
 
     let output_byte (oc: t) (n: OCamlInt) = output_char oc (byte n)
 
-    let output_bytes (oc: t) (b: OCamlBytes) = Ofd.writeByteCharSpanWithEncodingIfNotStdIn (fd oc) (Obs.bytesToReadOnlySpan b) Console.OutputEncoding
+    let output (oc: t) (b: OCamlBytes) (pos: OCamlInt) (len: OCamlInt) = 
+        Unix.single_write_core (fd oc) b pos len (getEncoding oc) |> ignore
+
+    let output_bytes (oc: t) (b: OCamlBytes) = output oc b 0 (Bytes.length b)
+        
+    let output_substring oc (s: OCamlString) pos len = String.mnd { let! s' = s in return! output oc s' pos len }
 
     let output_string (oc: t) (s: OCamlString) = String.mnd { let! s' = s in return! output_bytes oc s' }
     

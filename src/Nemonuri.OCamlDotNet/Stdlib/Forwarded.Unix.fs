@@ -1,6 +1,7 @@
 namespace Nemonuri.OCamlDotNet.Forwarded
 
 open System.IO
+open System.Text
 open System.Diagnostics
 open Nemonuri.ByteChars.IO
 open Nemonuri.OCamlDotNet.Primitives
@@ -96,7 +97,10 @@ module Unix =
         | StandardReader _ | StandardWriter _ -> true
         | _ -> false
 
-    let single_write (fd: file_descr) (buf: OCamlBytes) (pos: OCamlInt) (len: OCamlInt) = 
+    let internal single_write_core (fd: file_descr) (buf: OCamlBytes) (pos: OCamlInt) (len: OCamlInt) (enc: Encoding) = 
         let rbs = (Obs.bytesToReadOnlySpan buf).Slice(pos, len) in
-        Ofd.writeByteSpanIfNotStdIn fd rbs
+        Ofd.writeByteCharSpanWithEncodingIfNotStdIn fd rbs enc
         rbs.Length
+
+    let single_write (fd: file_descr) (buf: OCamlBytes) (pos: OCamlInt) (len: OCamlInt) = 
+        single_write_core fd buf pos len Encodings.utf8NoBom

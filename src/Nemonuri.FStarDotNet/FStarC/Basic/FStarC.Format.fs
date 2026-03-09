@@ -152,20 +152,18 @@ val colorize_magenta : string -> string
     let colorize_magenta = colorize ((toString "\x1b[35;1m"B), (toString "\x1b[0m"B))
 
 
-    let private pr = Core.Printf.printf
-    let private fpr = Core.Printf.fprintf
 
     let default_printer =
-        {   printer_prinfo = (fun s -> pr "%s" (s |> Obs.stringToDotNetString); flush stdout);
-            printer_prwarning = (fun s -> use stderrTw = (stderr |> Ofd.outChannelToTextWriter) in fpr stderrTw "%s" (colorize_yellow s |> Obs.stringToDotNetString); flush stdout; stderrTw.Flush());
-            printer_prerror = (fun s -> use stderrTw = (stderr |> Ofd.outChannelToTextWriter) in fpr stderrTw "%s" (colorize_red s |> Obs.stringToDotNetString); flush stdout; stderrTw.Flush());
-            printer_prgeneric = fun label get_string get_json -> pr "%s: %s" (label |> Obs.stringToDotNetString) (get_string () |> Obs.stringToDotNetString)}
+        {   printer_prinfo = (fun s -> output_string stdout s; flush stdout);
+            printer_prwarning = (fun s -> output_string stderr (colorize_yellow s); flush stdout; flush stderr);
+            printer_prerror = (fun s -> output_string stderr (colorize_red s); flush stdout; flush stderr);
+            printer_prgeneric = fun label get_string get_json -> output_string stdout (label ^. (toString ": "B) ^. (get_string())) ; flush stdout; }
 
     let current_printer = ref default_printer
     let set_printer printer = current_printer := printer
 
 
-    let print_raw s = Out_channel.set_binary_mode stdout true; pr "%s" s; flush stdout
+    let print_raw s = Out_channel.set_binary_mode stdout true; output_string stdout s; flush stdout
     let print_string s = (!current_printer).printer_prinfo s
     let print_generic label to_string to_json a = (!current_printer).printer_prgeneric label (fun () -> to_string a) (fun () -> to_json a)
     let print_any s = (!current_printer).printer_prinfo (JsonSerializers.serialize s)

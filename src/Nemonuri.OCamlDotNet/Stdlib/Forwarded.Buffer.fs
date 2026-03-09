@@ -13,7 +13,7 @@ module Buffer =
     
     type t = Nemonuri.OCamlDotNet.Primitives.OCamlBuffer
 
-    let create (n: int) : t = mnd { return bd(n) }
+    let create (n: OCamlInt) : t = mnd { return bd(n) }
 
     let contents (b: t) : OCamlString = mnd { let! b' = b in return! b'.AsSpan().ToArray() |> Obs.Unsafe.stringOfArray }
 
@@ -28,3 +28,10 @@ module Buffer =
             (Ofd.outChannelToStream oc).Write(ary, 0, ary.Length) 
     }
 
+    let add_char (b: t) (c: OCamlChar) = mnd { let! b' = b in return! b'.Add(c) }
+
+    let add_subbytes (b: t) (s: OCamlBytes) (ofs: OCamlInt) (len: OCamlInt) =
+        mnd { let! b' = b in return! b'.Append((Obs.bytesToReadOnlySpan s).Slice(ofs, len)) }
+    
+    let add_substring b (s: OCamlString) ofs len =
+        String.mnd { let! s' = s in return! add_subbytes b s' ofs len }

@@ -9,6 +9,7 @@
     <Compile Include="FStarC.Order.fs" />
     <Compile Include="FStarC.Class.Ord.fs" />
     <Compile Include="FStarC.Class.Show.fs" />
+    <Compile Include="FStarC.Platform.fs" />
     <Compile Include="FStarC.Timing.fs" />
     <Compile Include="FStarC.SMap.fs" />
     <Compile Include="FStarC.Json.fs" />
@@ -22,8 +23,8 @@
     <Compile Include="FStarC.Getopt.fs" />
     <Compile Include="FStarC.VConfig.fs" />
     <Compile Include="FStarC.PSMap.fs" />
-    
-    <Compile Include="FStarC.Debug.fs" /><Compile Include="FStarC.Common.fs" />
+    <Compile Include="FStarC.Debug.fs" />
+    <Compile Include="FStarC.Common.fs" />
     <Compile Include="FStarC.Forwarded.Options_Ext.fs" />
     <Compile Include="FStarC.Options.fs" />
   </ItemGroup>

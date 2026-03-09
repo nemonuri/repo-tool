@@ -16,6 +16,7 @@
     <Project Path="Nemonuri.OCamlDotNet/Stdlib/Nemonuri.OCamlDotNet.Stdlib.fsproj" />
     <Project Path="Nemonuri.OCamlDotNet/Zarith/Nemonuri.OCamlDotNet.Zarith.fsproj" />
     <Project Path="Nemonuri.OCamlDotNet/Batteries/Nemonuri.OCamlDotNet.Batteries.fsproj" />
+    <Project Path="Nemonuri.OCamlDotNet/PPrint/Nemonuri.OCamlDotNet.PPrint.fsproj" />
   </Folder>
   <Folder Name="/test/">
     <Project Path="test/Nemonuri.RepoTools.FStar.BuildTasks.Tests/Nemonuri.RepoTools.FStar.BuildTasks.Tests.fsproj" />

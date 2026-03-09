@@ -59,3 +59,14 @@ module internal UnsafeOCamlByteSpanSources =
     let toDotNetString (s: t) : string = ByteCharSpanTheory.ToDotNetString(toSpan s)
 
     let ofDotNetString (s: string) : t = MutableByteStringTheory.FromDotNetStringWithEncoding(s, Encodings.utf8NoBom) |> ofArraySegment
+
+    let referenceEqual (s1: t) (s2: t) =
+        match s1, s2 with
+        | None, None -> true
+        | e1, e2 when length e1 = 0 && length e2 = 0 -> true
+        | n1, n2 ->
+            let sp1 = toSpan n1 in
+            let sp2 = toSpan n2 in
+            use p1 = fixed sp1 in
+            use p2 = fixed sp2 in
+            p1 = p2 && sp1.Length = sp2.Length

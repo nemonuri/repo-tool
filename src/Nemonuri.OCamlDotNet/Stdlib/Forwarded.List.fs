@@ -37,6 +37,8 @@ module List =
 
     let map f l = Fl.map f l
 
+    let fold_left (f: 'acc -> 'a -> 'acc) (init: 'acc) (l: 'a list) : 'acc = Fl.fold f init l
+
     let fold_right (f: 'a -> 'acc -> 'acc) (l: 'a list) (init: 'acc) : 'acc = Fl.foldBack f l init
 
     let mem a set = Fl.contains a set
