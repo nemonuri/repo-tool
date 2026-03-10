@@ -1,3 +1,4 @@
+#if false
 using Nemonuri.Transcodings;
 using Nemonuri.ByteChars.Internal;
 using System.Diagnostics;
@@ -87,3 +88,4 @@ public readonly struct DotNetEncodingBasedByteCharTranscoder : ITranscoder<byte,
         return (sourcesRead == source.Length) ? OperationStatus.Done : OperationStatus.DestinationTooSmall;
     }
 }
+#endif
