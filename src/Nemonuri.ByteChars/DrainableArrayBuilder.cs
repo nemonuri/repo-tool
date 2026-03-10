@@ -91,6 +91,14 @@ public struct DrainableArrayBuilder<T>
         Append(newItems, 0, newItems.Length);
     }
 
+    public void SetCount(int count)
+    {
+        Guard.IsGreaterThanOrEqualTo(count, 0);
+        EnsureCapacity(count);
+
+        _count = count;
+    }
+
     public void Clear()
     {
         AsSpan().Clear();
