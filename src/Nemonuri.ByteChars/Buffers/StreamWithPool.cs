@@ -62,7 +62,7 @@ public struct StreamWithByteArrayPool : IBufferWriter<byte>, IDisposable
         var buffer = Interlocked.Exchange(ref _buffer, null);
         if (buffer is not null)
         {
-            Pool.Return(_buffer);
+            Pool.Return(buffer);
         }
     }
 }

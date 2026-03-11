@@ -83,4 +83,4 @@ type OCamlString = internal { Source: OCamlByteSpanSource } with
 
 [<Struct>]
 [<NoEquality; NoComparison>]
-type OCamlBuffer = internal { Value: Nemonuri.Buffers.DrainableArrayBuffer<byte> }
+type OCamlBuffer = internal { Value: Nemonuri.Buffers.DrainableArrayBuilder<byte> }

@@ -172,7 +172,7 @@ module ByteSpans =
     type private bs = Span<OCamlChar>
     type private rbs = ReadOnlySpan<OCamlChar>
     type private trbs = ITemporaryReadOnlySpanSource<OCamlChar>
-    type private bd = Nemonuri.Collections.DrainableArrayBuilder<OCamlChar>
+    type private bd = Nemonuri.Buffers.DrainableArrayBuilder<OCamlChar>
     type private Cc = Nemonuri.ByteChars.ByteCharConstants
     type private Cth = Nemonuri.ByteChars.ByteCharTheory
     type private Sth = Nemonuri.ByteChars.ByteCharSpanSourceTheory
@@ -205,15 +205,15 @@ module ByteSpans =
         ((bd(0), false), sl)
         ||> Seq.fold 
                 (fun (builder, looped) elem -> 
-                    if looped then builder.Append(sep.AsTemporarySpan()) else ()
-                    builder.Append(elem.AsTemporarySpan())
+                    if looped then builder.AddRange(sep.AsTemporarySpan()) else ()
+                    builder.AddRange(elem.AsTemporarySpan())
                     (builder, true))
         |> Core.Operators.fst |> _.DrainToArraySemgent()
     
     let cat<'t1, 't2 when 't1 :> trbs and 't2 :> trbs> (s1: 't1) (s2: 't2) = 
         let builder = bd(2)
-        builder.Append(s1.AsTemporarySpan())
-        builder.Append(s2.AsTemporarySpan())
+        builder.AddRange(s1.AsTemporarySpan())
+        builder.AddRange(s2.AsTemporarySpan())
         builder.DrainToArraySemgent()
 
     let iter (f: OCamlChar -> unit) (s: rbs) = for c in s do f c
@@ -286,7 +286,7 @@ module ByteSpans =
         let tempStore = DotNetSpans.NativePtrToSpan(NativePtr.stackalloc<OCamlChar> 4, 4)
         for c in s do
             let stepCount = escapeCharAndCount tempStore c
-            builder.Append(tempStore.Slice(0, stepCount))
+            builder.AddRange(tempStore.Slice(0, stepCount))
         builder.DrainToArraySemgent()
     
     let inline internal (|GreaterThanOrEqualToZero|_|) (v: int) = if v >= 0 then ValueSome v else ValueNone

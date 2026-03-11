@@ -3,6 +3,8 @@ namespace Nemonuri.OCamlDotNet.Primitives
 open System
 open System.IO
 open System.Text
+open Nemonuri.Buffers
+open Nemonuri.Transcodings
 open Nemonuri.ByteChars.IO
 
 type internal OCamlStandardWriterKind =
@@ -43,7 +45,7 @@ module OCamlFileDescriptors =
         | StandardReader _ -> ()
         | s -> (toStream s).Flush()
 
-    let toTextWriter (fd: t) : TextWriter = new StreamWriter(toStream fd, null, -1, true)
+    // let toTextWriter (fd: t) : TextWriter = new StreamWriter(toStream fd, null, -1, true)
 
     let writeByteIfNotStdIn (fd: t) (b: byte) =
         match fd with
@@ -57,6 +59,19 @@ module OCamlFileDescriptors =
         | StandardWriter (bw, _) -> BinaryWriterTheory.WriteByteSpan(bw, bs)
         | s -> StreamTheory.WriteByteSpan(toStream s, bs)
     
+    let private writeByteSpanWithTranscodingIfNotStdIn (fd: t) (bs: ReadOnlySpan<byte>) (tcp: 'tcp) =
+        match fd with
+        | StandardReader _ -> ()
+        | StandardWriter (bw, _) ->
+            use mutable bwp = new BinaryWriterWithPool(null, bw, bs.Length) in
+            let _ = TranscodingTheory.TranscodeWhileDestinationTooSmall<byte,byte,'tcp,BinaryWriterWithPool>(bs,&bwp) in
+            ()
+        | s -> 
+            use mutable swp = new StreamWithByteArrayPool(null, (toStream s), bs.Length) in
+            let _ = TranscodingTheory.TranscodeWhileDestinationTooSmall<byte,byte,'tcp,StreamWithByteArrayPool>(bs, &swp) in
+            ()
+
+#if false    
     let isStdIn (fd: t) = match fd with | StandardReader _ -> true | _ -> false
 
     let writeByteCharWithEncodingIfNotStdIn (fd: t) (b: byte) (dstEncoding: Encoding) =
@@ -79,5 +94,9 @@ module OCamlFileDescriptors =
     let outChannelToStream (oc: out_channel) = oc.FileDescriptor |> toStream
 
     let outChannelToTextWriter (oc: out_channel) = oc.FileDescriptor |> toTextWriter
+#endif
 
-
+    let writeByteSpanToOutChannel (oc: out_channel) (bs: ReadOnlySpan<byte>) = 
+        match oc.BinaryMode with
+        | true -> writeByteSpanIfNotStdIn oc.FileDescriptor bs
+        | false -> writeByteSpanWithTranscodingIfNotStdIn oc.FileDescriptor bs Unchecked.defaultof<Nemonuri.ByteChars.UncheckedUtf8UnixToWindowsNewLine>
