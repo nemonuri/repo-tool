@@ -1,4 +1,4 @@
-using Nemonuri.Collections;
+using Nemonuri.Buffers;
 using Nemonuri.ByteChars.Internal;
 using System.Buffers;
 using System.Buffers.Text;

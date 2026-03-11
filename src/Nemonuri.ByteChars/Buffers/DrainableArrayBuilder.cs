@@ -1,4 +1,4 @@
-namespace Nemonuri.Collections;
+namespace Nemonuri.Buffers;
 
 /**
 - Reference: https://github.com/dotnet/runtime/blob/v10.0.3/src/coreclr/tools/Common/System/Collections/Generic/ArrayBuilder.cs
@@ -16,7 +16,17 @@ public struct DrainableArrayBuilder<T>
     public DrainableArrayBuilder(int capacity)
     {
         _items = new T[capacity];
+        _count = 0;
     }
+
+    internal readonly T[]? GetinternalArray() => _items;
+
+    internal void SetInternalCount(int count)
+    {
+        Debug.Assert( 0 <= count && count <= (_items ?? []).Length );
+        _count = count;
+    }
+
 
     private (T[]? Items, int Count) DrainAllFields()
     {
@@ -57,6 +67,7 @@ public struct DrainableArrayBuilder<T>
         return new(items, 0, count);
     }
 
+#if false
     public void CopyTo(T[] destination)
     {
         if (_items != null)
@@ -65,6 +76,7 @@ public struct DrainableArrayBuilder<T>
             Array.Copy(_items, destination, _count);
         }
     }
+#endif
 
     public void Add(T item)
     {
@@ -75,6 +87,7 @@ public struct DrainableArrayBuilder<T>
 
     public readonly Span<T> AsSpan() => _items.AsSpan(0, _count);
 
+#if false
     public readonly Span<T> AsSpan(int start) => _items.AsSpan(start, _count - start);
 
     public Span<T> AppendSpan(int length)
@@ -90,20 +103,8 @@ public struct DrainableArrayBuilder<T>
     {
         Append(newItems, 0, newItems.Length);
     }
+#endif
 
-    public void SetCount(int count)
-    {
-        Guard.IsGreaterThanOrEqualTo(count, 0);
-        EnsureCapacity(count);
-
-        _count = count;
-    }
-
-    public void Clear()
-    {
-        AsSpan().Clear();
-        _count = 0;
-    }
 
 #nullable disable
     public void Append(T[] newItems, int offset, int length)

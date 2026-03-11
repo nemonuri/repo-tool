@@ -1,4 +1,4 @@
-using Nemonuri.Collections;
+using Nemonuri.Buffers;
 
 namespace Nemonuri.Transcodings;
 
@@ -7,6 +7,7 @@ public static class TranscodingTheory
     extension<TSource, TTarget, TPremise>(TPremise)
         where TPremise : unmanaged, ITranscodingPremise<TSource, TTarget>
     {
+#if false
         public static ArraySegment<TTarget> TranscodeWhileDestinationTooSmall(ReadOnlySpan<TSource> source, out int sourcesRead)
         {
             TPremise th = new();
@@ -32,6 +33,38 @@ public static class TranscodingTheory
                 sourcesRead += stepSr;
                 stepSrc = stepSrc[stepSr..];
             }
+        }
+#endif
+
+        public static void TranscodeWhileDestinationTooSmall(ReadOnlySpan<TSource> source, IBufferWriter<TTarget> dest, out int sourcesRead)
+        {
+            Guard.IsNotNull(dest);
+
+            TPremise th = new();
+            sourcesRead = 0;
+            ReadOnlySpan<TSource> stepSrc = source;
+
+            while (true)
+            {
+                var stepDest = dest.GetSpan();
+                var stepSt = th.Transcode(stepSrc, stepDest, out int stepSr, out int stepTw);
+                sourcesRead += stepSr;
+                dest.Advance(stepTw);
+
+                if (stepSt is not OperationStatus.DestinationTooSmall)
+                {
+                    return;
+                }
+
+                stepSrc = stepSrc[stepSr..];
+            }
+        }
+
+        public static ArraySegment<TTarget> TranscodeToArraySegmentWhileDestinationTooSmall(ReadOnlySpan<TSource> source, out int sourcesRead, int initialCapacity = -1)
+        {
+            DrainableArrayBuffer<TTarget> buffer = new(initialCapacity < 0 ? source.Length : initialCapacity);
+            TranscodeWhileDestinationTooSmall<TSource, TTarget, TPremise>(source, buffer, out sourcesRead);
+            return buffer.DrainToArraySemgent();
         }
     }
 }

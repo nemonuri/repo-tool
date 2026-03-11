@@ -1,5 +1,5 @@
 using Nemonuri.ByteChars.Internal;
-using Nemonuri.Collections;
+using Nemonuri.Buffers;
 using Nemonuri.FixedSizes;
 using Sls = Nemonuri.ByteChars.Internal.StackLimitSizePremise;
 
