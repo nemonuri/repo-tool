@@ -14,7 +14,6 @@ open Nemonuri.FStarDotNet.FStarOperators
 open Nemonuri.FStarDotNet.FStarC.Effect
 open Nemonuri.FStarDotNet.FStarC.Json
 module Obs = Nemonuri.OCamlDotNet.Primitives.OCamlByteSpanSources
-module Ofd = Nemonuri.OCamlDotNet.Primitives.OCamlFileDescriptors
 
 module Format =
 

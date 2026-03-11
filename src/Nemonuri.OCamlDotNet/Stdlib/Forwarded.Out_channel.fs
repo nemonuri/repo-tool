@@ -22,7 +22,6 @@ module Out_channel =
     | Open_text  (* open in text mode (may perform conversions). *)
     | Open_nonblock (* open in non-blocking mode. *)
 
-    let inline private fd (oc: t) = oc.FileDescriptor
 
     let stdout = { FileDescriptor = Unix.stdout; BinaryMode = false }
 
@@ -33,8 +32,6 @@ module Out_channel =
     let is_binary_mode (oc: t) = oc.BinaryMode
 
     let flush (oc: t) = Ofd.flush oc.FileDescriptor
-
-    let private getEncoding (oc: t) = if is_binary_mode oc then Encodings.utf8NoBom :> System.Text.Encoding else Console.OutputEncoding
 
     let output_char (oc: t) (c: OCamlChar) = Ofd.writeByteToOutChannel oc c
 

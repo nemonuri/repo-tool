@@ -918,7 +918,7 @@ val set_vconfig : vconfig -> unit
         if Format.stdout_isatty () = Some true
         then fancystring (toString "\x1b[39;1m"B) 0 ^^ d ^^ fancystring (toString "\x1b[0m"B) 0
         else d
-#endif
+
 
     let display_debug_keys () =
         let keys = Debug.list_all_toggles () in
@@ -989,7 +989,7 @@ val set_vconfig : vconfig -> unit
 
     let add_verify_module s =
             accumulate_string (toString "verify_module"B) String.lowercase s
-
+#endif
 
 
 

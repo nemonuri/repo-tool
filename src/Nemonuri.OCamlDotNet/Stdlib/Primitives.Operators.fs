@@ -1,6 +1,7 @@
 namespace Nemonuri.OCamlDotNet.Primitives
 
 open System
+module Obs = Nemonuri.OCamlDotNet.Primitives.OCamlByteSpanSources
 
 module Operators =
 
@@ -43,3 +44,23 @@ module Operators =
     let inline ( ! ) (r: 'a ref) = r.Value
 
     let inline ( := ) (r: 'a ref) (a: 'a) = r.Value <- a
+
+    let inline ( ^ ) (x: OCamlString) (y: OCamlString) = Nemonuri.OCamlDotNet.Forwarded.String.cat x y
+
+    module Literals =
+
+        type Premise =
+            struct
+                static member ( ~% ) (source: byte array) : OCamlString = Obs.Unsafe.stringOfArray source
+                static member ( ~% ) (source: System.String) : OCamlString = Obs.stringOfDotNetString source
+            end
+        
+        let inline ( ~% ) s =
+            let inline call (p: ^p) (s': ^s) = ((^p or ^s) : (static member ( ~% ): ^s -> ^os) s') in
+            call Unchecked.defaultof<Premise> s
+
+module TypeShadowing =
+
+    type char = OCamlChar
+
+    type string = OCamlString

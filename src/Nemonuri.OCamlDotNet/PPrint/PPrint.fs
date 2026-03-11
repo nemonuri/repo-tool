@@ -9,7 +9,7 @@ namespace Nemonuri.OCamlDotNet
 open Nemonuri.OCamlDotNet.Forwarded
 open Nemonuri.OCamlDotNet.Primitives
 open Nemonuri.OCamlDotNet.Primitives.Operators
-module Obsu = Nemonuri.OCamlDotNet.Primitives.OCamlByteSpanSources.Unsafe
+open Nemonuri.OCamlDotNet.Primitives.Operators.Literals
 open Nemonuri.OCamlDotNet.PPrintEngine
 
 module PPrint =
@@ -389,16 +389,16 @@ module PPrint =
         (* A few constants and combinators, used below. *)
 
         let some =
-            string (Obsu.stringOfArray "Some"B)
+            string %"Some"B
 
         let none =
-            string (Obsu.stringOfArray "None"B)
+            string %"None"B
 
         let lbracketbar =
-            string (Obsu.stringOfArray "[|"B)
+            string %"[|"B
 
         let rbracketbar =
-            string (Obsu.stringOfArray "|]"B)
+            string %"|]"B
 
         let seq1 opening separator closing =
             surround_separate 2 0
@@ -450,7 +450,7 @@ module PPrint =
             ) ^^ space ^^ rbracketbar)
 
         let ref f x =
-            record (Obsu.stringOfArray "ref"B) [(Obsu.stringOfArray "contents"B), f !x]
+            record %"ref"B [%"contents"B, f !x]
 
 #if false
         let float f =
