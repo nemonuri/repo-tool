@@ -32,13 +32,15 @@ public class UncheckedUtf8UnixToWindowsNewLineTests
     {
         { [.."\n"u8], 256, [.."\r\n"u8] },
         { [.."Hello, world!"u8], 256, [.."Hello, world!"u8] },
-        { [.."Hello, \nworld!"u8], 256, [.."Hello, \r\nworld!"u8] }
+        { [.."Hello, \nworld!"u8], 256, [.."Hello, \r\nworld!"u8] },
+        { [.."Hello, \r\nworld!"u8], 256, [.."Hello, \r\nworld!"u8] },
+        { [.."이것은, \n\n 시험용 문자열입니다★"u8], 1024, [.."이것은, \r\n\r\n 시험용 문자열입니다★"u8]  }
     };
 
 
-//    [Theory]
-//    [MemberData(nameof(Members1))]
-    private void Test1(byte[] source, byte[] expected)
+    [Theory]
+    [MemberData(nameof(Members2))]
+    public void Test1(byte[] source, byte[] expected)
     {
         // Arrange
 
