@@ -20,6 +20,7 @@
   </Folder>
   <Folder Name="/test/">
     <Project Path="test/Nemonuri.RepoTools.FStar.BuildTasks.Tests/Nemonuri.RepoTools.FStar.BuildTasks.Tests.fsproj" />
+    <Project Path="test/Nemonuri.ByteChars.UnitTests/Nemonuri.ByteChars.UnitTests.csproj" />
     <Project Path="test/Nemonuri.OCamlDotNet/PPrint/Sample1/Nemonuri.OCamlDotNet.PPrint.Sample1.fsproj" />
   </Folder>
   <Project Path="Nemonuri.ByteChars/Nemonuri.ByteChars.csproj" />

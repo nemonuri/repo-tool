@@ -17,6 +17,10 @@
   <ItemGroup>
     <Using Include="Xunit" />
   </ItemGroup>
+  
+  <ItemGroup>
+    <Remove Include="*.cs.txt" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="xunit.v3.mtp-v2" />
