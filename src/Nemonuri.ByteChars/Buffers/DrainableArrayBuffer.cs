@@ -9,12 +9,12 @@ public class DrainableArrayBuffer<T> : IBuffer<T>
 /**
     ## Q. What is diffrence of 'DrainableArrayBuilder' and 'DrainableArrayBuffer'?
 
-    A. 'DrainableArrayBuffer' can reset 'Count'.
+    A. 'DrainableArrayBuffer' can reset 'Count', and can be locked.
 */
 
-    private readonly DrainableArrayBuilder<T> _builder;
+    private DrainableArrayBuilder<T> _builder;
 
-    public DrainableArrayBuffer(int capacity)
+    public DrainableArrayBuffer(int capacity = 0)
     {
         _builder = new(capacity);
     }
