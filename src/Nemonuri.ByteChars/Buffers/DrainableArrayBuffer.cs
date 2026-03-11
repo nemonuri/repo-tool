@@ -4,7 +4,7 @@ using CommunityToolkit.HighPerformance.Buffers;
 
 namespace Nemonuri.Buffers;
 
-public readonly struct DrainableArrayBuffer<T> : IBuffer<T>
+public class DrainableArrayBuffer<T> : IBuffer<T>
 {
 /**
     ## Q. What is diffrence of 'DrainableArrayBuilder' and 'DrainableArrayBuffer'?
@@ -19,21 +19,21 @@ public readonly struct DrainableArrayBuffer<T> : IBuffer<T>
         _builder = new(capacity);
     }
 
-    public readonly int WrittenCount => _builder.Count;
+    public int WrittenCount => _builder.Count;
 
-    public readonly int Capacity => _builder.GetinternalArray() is { Length: var len } ? len : 0;
+    public int Capacity => _builder.GetinternalArray() is { Length: var len } ? len : 0;
 
-    public readonly int FreeCapacity => Capacity - WrittenCount;
+    public int FreeCapacity => Capacity - WrittenCount;
 
-    public readonly void Clear()
+    public void Clear()
     {
         _builder.AsSpan().Clear();
         _builder.SetInternalCount(0);
     }
 
-    public readonly ReadOnlySpan<T> WrittenSpan => _builder.AsSpan();
+    public ReadOnlySpan<T> WrittenSpan => _builder.AsSpan();
 
-    public readonly ReadOnlyMemory<T> WrittenMemory => _builder.GetinternalArray() is { } ary ? new (ary, 0, WrittenCount) : ReadOnlyMemory<T>.Empty;
+    public ReadOnlyMemory<T> WrittenMemory => _builder.GetinternalArray() is { } ary ? new (ary, 0, WrittenCount) : ReadOnlyMemory<T>.Empty;
 
     public void Advance(int count)
     {
@@ -41,7 +41,7 @@ public readonly struct DrainableArrayBuffer<T> : IBuffer<T>
         _builder.SetInternalCount(_builder.Count + count);
     }
 
-    private readonly T[] GetFreeCapacityEnsuredInternalArray(int sizeHint)
+    private T[] GetFreeCapacityEnsuredInternalArray(int sizeHint)
     {
         Guard.IsGreaterThanOrEqualTo(sizeHint, 0);
         _builder.EnsureCapacity(WrittenCount + Math.Max(sizeHint, 1));
