@@ -1,4 +1,3 @@
-using System.Buffers;
 using System.Diagnostics;
 using CommunityToolkit.HighPerformance.Buffers;
 
@@ -7,9 +6,7 @@ namespace Nemonuri.Buffers;
 public class DrainableArrayBuffer<T> : IBuffer<T>
 {
 /**
-    ## Q. What is diffrence of 'DrainableArrayBuilder' and 'DrainableArrayBuffer'?
-
-    A. 'DrainableArrayBuffer' can reset 'Count', and can be locked.
+    'DrainableArrayBuffer' is boxed version of 'DrainableArrayBuilder'
 */
 
     private DrainableArrayBuilder<T> _builder;
@@ -27,8 +24,7 @@ public class DrainableArrayBuffer<T> : IBuffer<T>
 
     public void Clear()
     {
-        _builder.AsSpan().Clear();
-        _builder.SetInternalCount(0);
+        _builder.Clear();
     }
 
     public ReadOnlySpan<T> WrittenSpan => _builder.AsSpan();

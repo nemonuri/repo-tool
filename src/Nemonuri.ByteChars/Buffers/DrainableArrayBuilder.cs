@@ -2,6 +2,7 @@ namespace Nemonuri.Buffers;
 
 /**
 - Reference: https://github.com/dotnet/runtime/blob/v10.0.3/src/coreclr/tools/Common/System/Collections/Generic/ArrayBuilder.cs
+- Reference: https://learn.microsoft.com/en-us/dotnet/api/system.collections.immutable.immutablearray-1.builder?view=net-10.0
 */
 
 using System.Runtime.CompilerServices;
@@ -67,7 +68,6 @@ public struct DrainableArrayBuilder<T>
         return new(items, 0, count);
     }
 
-#if false
     public void CopyTo(T[] destination)
     {
         if (_items != null)
@@ -76,7 +76,6 @@ public struct DrainableArrayBuilder<T>
             Array.Copy(_items, destination, _count);
         }
     }
-#endif
 
     public void Add(T item)
     {
@@ -98,46 +97,51 @@ public struct DrainableArrayBuilder<T>
         _count = origCount + length;
         return _items.AsSpan(origCount, length);
     }
-
-    public void Append(T[] newItems)
-    {
-        Append(newItems, 0, newItems.Length);
-    }
 #endif
 
 
-#nullable disable
-    public void Append(T[] newItems, int offset, int length)
+    public void AddRange(T[] items)
+    {
+        AddRange(items, 0, items.Length);
+    }
+
+
+    public void AddRange(T[] items, int offset, int length)
     {
         if (length == 0)
             return;
 
         Debug.Assert(length > 0);
-        Debug.Assert(newItems.Length >= offset + length);
+        Debug.Assert(items.Length >= offset + length);
 
         EnsureCapacity(_count + length);
-        Array.Copy(newItems, offset, _items, _count, length);
+        Array.Copy(items, offset, _items, _count, length);
         _count += length;
     }
 
-    public void Append(ReadOnlySpan<T> newItems)
+    public void AddRange(ArraySegment<T> items) => AddRange(items.Array, items.Offset, items.Count);
+
+
+#nullable disable
+
+    public void AddRange(ReadOnlySpan<T> items)
     {
-        var length = newItems.Length;
+        var length = items.Length;
         if (length == 0)
             return;
 
         EnsureCapacity(_count + length);
-        newItems.CopyTo(_items.AsSpan().Slice(_count));
+        items.CopyTo(_items.AsSpan().Slice(_count));
         _count += length;
     }
 
-    public void Append(DrainableArrayBuilder<T> newItems)
+    public void AddRange(DrainableArrayBuilder<T> items)
     {
-        if (newItems.Count == 0)
+        if (items.Count == 0)
             return;
-        EnsureCapacity(_count + newItems.Count);
-        Array.Copy(newItems._items, 0, _items, _count, newItems.Count);
-        _count += newItems.Count;
+        EnsureCapacity(_count + items.Count);
+        Array.Copy(items._items, 0, _items, _count, items.Count);
+        _count += items.Count;
     }
 
     public void ZeroExtend(int numItems)
@@ -196,4 +200,10 @@ public struct DrainableArrayBuilder<T>
         return false;
     }
 #nullable restore
+
+    public void Clear()
+    {
+        AsSpan().Clear();
+        SetInternalCount(0);
+    }
 }
