@@ -9,7 +9,7 @@ using System.Runtime.CompilerServices;
 using Debug = System.Diagnostics.Debug;
 
 
-public struct DrainableArrayBuilder<T>
+public struct DrainableArrayBuilder<T> : IBufferWriter<T>
 {
     private T[]? _items;
     private int _count;
@@ -105,7 +105,7 @@ public struct DrainableArrayBuilder<T>
         AddRange(items, 0, items.Length);
     }
 
-
+#nullable disable
     public void AddRange(T[] items, int offset, int length)
     {
         if (length == 0)
@@ -121,8 +121,6 @@ public struct DrainableArrayBuilder<T>
 
     public void AddRange(ArraySegment<T> items) => AddRange(items.Array, items.Offset, items.Count);
 
-
-#nullable disable
 
     public void AddRange(ReadOnlySpan<T> items)
     {
@@ -144,7 +142,7 @@ public struct DrainableArrayBuilder<T>
         _count += items.Count;
     }
 
-    public void ZeroExtend(int numItems)
+    private void ZeroExtend(int numItems)
     {
         Debug.Assert(numItems >= 0);
         EnsureCapacity(_count + numItems);
@@ -198,6 +196,25 @@ public struct DrainableArrayBuilder<T>
         }
 
         return false;
+    }
+
+    void IBufferWriter<T>.Advance(int count)
+    {
+        ZeroExtend(count);
+    }
+
+    Memory<T> IBufferWriter<T>.GetMemory(int sizeHint)
+    {
+        Guard.IsGreaterThanOrEqualTo(sizeHint, 0);
+        EnsureCapacity(Count + Math.Max(sizeHint, 1));
+        return new(_items, Count, sizeHint is 0 ? (_items.Length - Count) : sizeHint);
+    }
+
+    Span<T> IBufferWriter<T>.GetSpan(int sizeHint)
+    {
+        Guard.IsGreaterThanOrEqualTo(sizeHint, 0);
+        EnsureCapacity(Count + Math.Max(sizeHint, 1));
+        return new(_items, Count, sizeHint is 0 ? (_items.Length - Count) : sizeHint);
     }
 #nullable restore
 

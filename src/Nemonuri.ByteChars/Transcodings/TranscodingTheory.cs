@@ -7,7 +7,8 @@ public static class TranscodingTheory
     extension<TSource, TTarget, TPremise>(TPremise)
         where TPremise : unmanaged, ITranscodingPremise<TSource, TTarget>
     {
-        public static void TranscodeWhileDestinationTooSmall(ReadOnlySpan<TSource> source, IBufferWriter<TTarget> dest, out int sourcesRead)
+        public static void TranscodeWhileDestinationTooSmall<TBufferWriter>(ReadOnlySpan<TSource> source, ref TBufferWriter dest, out int sourcesRead)
+            where TBufferWriter : IBufferWriter<TTarget>
         {
             Guard.IsNotNull(dest);
 
@@ -44,8 +45,8 @@ public static class TranscodingTheory
 
         public static ArraySegment<TTarget> TranscodeToArraySegmentWhileDestinationTooSmall(ReadOnlySpan<TSource> source, out int sourcesRead, int initialCapacity = -1)
         {
-            DrainableArrayBuffer<TTarget> buffer = new(initialCapacity < 0 ? source.Length : initialCapacity);
-            TranscodeWhileDestinationTooSmall<TSource, TTarget, TPremise>(source, buffer, out sourcesRead);
+            DrainableArrayBuilder<TTarget> buffer = new(initialCapacity < 0 ? source.Length : initialCapacity);
+            TranscodeWhileDestinationTooSmall<TSource, TTarget, TPremise, DrainableArrayBuilder<TTarget>>(source, ref buffer, out sourcesRead);
             return buffer.DrainToArraySemgent();
         }
     }
