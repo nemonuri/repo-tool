@@ -63,9 +63,9 @@ public readonly struct UncheckedUtf8UnixToWindowsNewLine : ITranscodingPremise<b
         {
             Debug.Assert ( nIndex > 0 );
 
-            int copyLength = nIndex - 1;
+            int copyLength = nIndex; //- 1;
             var copyDest = destination;
-            if (source[copyLength] == AsciiCarriageReturn)
+            if (source[nIndex - 1] == AsciiCarriageReturn)
             {
                 copyLength += 1;
                 copyDest = copyDest[..^(copyDest.Length % 2)];

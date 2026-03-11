@@ -49,6 +49,7 @@ public class UncheckedUtf8UnixToWindowsNewLineTests
         Assert.Equal(expected.AsSpan(), actual.AsSpan());
     }
 
+    public static TheoryData<byte[],byte[]> Members2 => new( Members1.Select(static a => (a.Data.Item1, a.Data.Item3)) );
 
 
 }
