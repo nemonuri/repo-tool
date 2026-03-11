@@ -43,19 +43,30 @@ public static class TranscodingTheory
             TPremise th = new();
             sourcesRead = 0;
             ReadOnlySpan<TSource> stepSrc = source;
+            int prevDestLength = 0;
+            bool prevAdvanced = false;
 
             while (true)
             {
-                var stepDest = dest.GetSpan();
+                var stepDest = dest.GetSpan(prevAdvanced ? 0 : prevDestLength * 2);
                 var stepSt = th.Transcode(stepSrc, stepDest, out int stepSr, out int stepTw);
                 sourcesRead += stepSr;
-                dest.Advance(stepTw);
+                if (stepTw > 0)
+                {
+                    dest.Advance(stepTw);
+                    prevAdvanced = true;
+                }
+                else
+                {
+                    prevAdvanced = false;
+                }
 
                 if (stepSt is not OperationStatus.DestinationTooSmall)
                 {
                     return;
                 }
 
+                prevDestLength = stepDest.Length;
                 stepSrc = stepSrc[stepSr..];
             }
         }
