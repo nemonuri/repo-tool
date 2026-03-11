@@ -36,12 +36,11 @@ module Out_channel =
 
     let private getEncoding (oc: t) = if is_binary_mode oc then Encodings.utf8NoBom :> System.Text.Encoding else Console.OutputEncoding
 
-    let output_char (oc: t) (c: OCamlChar) = Ofd.writeByteCharWithEncodingIfNotStdIn (fd oc) c (getEncoding oc)
+    let output_char (oc: t) (c: OCamlChar) = Ofd.writeByteToOutChannel oc c
 
     let output_byte (oc: t) (n: OCamlInt) = output_char oc (byte n)
 
-    let output (oc: t) (b: OCamlBytes) (pos: OCamlInt) (len: OCamlInt) = 
-        Unix.single_write_core (fd oc) b pos len (getEncoding oc) |> ignore
+    let output (oc: t) (b: OCamlBytes) (pos: OCamlInt) (len: OCamlInt) = Ofd.writeOCamlBytesToOutChannel oc b pos len
 
     let output_bytes (oc: t) (b: OCamlBytes) = output oc b 0 (Bytes.length b)
         

@@ -97,10 +97,6 @@ module Unix =
         | StandardReader _ | StandardWriter _ -> true
         | _ -> false
 
-    let internal single_write_core (fd: file_descr) (buf: OCamlBytes) (pos: OCamlInt) (len: OCamlInt) (enc: Encoding) = 
-        let rbs = (Obs.bytesToReadOnlySpan buf).Slice(pos, len) in
-        Ofd.writeByteCharSpanWithEncodingIfNotStdIn fd rbs enc
-        rbs.Length
-
     let single_write (fd: file_descr) (buf: OCamlBytes) (pos: OCamlInt) (len: OCamlInt) = 
-        single_write_core fd buf pos len Encodings.utf8NoBom
+        Ofd.writeOCamlBytesWithOptionsIfNotStdIn fd buf pos len Ofd.None
+        len

@@ -7,11 +7,14 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Encodings.fs" />
+    <Compile Include="DotNetSpans.fs" />
     <Compile Include="Internals.fs" />
     <Compile Include="HashMultiMap.fs" />
     <Compile Include="Primitives.fs" />
+    <Compile Include="OCamlByteSpanSources.fs" />
     <Compile Include="OCamlFileDescriptors.fs" />
-    <Compile Include="Primitives.Operations.fs" /><Compile Include="Primitives.Operators.fs" />
+    <Compile Include="ByteSpans.fs" />
+    <Compile Include="Primitives.Operators.fs" />
     <Compile Include="Primitives.Exceptions.fs" />
     <Compile Include="Forwarded.Char.fs" />
     <Compile Include="Forwarded.Bytes.fs" />
