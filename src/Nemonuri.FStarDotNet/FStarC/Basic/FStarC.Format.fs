@@ -10,7 +10,7 @@ open Nemonuri.OCamlDotNet.Forwarded
 open Nemonuri.OCamlDotNet.Forwarded.Out_channel
 open Nemonuri.OCamlDotNet.Batteries
 open Nemonuri.FStarDotNet
-open Nemonuri.FStarDotNet.FStarOperators
+open Nemonuri.FStarDotNet.Operators
 open Nemonuri.FStarDotNet.FStarC.Effect
 open Nemonuri.FStarDotNet.FStarC.Json
 module Obs = Nemonuri.OCamlDotNet.Primitives.OCamlByteSpanSources
@@ -140,7 +140,7 @@ val colorize_magenta : string -> string
     *)
     let colorize (o, c) s =
         match stdout_isatty () with
-        | Some true -> o ^. s ^. c
+        | Some true -> o ^ s ^ c
         | _ -> s
 
     let colorize_bold    = colorize ((toString "\x1b[39;1m"B), (toString "\x1b[0m"B))
@@ -156,7 +156,7 @@ val colorize_magenta : string -> string
         {   printer_prinfo = (fun s -> output_string stdout s; flush stdout);
             printer_prwarning = (fun s -> output_string stderr (colorize_yellow s); flush stdout; flush stderr);
             printer_prerror = (fun s -> output_string stderr (colorize_red s); flush stdout; flush stderr);
-            printer_prgeneric = fun label get_string get_json -> output_string stdout (label ^. (toString ": "B) ^. (get_string())) ; flush stdout; }
+            printer_prgeneric = fun label get_string get_json -> output_string stdout (label ^ (toString ": "B) ^ (get_string())) ; flush stdout; }
 
     let current_printer = ref default_printer
     let set_printer printer = current_printer := printer
@@ -177,10 +177,10 @@ val colorize_magenta : string -> string
         let frags = batstring_nsplit fmt (toString "%s"B) in
         if List.length frags <> List.length args + 1 then
             failwith 
-              ((toString "Not enough arguments to format Prims.string "B) ^. 
-                    fmt ^. (toString " : expected "B) ^. (Int.to_string (List.length frags)) ^. 
-                    (toString " got ["B) ^. (String.concat (toString ", "B) args) ^. 
-                    (toString "] frags are ["B) ^. (String.concat (toString ", "B) frags) ^. (toString "]"B))
+              ((toString "Not enough arguments to format Prims.string "B) ^ 
+                    fmt ^ (toString " : expected "B) ^ (Int.to_string (List.length frags)) ^ 
+                    (toString " got ["B) ^ (String.concat (toString ", "B) args) ^ 
+                    (toString "] frags are ["B) ^ (String.concat (toString ", "B) frags) ^ (toString "]"B))
         else
             let sbldr = StringBuffer.create (Z.of_int 80) in
             ignore (StringBuffer.add (List.hd frags) sbldr);

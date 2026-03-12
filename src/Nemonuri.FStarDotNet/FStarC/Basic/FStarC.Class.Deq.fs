@@ -8,7 +8,7 @@ namespace Nemonuri.FStarDotNet.FStarC.Class
 
 open Nemonuri.FStarDotNet
 open Nemonuri.FStarDotNet.FStar.Pervasives
-open Nemonuri.FStarDotNet.FStarOperators
+open Nemonuri.FStarDotNet.Operators
 open Microsoft.FSharp.Core.Operators.Unchecked
 
 module Deq =

@@ -8,7 +8,7 @@ namespace Nemonuri.FStarDotNet.FStarC.Class
 
 open Nemonuri.FStarDotNet
 open Nemonuri.OCamlDotNet.Forwarded
-open Nemonuri.FStarDotNet.FStarOperators
+open Nemonuri.FStarDotNet.Operators
 open Nemonuri.FStarDotNet.FStarC.Order
 open Nemonuri.FStarDotNet.FStarC.Class.Deq
 open Microsoft.FSharp.Core.Operators.Unchecked

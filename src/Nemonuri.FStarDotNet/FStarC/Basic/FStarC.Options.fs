@@ -11,7 +11,7 @@ open Nemonuri.FStarDotNet
 open Nemonuri.FStarDotNet.FStar
 open Nemonuri.FStarDotNet.FStar.Pervasives.Native
 open Nemonuri.OCamlDotNet.Forwarded
-open Nemonuri.FStarDotNet.FStarOperators
+open Nemonuri.FStarDotNet.Operators
 open Nemonuri.FStarDotNet.FStarC.Effect
 open Nemonuri.FStarDotNet.FStarC.PSMap
 open Nemonuri.FStarDotNet.FStarC.Getopt
@@ -634,16 +634,16 @@ val set_vconfig : vconfig -> unit
 
     let get_option s =
         match psmap_try_find (peek ()) s with
-        | None -> failwith ((toString "Impossible: option "B) ^.s^. (toString " not found"B))
+        | None -> failwith ((toString "Impossible: option "B) ^s^ (toString " not found"B))
         | Some s -> s
 
     let rec option_val_to_string (v:option_val) : Prims.string =
         match v with
-        | Bool b -> (toString "Bool "B) ^. (defaultof<showable_bool> :> showable<bool>).show b
-        | String s -> (toString "String "B) ^. (defaultof<showable_string> :> showable<Prims.string>).show s
-        | Path s -> (toString "Path "B) ^. (defaultof<showable_string> :> showable<Prims.string>).show s
-        | Int i -> (toString "Int "B) ^. (defaultof<showable_int> :> showable<Prims.int>).show i
-        | List vs -> (toString "List "B) ^. Common.string_of_list option_val_to_string vs
+        | Bool b -> (toString "Bool "B) ^ (defaultof<showable_bool> :> showable<bool>).show b
+        | String s -> (toString "String "B) ^ (defaultof<showable_string> :> showable<Prims.string>).show s
+        | Path s -> (toString "Path "B) ^ (defaultof<showable_string> :> showable<Prims.string>).show s
+        | Int i -> (toString "Int "B) ^ (defaultof<showable_int> :> showable<Prims.int>).show i
+        | List vs -> (toString "List "B) ^ Common.string_of_list option_val_to_string vs
         | Unset -> (toString "Unset"B)
 
     [<NoEquality; NoComparison>]
@@ -707,7 +707,7 @@ val set_vconfig : vconfig -> unit
         in
         let rec show_optionval v =
             match v with
-            | String s -> (toString "\""B) ^. s ^. (toString "\""B) // FIXME: proper escape
+            | String s -> (toString "\""B) ^ s ^ (toString "\""B) // FIXME: proper escape
             | Bool b -> (defaultof<showable_bool> :> showable<bool>).show b
             | Int i -> (defaultof<showable_int> :> showable<Prims.int>).show i
             | Path s -> s

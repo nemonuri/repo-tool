@@ -8,7 +8,7 @@ namespace Nemonuri.FStarDotNet.FStarC
 
 open Nemonuri.OCamlDotNet.Forwarded
 open Nemonuri.FStarDotNet
-open Nemonuri.FStarDotNet.FStarOperators
+open Nemonuri.FStarDotNet.Operators
 open Nemonuri.FStarDotNet.FStarC.Effect
 open Nemonuri.FStarDotNet.FStarC.Class.Show
 
@@ -27,7 +27,7 @@ module Platform =
             | (ToString "Unix"B) -> Unix
             | (ToString "Win32"B) -> Win32
             | (ToString "Cygwin"B) -> Cygwin
-            | s -> failwith ((toString "Unrecognized system: "B) ^. s)
+            | s -> failwith ((toString "Unrecognized system: "B) ^ s)
         
         (* Tries to read the output of the `uname` command. *)
         /// val kernel () : string
@@ -61,7 +61,7 @@ module Platform =
     just appends '.exe' on Windows. *)
     /// val exe : string -> string
     let exe s =
-        if windows then s ^. (toString ".exe"B) else s
+        if windows then s ^ (toString ".exe"B) else s
     
     (* String used to separate paths in the OCAMLPATH environment variable. *)
     /// val ocamlpath_sep : string

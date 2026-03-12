@@ -4,7 +4,7 @@
 namespace Nemonuri.FStarDotNet.FStarC
 
 open Nemonuri.FStarDotNet
-open Nemonuri.FStarDotNet.FStarOperators
+open Nemonuri.FStarDotNet.Operators
 open Nemonuri.FStarDotNet.FStarC.Effect
 module String = Nemonuri.FStarDotNet.FStarC.String
 
@@ -116,7 +116,7 @@ val set_level_extreme () : unit
 
     let tag (s:Prims.string) =
         if any () then
-            Format.print_string ((toString "DEBUG:"B) ^.  s ^. (toString "\n"B))
+            Format.print_string ((toString "DEBUG:"B) ^  s ^ (toString "\n"B))
 
     let enable () = anyref := true
 
@@ -141,7 +141,7 @@ val set_level_extreme () : unit
             | (ToString "Extreme"B) -> set_level_extreme ()
             | _ ->
                 if String.length k >. (toInt 0) && String.get k (toInt 0) = (Core.Operators.int '-'B) then
-                    let k = String.substring k (toInt 1) (String.length k -. (toInt 1)) in
+                    let k = String.substring k (toInt 1) (String.length k - (toInt 1)) in
                     let t = get_toggle k in
                     t := false
                 else

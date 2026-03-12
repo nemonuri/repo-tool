@@ -4,7 +4,7 @@ using static Nemonuri.ByteChars.ByteCharConstants;
 
 namespace Nemonuri.ByteChars;
 
-public readonly struct UncheckedUtf8UnixToWindowsNewLine : ITranscodingPremise<byte,byte>
+public readonly struct UncheckedUtf8UnixToWindowsNewLine : ITranscoderPremise<byte,byte>
 {
     public OperationStatus Transcode(ReadOnlySpan<byte> source, Span<byte> destination, out int sourcesRead, out int targetsWritten)
     {

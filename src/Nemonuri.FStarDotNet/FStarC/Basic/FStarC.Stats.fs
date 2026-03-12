@@ -6,7 +6,7 @@ namespace Nemonuri.FStarDotNet.FStarC
 open Nemonuri.FStarDotNet
 open Nemonuri.FStarDotNet.FStar.Pervasives
 open Nemonuri.FStarDotNet.FStar.Pervasives.Native
-open Nemonuri.FStarDotNet.FStarOperators
+open Nemonuri.FStarDotNet.Operators
 open Nemonuri.FStarDotNet.FStarC.Effect
 open Nemonuri.FStarDotNet.FStarC.Class.Show
 open Microsoft.FSharp.Core.Operators.Unchecked
@@ -47,10 +47,10 @@ module Stats =
         }
     let private mplus = (fun s1 s2 ->
             {
-                ns_tree  = s1.ns_tree +. s2.ns_tree;
-                ns_exn   = s1.ns_exn +. s2.ns_exn;
-                ns_sub   = s1.ns_sub +. s2.ns_sub;
-                ncalls   = s1.ncalls +. s2.ncalls;
+                ns_tree  = s1.ns_tree + s2.ns_tree;
+                ns_exn   = s1.ns_exn + s2.ns_exn;
+                ns_sub   = s1.ns_sub + s2.ns_sub;
+                ncalls   = s1.ncalls + s2.ncalls;
             })
     //}
 
@@ -129,7 +129,7 @@ module Stats =
 
     let lpad (len:Prims.int) (s:Prims.string) : Prims.string =
         let l = String.length s in
-        if l >=. len then s else String.make (len - l) (toChar ' 'B) ^. s
+        if l >=. len then s else String.make (len - l) (toChar ' 'B) ^ s
 
     let max x y =
         if x >. y then x else y
@@ -143,7 +143,7 @@ module Stats =
         let points =
             points |>
             Class.Ord.sort_by (fun (_, s1) (_, s2) ->
-                (s2.ns_tree -. s2.ns_sub) </(defaultof<Class.Ord.ord_int> :> Class.Ord.ord<Prims.int>).cmp/> (s1.ns_tree -. s1.ns_sub))
+                (s2.ns_tree - s2.ns_sub) </(defaultof<Class.Ord.ord_int> :> Class.Ord.ord<Prims.int>).cmp/> (s1.ns_tree - s1.ns_sub))
         in
         let longest_key = FStar.List.fold_left (fun acc (k, _) -> max acc (String.length k)) (toInt 20) points in
         let pr1 (p : (Prims.string * stat)) : Prims.string =
@@ -152,9 +152,9 @@ module Stats =
             Format.fmt5 (toString "  %s  %s %s ms %s ms %s ms"B)
                 (lpad longest_key k)
                 (lpad (toInt 8) (show' st.ncalls))
-                (lpad (toInt 6) (show' (st.ns_tree  /. (toInt 1000000))))
-                (lpad (toInt 6) (show' ((st.ns_tree -. st.ns_sub) /. (toInt 1000000))))
-                (lpad (toInt 6) (show' (st.ns_exn   /. (toInt 1000000))))
+                (lpad (toInt 6) (show' (st.ns_tree  / (toInt 1000000))))
+                (lpad (toInt 6) (show' ((st.ns_tree - st.ns_sub) / (toInt 1000000))))
+                (lpad (toInt 6) (show' (st.ns_exn   / (toInt 1000000))))
         in
         Format.fmt5 
             (toString "  %s  %s %s %s %s"B) 
@@ -162,5 +162,5 @@ module Stats =
             (lpad (toInt 8) (toString "calls"B)) 
             (lpad (toInt 9) (toString "tree"B)) 
             (lpad (toInt 9) (toString "point"B)) 
-            (lpad (toInt 9) (toString "exn"B)) ^. (toString "\n"B) ^.
+            (lpad (toInt 9) (toString "exn"B)) ^ (toString "\n"B) ^
             (points |> List.map pr1 |> String.concat (toString "\n"B))

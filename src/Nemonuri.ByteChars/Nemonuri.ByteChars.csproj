@@ -37,6 +37,7 @@
           $(PolySharpIncludeGeneratedTypes)
           System.Diagnostics.CodeAnalysis.NotNullWhenAttribute;
           System.Diagnostics.CodeAnalysis.MaybeNullWhenAttribute;
+          System.Diagnostics.CodeAnalysis.MaybeNullAttribute;
         </PolySharpIncludeGeneratedTypes>
         <NoWarn>$(NoWarn);CS8601;CS8602;CS8618</NoWarn>
       </PropertyGroup>

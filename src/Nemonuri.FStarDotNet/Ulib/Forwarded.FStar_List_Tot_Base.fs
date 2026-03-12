@@ -4,7 +4,7 @@
 
 namespace Nemonuri.FStarDotNet.Forwarded
 
-open Nemonuri.FStarDotNet.FStarOperators
+open Nemonuri.FStarDotNet.Operators
 
 module FStar_List_Tot_Base =
 
@@ -24,7 +24,7 @@ module FStar_List_Tot_Base =
     /// val length: list 'a -> Tot nat
     let rec length = function
         | [] -> (toInt 0)
-        | _::tl -> (toInt 1) +. length tl
+        | _::tl -> (toInt 1) + length tl
 
 
     (** [existsb f l] returns [true] if, and only if, there exists some

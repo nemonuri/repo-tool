@@ -5,7 +5,7 @@
 namespace Nemonuri.FStarDotNet.FStarC.Class
 
 open Nemonuri.FStarDotNet
-open Nemonuri.FStarDotNet.FStarOperators
+open Nemonuri.FStarDotNet.Operators
 
 module Show =
 
@@ -42,5 +42,5 @@ module Show =
     type showable_string =
         struct
             interface showable<Prims.string> with
-                member _.show x = (toString "\""B) ^. x ^. (toString "\""B)
+                member _.show x = (toString "\""B) ^ x ^ (toString "\""B)
         end

@@ -7,7 +7,7 @@ namespace Nemonuri.FStarDotNet.FStarC
 
 open Nemonuri.FStarDotNet
 open Nemonuri.OCamlDotNet.Zarith
-open Nemonuri.FStarDotNet.FStarOperators
+open Nemonuri.FStarDotNet.Operators
 open Nemonuri.OCamlDotNet.Primitives
 open Nemonuri.OCamlDotNet.Forwarded
 open Nemonuri.OCamlDotNet.Forwarded.Array.Operators
@@ -66,17 +66,17 @@ module Getopt =
             let go_on () = bind (def arg) (fun _ -> parse opts def ar (ix + 1) max (i + 1)) in
             match find_matching_opt opts arg with
             | None -> go_on ()
-            | Some (None, _) -> Error ((toString "unrecognized option '"B) ^. arg ^. (toString "'\n"B), arg)
+            | Some (None, _) -> Error ((toString "unrecognized option '"B) ^ arg ^ (toString "'\n"B), arg)
             | Some (Some (_, opt, p), argtrim) ->
                 begin match p with
                 | ZeroArgs f -> f (); parse opts def ar (ix + 1) max (i + 1)
                 | OneArg (f, name) ->
                     if ix + 1 > max
-                    then Error ((toString "last option '"B) ^. argtrim ^. (toString "' takes an argument but has none\n"B), opt)
+                    then Error ((toString "last option '"B) ^ argtrim ^ (toString "' takes an argument but has none\n"B), opt)
                     else
                     let r =
                         try (f ((.()) ar (ix + 1)); Success)
-                        with _ -> Error ((toString "wrong argument given to option `"B) ^. argtrim ^. (toString "`\n"B), opt)
+                        with _ -> Error ((toString "wrong argument given to option `"B) ^ argtrim ^ (toString "`\n"B), opt)
                     in bind r (fun () -> parse opts def ar (ix + 2) max (i + 1))
                 end
     

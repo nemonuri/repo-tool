@@ -4,7 +4,7 @@
 namespace Nemonuri.FStarDotNet.FStarC.Forwarded
 
 open Nemonuri.FStarDotNet
-open Nemonuri.FStarDotNet.FStarOperators
+open Nemonuri.FStarDotNet.Operators
 open Nemonuri.FStarDotNet.FStarC.Effect
 open Nemonuri.FStarDotNet.FStarC.PSMap
 open Nemonuri.OCamlDotNet.Forwarded
@@ -69,7 +69,7 @@ module Options_Ext =
     /// val getns (ns:string) : list (key & value)
     let getns (ns:Prims.string) : list<(key * value)> =
         let f k v acc =
-            if (ns^.(toString ":"B)) </is_prefix/> k
+            if (ns^(toString ":"B)) </is_prefix/> k
             then (k, v) :: acc
             else acc
         in

@@ -9,7 +9,7 @@ open Nemonuri.OCamlDotNet.Primitives
 open Nemonuri.OCamlDotNet.Forwarded
 open Nemonuri.OCamlDotNet.Zarith
 open Nemonuri.OCamlDotNet.Batteries
-open Nemonuri.FStarDotNet.FStarOperators
+open Nemonuri.FStarDotNet.Operators
 open Nemonuri.FStarDotNet.FStar
 open Nemonuri.FStarDotNet.FStarC.Json
 open Nemonuri.FStarDotNet.FStarC.Effect

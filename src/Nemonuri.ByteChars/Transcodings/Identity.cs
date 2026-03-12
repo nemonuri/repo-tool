@@ -2,7 +2,7 @@ using System.Diagnostics;
 
 namespace Nemonuri.Transcodings;
 
-public readonly struct Identity<T> : ITranscodingPremise<T, T>
+public readonly struct Identity<T> : ITranscoderPremise<T, T>
 {
     public OperationStatus Transcode(ReadOnlySpan<T> source, Span<T> destination, out int sourcesRead, out int targetsWritten)
     {

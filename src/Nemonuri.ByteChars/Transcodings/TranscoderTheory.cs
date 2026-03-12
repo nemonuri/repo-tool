@@ -2,11 +2,12 @@ using Nemonuri.Buffers;
 
 namespace Nemonuri.Transcodings;
 
-public static class TranscodingTheory
+public static class TranscoderTheory
 {
     extension<TSource, TTarget, TPremise>(TPremise)
-        where TPremise : unmanaged, ITranscodingPremise<TSource, TTarget>
+        where TPremise : unmanaged, ITranscoderPremise<TSource, TTarget>
     {
+        /// <exception cref="System.OverflowException" />
         public static void TranscodeWhileDestinationTooSmall<TBufferWriter>(ReadOnlySpan<TSource> source, ref TBufferWriter dest, out int sourcesRead)
             where TBufferWriter : IBufferWriter<TTarget>
         {
@@ -20,7 +21,7 @@ public static class TranscodingTheory
 
             while (true)
             {
-                var stepDest = dest.GetSpan(prevAdvanced ? 0 : prevDestLength * 2);
+                var stepDest = dest.GetSpan(prevAdvanced ? 0 : checked( prevDestLength * 2)); // 2147483647 bytes == 2.147483647 GB
                 var stepSt = th.Transcode(stepSrc, stepDest, out int stepSr, out int stepTw);
                 sourcesRead += stepSr;
                 if (stepTw > 0)

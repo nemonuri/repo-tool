@@ -6,7 +6,7 @@ namespace Nemonuri.FStarDotNet.FStarC
 open Nemonuri.FStarDotNet
 open Nemonuri.OCamlDotNet.Batteries
 open Nemonuri.OCamlDotNet.Zarith
-open Nemonuri.FStarDotNet.FStarOperators
+open Nemonuri.FStarDotNet.Operators
 module S = Nemonuri.OCamlDotNet.Forwarded.String
 module List = Nemonuri.OCamlDotNet.Forwarded.List
 
@@ -70,7 +70,7 @@ module String =
     /// val collect: (char -> string) -> string -> string
     let collect f s =
         let r = ref (toString ""B) in
-        BatUTF8.iter (fun c -> Effect.(:=) r ((Effect.(!) r) ^. f (BatUChar.code c))) s; (Effect.(!) r)
+        BatUTF8.iter (fun c -> Effect.(:=) r ((Effect.(!) r) ^ f (BatUChar.code c))) s; (Effect.(!) r)
 
     exception Found of int
     /// val index_of: string -> char -> int

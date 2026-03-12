@@ -5,7 +5,7 @@
 namespace Nemonuri.FStarDotNet.FStarC
 
 open Nemonuri.FStarDotNet
-open Nemonuri.FStarDotNet.FStarOperators
+open Nemonuri.FStarDotNet.Operators
 open Nemonuri.FStarDotNet.FStarC.Effect
 open Nemonuri.FStarDotNet.FStarC.PSMap
 module List = Nemonuri.FStarDotNet.FStar.List
@@ -70,9 +70,9 @@ val option_to_list (o : option 'a) : list 'a
         let rec aux n : 'a =
             if n <=. (toInt 0) then failwith (toString "(rollback) Too many pops"B)
             else if n =. (toInt 1) then pop ()
-            else (ignore (pop ()); aux (n -. (toInt 1))) in
+            else (ignore (pop ()); aux (n - (toInt 1))) in
         let curdepth = List.Tot.Base.length !stackref in
-        let n = match depth with Some d -> curdepth -. d | None -> (toInt 1) in
+        let n = match depth with Some d -> curdepth - d | None -> (toInt 1) in
         if FStarC.Debug.any () then Format.print1 (toString " depth is %s\n "B)(Prims.string_of_int (List.Tot.Base.length (!stackref)));
         BU.atomically (fun () -> aux n)
 
@@ -108,13 +108,13 @@ val option_to_list (o : option 'a) : list 'a
 
     let string_of_option f = function
         | None -> (toString "None"B)
-        | Some x -> (toString "Some "B) ^. f x
+        | Some x -> (toString "Some "B) ^ f x
 
     (* Was List.init, but F* doesn't have this in ulib *)
     let tabulate (n:Prims.int) (f : Prims.int -> 'a) : list<'a> =
         let rec aux i : list<'a> =
             if i <. n
-            then f i :: aux (i +. (toInt 1))
+            then f i :: aux (i + (toInt 1))
             else []
         in aux (toInt 0)
 

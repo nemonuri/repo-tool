@@ -58,6 +58,13 @@ module Operators =
         let inline ( ~% ) s =
             let inline call (p: ^p) (s': ^s) = ((^p or ^s) : (static member ( ~% ): ^s -> ^os) s') in
             call Unchecked.defaultof<Premise> s
+        
+        /// Constant pattern matching
+        let inline (|C|_|) l r =
+            let inline call (l': ^s) (r': ^os) = Core.Operators.(=) (%l') r' in
+            match call l r with
+            | true -> ValueSome r
+            | false -> ValueNone
 
 module TypeShadowing =
 

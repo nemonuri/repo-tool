@@ -45,7 +45,7 @@ public class UncheckedUtf8UnixToWindowsNewLineTests
         // Arrange
 
         // Act
-        var actual = TranscodingTheory.TranscodeToArraySegmentWhileDestinationTooSmall<byte,byte,UncheckedUtf8UnixToWindowsNewLine>(source.AsSpan(), out _);
+        var actual = TranscoderTheory.TranscodeToArraySegmentWhileDestinationTooSmall<byte,byte,UncheckedUtf8UnixToWindowsNewLine>(source.AsSpan(), out _);
 
         // Assert
         Assert.Equal(expected.AsSpan(), actual.AsSpan());

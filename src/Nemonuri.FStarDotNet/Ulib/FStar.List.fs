@@ -20,7 +20,7 @@ namespace Nemonuri.FStarDotNet.FStar
 
 open Nemonuri.FStarDotNet
 open Nemonuri.FStarDotNet.Forwarded
-open Nemonuri.FStarDotNet.FStarOperators
+open Nemonuri.FStarDotNet.Operators
 
 (**
 F* standard library List module. 
@@ -103,7 +103,7 @@ module List =
                 else
                 match l with
                     | [] -> failwith "not enough elements"
-                    | _::tl -> nth tl (n -. (toInt 1))
+                    | _::tl -> nth tl (n - (toInt 1))
 
     (** Iterators **)
 
@@ -121,7 +121,7 @@ module List =
     let rec iteri_aux i f x = 
         match x with
         | [] -> ()
-        | a::tl -> f i a; iteri_aux (i +. (toInt 1)) f tl
+        | a::tl -> f i a; iteri_aux (i + (toInt 1)) f tl
 
     (** [iteri_aux f l] performs, for each [i], [f i x] for the i-th
     element [x] of [l], in the order in which they appear in [l]. Named as
@@ -155,7 +155,7 @@ module List =
     let rec mapi_init f l i = 
         match l with
         | [] -> []
-        | hd::tl -> (f i hd)::(mapi_init f tl (i +. (toInt 1)))
+        | hd::tl -> (f i hd)::(mapi_init f tl (i + (toInt 1)))
 
     (** [mapi f l] applies, for each [k], [f k] to the [k]-th element of
     [l] and returns the list of results, in the order of the original
@@ -365,7 +365,7 @@ module List =
             match l with
             | []     -> failwith "splitAt index is more that list length"
             | hd::tl ->
-                let l1, l2 = splitAt (n -. (toInt 1)) tl in
+                let l1, l2 = splitAt (n - (toInt 1)) tl in
                 hd::l1, l2
 
 
@@ -402,6 +402,6 @@ module List =
                 if f hd then
                     i
                 else
-                    index tl (i +. (toInt 1))
+                    index tl (i + (toInt 1))
         in
         index l (toInt 0)

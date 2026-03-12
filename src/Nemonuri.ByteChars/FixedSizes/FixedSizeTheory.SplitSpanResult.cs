@@ -17,10 +17,10 @@ public static partial class FixedSizeTheory
 
         public readonly Enumerator GetEnumerator() => new (this);
 
-        public readonly ref struct Enumerator
+        public ref struct Enumerator
         {
             private readonly SplitSpanResult<TSize, T> _source;
-            private readonly FixedSizeChunkSpan<TSize, T>.Enumerator _chunkEnumerator;
+            private FixedSizeChunkSpan<TSize, T>.Enumerator _chunkEnumerator;
             
 
             internal Enumerator(SplitSpanResult<TSize, T> source)
@@ -29,7 +29,7 @@ public static partial class FixedSizeTheory
                 _chunkEnumerator = _source.Chunks.GetEnumerator();
             }
 
-            public readonly bool MoveNext()
+            public bool MoveNext()
             {
                 if (_chunkEnumerator.MoveNext())
                 {

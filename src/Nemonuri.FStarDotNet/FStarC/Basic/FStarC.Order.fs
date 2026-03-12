@@ -4,7 +4,7 @@
 namespace Nemonuri.FStarDotNet.FStarC
 
 open Nemonuri.FStarDotNet
-open Nemonuri.FStarDotNet.FStarOperators
+open Nemonuri.FStarDotNet.Operators
 
 module Order =
 
@@ -33,7 +33,7 @@ module Order =
         else if i =. (toInt 0) then Eq
         else Gt
 
-    let compare_int (i : Prims.int) (j : Prims.int) : order = order_from_int (i -. j)
+    let compare_int (i : Prims.int) (j : Prims.int) : order = order_from_int (i - j)
 
     let compare_bool (b1: bool) (b2 : bool) : order =
         match b1, b2 with
