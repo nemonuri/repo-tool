@@ -4,6 +4,7 @@ open System
 open System.Buffers
 open System.Buffers.Text
 open Microsoft.FSharp.NativeInterop
+open Nemonuri.Buffers
 open Nemonuri.Transcodings
 open Nemonuri.Transcodings.Utf8Encodings
 module Bs = Nemonuri.OCamlDotNet.Primitives.ByteSpans
@@ -11,10 +12,13 @@ module Bs = Nemonuri.OCamlDotNet.Primitives.ByteSpans
 
 [<Struct>]
 [<NoEquality; NoComparison>]
-type OCamlFormat4<'TSource,'TBuffer,'TResidue,'TResult> = internal {
-    BufferWriter: 'TSource -> 'TBuffer -> 'TResidue;
-    BufferFlusher: 'TBuffer -> 'TResidue -> 'TResult
+type OCamlFormat4<'TSource,'TState,'TResidue,'TResult> = internal {
+    FormatBuilder: DrainableArrayBuilder<byte>;
+    Writer: 'TSource -> 'TState -> 'TResidue;
+    Flusher: 'TState -> 'TResidue -> 'TResult
 }
+
+type OCamlFormat<'TSource,'TBuffer,'TResult> = OCamlFormat4<'TSource,'TBuffer,'TResult,'TResult>
 
 module Formats =
 

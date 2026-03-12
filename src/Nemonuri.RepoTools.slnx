@@ -23,9 +23,12 @@
     <Project Path="test/Nemonuri.ByteChars.UnitTests/Nemonuri.ByteChars.UnitTests.csproj" />
     <Project Path="test/Nemonuri.OCamlDotNet/PPrint/Sample1/Nemonuri.OCamlDotNet.PPrint.Sample1.fsproj" />
   </Folder>
+  <Folder Name="/PureTypeSystems/">
+    <Project Path="PureTypeSystems/Primitives/Nemonuri.PureTypeSystems.Primitives.csproj" />
+    <Project Path="PureTypeSystems/Core/Nemonuri.PureTypeSystems.Core.fsproj" />
+  </Folder>
   <Project Path="Nemonuri.ByteChars/Nemonuri.ByteChars.csproj" />
   <Project Path="Nemonuri.ByteChars.Json/Nemonuri.ByteChars.Json.csproj" />
-  <Project Path="Nemonuri.PureTypeSystems/Nemonuri.PureTypeSystems.fsproj" />
   <Project Path="Nemonuri.RepoTools.FStar.BuildTasks/Nemonuri.RepoTools.FStar.BuildTasks.fsproj" />
   <Project Path="Nemonuri.RepoTools.TestRuntime/Nemonuri.RepoTools.TestRuntime.csproj" />
 </Solution>

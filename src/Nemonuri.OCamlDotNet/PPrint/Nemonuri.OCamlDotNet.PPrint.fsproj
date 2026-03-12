@@ -11,7 +11,8 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Stdlib\Nemonuri.OCamlDotNet.Stdlib.fsproj" />
-    <ProjectReference Include="..\..\Nemonuri.PureTypeSystems\Nemonuri.PureTypeSystems.fsproj" />
+    <ProjectReference Include="..\..\PureTypeSystems\Core\Nemonuri.PureTypeSystems.Core.fsproj" />
+    
   </ItemGroup>
 
 </Project>

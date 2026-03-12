@@ -25,6 +25,7 @@
     <Compile Include="Forwarded.List.fs" />
     <Compile Include="Forwarded.Unix.fs" />
     <Compile Include="Forwarded.Out_channel.fs" />
+    <Compile Include="Forwarded.Printf.fs" />
     <Compile Include="Forwarded.Marshal.fs" />
     <Compile Include="Forwarded.Sys.fs" />
     <Compile Include="Forwarded.Int.fs" />

@@ -71,3 +71,5 @@ module TypeShadowing =
     type char = OCamlChar
 
     type string = OCamlString
+
+    type out_channel = OCamlOutChannel
