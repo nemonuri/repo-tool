@@ -1,4 +1,3 @@
-using System.Buffers;
 using Nemonuri.ByteChars.Internal;
 using Nemonuri.FixedSizes;
 using static Nemonuri.Buffers.ArrayPoolTheory;

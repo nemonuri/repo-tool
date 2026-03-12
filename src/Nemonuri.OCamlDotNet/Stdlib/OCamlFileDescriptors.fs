@@ -72,11 +72,11 @@ module internal OCamlFileDescriptors =
         | StandardReader _ -> ()
         | StandardWriter (bw, _) ->
             use mutable bwp = new BinaryWriterWithPool(null, bw, bs.Length) in
-            let _ = TranscodingTheory.TranscodeWhileDestinationTooSmall<byte,byte,'tcp,BinaryWriterWithPool>(bs,&bwp) in
+            let _ = TranscoderTheory.TranscodeWhileDestinationTooSmall<byte,byte,'tcp,BinaryWriterWithPool>(bs,&bwp) in
             ()
         | s -> 
             use mutable swp = new StreamWithByteArrayPool(null, (toStream s), bs.Length) in
-            let _ = TranscodingTheory.TranscodeWhileDestinationTooSmall<byte,byte,'tcp,StreamWithByteArrayPool>(bs, &swp) in
+            let _ = TranscoderTheory.TranscodeWhileDestinationTooSmall<byte,byte,'tcp,StreamWithByteArrayPool>(bs, &swp) in
             ()
 
     let writeByteSpanWithOptionsIfNotStdIn (fd: t) (bs: ReadOnlySpan<byte>) (opt: WriterOptions) =

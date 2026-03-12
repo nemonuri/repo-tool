@@ -2,9 +2,7 @@
 namespace Nemonuri.OCamlDotNet.Forwarded
 
 open Nemonuri.ByteChars
-open Nemonuri.ByteChars.ByteSpans
 open Nemonuri.OCamlDotNet.Primitives
-open Microsoft.FSharp.NativeInterop
 module Obs = Nemonuri.OCamlDotNet.Primitives.OCamlByteSpanSources
 module Cop = Microsoft.FSharp.Core.Operators
 
@@ -74,10 +72,7 @@ module Char =
         with
             | :? System.OverflowException as oe -> Exceptions.invalid_arg (Obs.stringOfDotNetString oe.Message)
 
-    let escaped a = 
-        let bs = DotNetSpans.NativePtrToSpan(NativePtr.stackalloc<OCamlChar> 1,1)
-        bs[0] <- a
-        ByteSpans.escaped(bs) |> Obs.Unsafe.stringOfArraySegment
+    let escaped a = ByteSpans.escapedSingleton a |> Obs.Unsafe.stringOfArraySegment
     
     let compare (l: t) (r: t) = l.CompareTo(r)
 

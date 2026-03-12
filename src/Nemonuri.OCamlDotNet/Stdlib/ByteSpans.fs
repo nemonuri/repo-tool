@@ -8,7 +8,7 @@ open Microsoft.FSharp.NativeInterop
 open Nemonuri.OCamlDotNet.Primitives
 
 
-module ByteSpans =
+module internal ByteSpans =
 
 
     type private bs = Span<OCamlChar>
@@ -123,14 +123,21 @@ module ByteSpans =
             let _, r0 = divRem10 q1
             Dns.WriteAndCount(dest, ``/``, r0, r1, r2)
     
+    let [<Literal>] escapeCharAndCountDestSize = 4
+
     let escaped (s: rbs) =
         let builder = bd(s.Length)
-        let tempStore = DotNetSpans.NativePtrToSpan(NativePtr.stackalloc<OCamlChar> 4, 4)
+        let tempStore = DotNetSpans.NativePtrToSpan(NativePtr.stackalloc<OCamlChar> escapeCharAndCountDestSize, escapeCharAndCountDestSize)
         for c in s do
             let stepCount = escapeCharAndCount tempStore c
             builder.AddRange(tempStore.Slice(0, stepCount))
         builder.DrainToArraySemgent()
-    
+
+    let escapedSingleton (c: byte) =
+        let bs = DotNetSpans.NativePtrToSpan(NativePtr.stackalloc<byte> 1,1)
+        bs[0] <- c
+        escaped(bs)
+
     let inline internal (|GreaterThanOrEqualToZero|_|) (v: int) = if v >= 0 then ValueSome v else ValueNone
 
     let index_from (s: rbs) (i: OCamlInt) (c: OCamlChar) = 
