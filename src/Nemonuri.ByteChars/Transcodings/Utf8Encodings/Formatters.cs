@@ -4,27 +4,25 @@ using static Nemonuri.Buffers.ArrayPoolTheory;
 
 namespace Nemonuri.Transcodings.Utf8Encodings;
 
-public interface IFormatterPremise<T, TSize> 
-    where TSize : unmanaged, IFixedSizePremise
+public interface IFormatterPremise<T, TFormat> 
 {
-    StandardFormat StandardFormat {get;}
-    bool TryFormat(T value, Span<byte> destination, out int bytesWritten, StandardFormat format = default);
+    bool TryFormat(T value, Span<byte> destination, TFormat format, out int bytesWritten);
 }
 
-public readonly struct DefaultSize : IFixedSizePremise
+public readonly struct FormatConfig<TFormat>(TFormat format, int maxLength)
 {
-    public int FixedSize => InternalConstants.StackAllocThreshold;
+    public TFormat Format {get;} = format;
+    public int MaxLength {get;} = maxLength;
 }
 
-public readonly struct FormatterBasedTranscoder<T, TSize, TFormatter> : ITranscoderPremise<T, byte>
-    where TSize : unmanaged, IFixedSizePremise
-    where TFormatter : unmanaged, IFormatterPremise<T, TSize>
+public readonly struct FormatterBasedTranscoder<T, TFormat, TFormatter> : ITranscoderPremise<T, byte, FormatConfig<TFormat>>
+    where TFormatter : unmanaged, IFormatterPremise<T, TFormat>
 {
-    public OperationStatus Transcode(ReadOnlySpan<T> source, Span<byte> destination, out int sourcesRead, out int targetsWritten)
+    public OperationStatus Transcode(ReadOnlySpan<T> source, Span<byte> destination, FormatConfig<TFormat> formatConfig, out int sourcesRead, out int targetsWritten)
     {
         TFormatter th = new();
-        StandardFormat fmt = th.StandardFormat;
-        int tempStorageLength = FixedSizeTheory.GetFixedSize<TSize>();
+        TFormat format = formatConfig.Format;
+        int tempStorageLength = formatConfig.MaxLength;
 
         sourcesRead = 0;
         targetsWritten = 0;
@@ -36,7 +34,7 @@ public readonly struct FormatterBasedTranscoder<T, TSize, TFormatter> : ITransco
 
         foreach (var elem in source)
         {
-            if (!th.TryFormat(elem, tempStorage, out int stepBw, fmt))
+            if (!th.TryFormat(elem, tempStorage, format, out int stepBw))
             {
                 /**
                     According to [doc](https://learn.microsoft.com/en-us/dotnet/api/system.buffers.text.utf8formatter.tryformat?view=net-10.0#system-buffers-text-utf8formatter-tryformat(system-boolean-system-span((system-byte))-system-int32@-system-buffers-standardformat)),
