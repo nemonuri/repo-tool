@@ -15,7 +15,7 @@
     <Compile Include="OCamlFileDescriptors.fs" />
     <Compile Include="ByteSpans.fs" />
     <Compile Include="Primitives.Exceptions.fs" />
-    <Compile Include="Formats.fs" />
+    <Compile Include="Formats.fs" /><Compile Include="TypeProxies.fs" />
     <Compile Include="Forwarded.Char.fs" />
     <Compile Include="Forwarded.Bytes.fs" />
     <Compile Include="Forwarded.String.fs" />
@@ -33,6 +33,9 @@
     <Compile Include="Forwarded.Hashtbl.fs" />
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="TypeEquality" />
+    <PackageReference Include="FSharp.Core" />
     <ProjectReference Include="..\..\Nemonuri.ByteChars\Nemonuri.ByteChars.csproj" />
+    <ProjectReference Include="..\..\PureTypeSystems\Core\Nemonuri.PureTypeSystems.Core.fsproj" />
   </ItemGroup>
 </Project>

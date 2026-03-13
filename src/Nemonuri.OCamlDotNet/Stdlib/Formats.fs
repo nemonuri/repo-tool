@@ -1,6 +1,7 @@
 namespace Nemonuri.OCamlDotNet.Primitives
 
 open System
+open TypeEquality
 open System.Buffers
 open System.Buffers.Text
 open CommunityToolkit.Diagnostics
@@ -17,23 +18,29 @@ type OCamlFormatter = internal | OCamlFormatter of fp:nativeint * sourceType:Sys
 
 
 [<Struct>]
-type OCamlFormatStringSegment =
-| InvalidSegemnt
-| PlaneSegemnt of s:OCamlString
-| FormatSegment of s:OCamlString * formatter:OCamlFormatter
+type OCamlFormatStringSegment = 
+    | OCamlFormatStringSegment of leading:OCamlString * format:OCamlString * trailing:OCamlString
+
+
 
 
 [<NoEquality; NoComparison>]
-type OCamlScopedFormat<'TWriter, 'TBuffer when 'TBuffer :> IBufferWriter<byte>> =  
-    internal
-    | OCamlScopedFormat of (ref<'TBuffer> -> 'TWriter)
+[<RequireQualifiedAccess>]
+type internal OCamlFormatCore<'THead, 'TTail> =  
+    private
+    | Empty of writer:(BufferWriterShim -> unit -> BufferWriterShim) * headTypeProof:Teq<unit,'THead> * tailTypeProof:Teq<BufferWriterShim,'TTail>
+    | Cons of writer:(BufferWriterShim -> 'THead -> 'TTail)
 
+[<NoEquality; NoComparison>]
+[<Struct>]
+type OCamlFormat<'THead, 'TBuffer, 'TResult, 'TTail> =  
+    internal {
+        Factory: 'TBuffer -> BufferWriterShim;
+        Core: OCamlFormatCore<'THead, 'TTail>;
+        Disposer: BufferWriterShim -> 'TResult;
+    }
 
-
-
-
-
-module ScopedFormats =
+module Formats =
 
     type transcoder<'a> = TranscoderHandle<'a,byte,OCamlString>
 
@@ -52,51 +59,58 @@ module ScopedFormats =
         let tc = Unsafe.As<nativeint, transcoder<'a>>(&ni') in
         ValueSome tc
     
-    let empty : OCamlScopedFormat<unit,'b> = 
-        OCamlScopedFormat (fun _ -> ())
+    let init (factory: 'b -> BufferWriterShim) (disposer: BufferWriterShim -> 'r) : OCamlFormat<unit,'b,'r,BufferWriterShim> = 
+        {
+            Factory = factory;
+            Core = OCamlFormatCore.Empty((fun bws _ -> bws), Teq.refl<unit>, Teq.refl<BufferWriterShim>)
+            Disposer = disposer;
+        }
     
-(*
-    type private Aux =
 
-        static member WriteCoreAux<'b, 's when 'b :> IBufferWriter<byte>>(b: byref<'b>, ph: byref<int>, ofsl: list<OCamlFormatStringSegment>, s: 's) : (list<OCamlFormatStringSegment> * bool) =
-            match ofsl with
-            
-*)
+    let emptyOfOutChannel = 
+        let factory (oc: OCamlOutChannel) = oc.FileDescriptor |> OCamlFileDescriptors.Writers.toBufferWriterShim in
+        let disposer shim =
+            match shim with
+            | BufferWriterShim.BinaryWriterWithPool b -> b.Dispose()
+            | BufferWriterShim.StreamWithByteArrayPool b -> b.Dispose()
+            | BufferWriterShim.Boxed b -> ()
+        init factory disposer
 
-
-    let private write_core<'b, 's when 'b :> IBufferWriter<byte>> (b: 'b) (ofsl: list<OCamlFormatStringSegment>) (s: 's) : 'b =
+    let private write_core<'b, 's when 'b :> IBufferWriter<byte>> (b: 'b) (ofsl: OCamlFormatStringSegment) (s: 's) (tc: transcoder<'s>) : 'b =
         let mutable b' = b in
         let mutable placeHolder: int = 0 in
-        let rec aux stepOfsl sourceConsumed =
-            match stepOfsl with
-            | [] -> [], sourceConsumed
-            | ofs::nextOfsl ->
-            match ofs with
-            | InvalidSegemnt -> aux nextOfsl sourceConsumed (* Temporarily, ignore *)
-            | PlaneSegemnt str -> 
-                TranscodeWhileDestinationTooSmall<byte,byte,Identity<byte>,'b>(Obs.stringToReadOnlySpan str, &b', &placeHolder); 
-                aux nextOfsl sourceConsumed
-            | FormatSegment (str, fmtr) ->
-                if sourceConsumed then 
-                    aux nextOfsl sourceConsumed (* Temporarily, ignore *)
-                else
-                match tryOfFormatter<'s> fmtr with
-                | ValueNone -> aux nextOfsl sourceConsumed (* Temporarily, ignore *)
-                | ValueSome tc -> 
-                    tc.TranscodeSingletonWhileDestinationTooSmall(s,&b',str,&placeHolder);
-                    aux nextOfsl true
-        in
-        aux ofsl false |> ignore (* Temporarily, ignore *)
+        
+        let inline writePlane src = TranscodeWhileDestinationTooSmall<byte,byte,Identity<byte>,'b>(Obs.stringToReadOnlySpan src, &b', &placeHolder); 
+        let inline writeFormatted src fmt = tc.TranscodeSingletonWhileDestinationTooSmall(src,&b',fmt,&placeHolder);
+
+        match ofsl with
+        | OCamlFormatStringSegment(le, fo, tr) ->
+            writePlane le;
+            writeFormatted s fo;
+            writePlane tr;
+        
         b'
 
-    let cons (prev: OCamlScopedFormat<'s,'b>) (ofsl: list<OCamlFormatStringSegment>) : OCamlScopedFormat<'ns -> 's,'b> =
-        let (OCamlScopedFormat accImpl) = prev in
-        let nextImpl (refB: ref<'b>) (ns: 'ns) =
+    let internal extractWriter (ofc: OCamlFormatCore<'hd,'tl>) : BufferWriterShim -> 'hd -> 'tl =
+        match ofc with
+        | OCamlFormatCore.Empty(writer, hf, tf) -> 
+            let proof0 = Teq.Cong.func hf tf in
+            let proof1 = Teq.Cong.func Teq.refl proof0 in
+            Teq.cast proof1 writer
+        | OCamlFormatCore.Cons writer -> writer
+
+    let private cons_core (prev: OCamlFormatCore<'hd,'tl>) (ofsl: OCamlFormatStringSegment) (tc: transcoder<'newHd>) : OCamlFormatCore<'newHd,'hd->'tl> =
+        let accImpl = extractWriter prev in
+        let nextImpl bws (newHd: 'newHd) (hd: 'hd) =
             // last pushed, first written.
-            refB.Value <- write_core refB.Value ofsl ns
-            accImpl refB
+            let nextB = write_core bws ofsl newHd tc in
+            accImpl nextB hd
         in
-        OCamlScopedFormat nextImpl
+        OCamlFormatCore.Cons nextImpl
+    
+    let cons (prev: OCamlFormat<'hd,'b,'r,'tl>) (ofsl: OCamlFormatStringSegment, tc: transcoder<'newHd>) =
+        let nextCore = cons_core prev.Core ofsl tc in
+        { Factory = prev.Factory; Core = nextCore; Disposer = prev.Disposer }
             
     type internal IBufferFactory<'TBufferSource> =
         interface
@@ -151,21 +165,3 @@ type OCamlFormat<'TWriter, 'TBufferSource, 'TResult> =
         disposer: ScopedFormats.IBufferDisposer<'TResult> *
         scopedFormat: OCamlScopedFormat<'TWriter, 
 #endif
-
-module Hmm =
-
-    let goal1_typeChange
-        (factory: 'TBufferSource -> 'TBuffer) 
-        (scopedFormat: ref<'TBuffer> -> 'TWriter) 
-        (sourceRef: ref<'TBufferSource>) 
-        : 'TWriter // * (unit -> 'TResult) 
-        =
-        raise (NotImplementedException())
-
-    let goal2_disposerThunk
-        (disposer: 'TBuffer -> 'TResult)
-        (scopedFormatResult: ref<'TBuffer>)
-        (_ :unit) 
-        : 'TWriter
-        =
-        raise (NotImplementedException())

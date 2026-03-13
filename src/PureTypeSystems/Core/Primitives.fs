@@ -1,6 +1,8 @@
 ﻿namespace Nemonuri.PureTypeSystems
 
+open Nemonuri.PureTypeSystems.Primitives
 
+#if false
 type IKind =
     interface
         abstract member TryToDotNet<'T>: 'T -> obj option
@@ -14,6 +16,7 @@ type Kind<'T> =
         val Witness: 'T
         new(witness: 'T) = { Witness = witness }
     end    
+#endif
 
 /// https://en.wikipedia.org/wiki/Three-valued_logic
 type Trilean = bool voption
@@ -51,15 +54,18 @@ type AlwaysUnknown =
 
 module Operations =
 
-    let inline toDotNet (head: ^h) (tail: ^t) = ((^h or ^t) : (static member ToDotNet: _*_ -> _) head, tail)
 
-    let inline ofDotNet (kind: ^k) (dn: ^dn) = ((^k or ^dn) : (static member FromDotNet: ^dn -> ^k * ^t) dn)
+    let inline toDotNet kindPremise typeExpr = 
+        let inline call (p: ^p) (e: ^e) = ((^p or ^e) : (static member ToDotNet : _ -> _) e) in
+        call kindPremise typeExpr
 
-    let (|Kind|) (x: Kind<'t>) = x.Witness
+    // let inline ofDotNet (kind: ^k) (dn: ^dn) = ((^k or ^dn) : (static member FromDotNet: ^dn -> ^k * ^t) dn)
+
+    let (|TypeExpr|) (x: TypeExpr<'t>) = x.Witness
 
     let tautology = Tautology()
 
-    let unitKind = Kind<unit>( () )
+    // let unitKind = Kind<unit>( () )
 
     let triUnknown = ValueNone
     let triTrue = ValueSome true

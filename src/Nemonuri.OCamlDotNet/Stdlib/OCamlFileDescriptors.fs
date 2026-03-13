@@ -2,6 +2,7 @@ namespace Nemonuri.OCamlDotNet.Primitives
 
 open System
 open System.IO
+open System.Buffers
 open Nemonuri.Buffers
 open Nemonuri.Transcodings
 open Nemonuri.ByteChars
@@ -20,7 +21,45 @@ type OCamlFileDescriptor =
     | RegularFile of fileStream: FileStream
     | Other of stream: Stream * aux: objnull
 
-type OCamlOutChannel = internal { FileDescriptor: OCamlFileDescriptor; mutable BinaryMode: bool }
+[<RequireQualifiedAccess>]
+type internal OCamlWritableFileDescriptor =
+    | StandardWriter of writer: BinaryWriter * kind: OCamlStandardWriterKind
+    | RegularFile of fileStream: FileStream
+    | Other of stream: Stream * aux: objnull
+
+type OCamlOutChannel = internal { FileDescriptor: OCamlWritableFileDescriptor; mutable BinaryMode: bool }
+
+
+[<Struct>]
+[<RequireQualifiedAccess>]
+[<NoComparison; NoEquality>]
+type BufferWriterShim =
+    internal
+    | Boxed of boxed:IBufferWriter<byte>
+    | BinaryWriterWithPool of binaryWriterWithPool:BinaryWriterWithPool
+    | StreamWithByteArrayPool of streamWithByteArrayPool:StreamWithByteArrayPool
+    with
+
+        interface IBufferWriter<byte> with
+
+            member this.Advance (count: int) = 
+                match this with
+                | Boxed b -> b.Advance(count)
+                | BinaryWriterWithPool b -> b.Advance(count)
+                | StreamWithByteArrayPool b -> b.Advance(count)
+            
+            member this.GetMemory (sizeHint: int) = 
+                match this with
+                | Boxed b -> b.GetMemory(sizeHint)
+                | BinaryWriterWithPool b -> b.GetMemory(sizeHint)
+                | StreamWithByteArrayPool b -> b.GetMemory(sizeHint)
+
+            member this.GetSpan (sizeHint: int) = 
+                match this with
+                | Boxed b -> b.GetSpan(sizeHint)
+                | BinaryWriterWithPool b -> b.GetSpan(sizeHint)
+                | StreamWithByteArrayPool b -> b.GetSpan(sizeHint)
+    end
 
 module internal OCamlFileDescriptors =
 
@@ -51,8 +90,6 @@ module internal OCamlFileDescriptors =
         | StandardReader _ -> ()
         | s -> (toStream s).Flush()
 
-    // let toTextWriter (fd: t) : TextWriter = new StreamWriter(toStream fd, null, -1, true)
-
 #if false   
     let writeByteIfNotStdIn (fd: t) (b: byte) =
         match fd with
@@ -60,6 +97,32 @@ module internal OCamlFileDescriptors =
         | StandardWriter (bw, _) -> bw.Write(b)
         | s -> (toStream s).WriteByte(b)
 #endif
+
+    module Writers =
+
+        type private O = OCamlWritableFileDescriptor
+        type private B = BufferWriterShim
+
+        let toTotal (fd: OCamlWritableFileDescriptor) =
+            match fd with
+            | O.StandardWriter(w, k) -> StandardWriter(w,k)
+            | O.RegularFile(fs) -> RegularFile fs
+            | O.Other(st, aux) -> Other(st, aux)
+        
+        let tryOfTotal (fd: OCamlFileDescriptor) : voption<OCamlWritableFileDescriptor> =
+            match fd with
+            | StandardWriter(w,k) -> O.StandardWriter(w, k) |> ValueSome
+            | RegularFile(fs) -> O.RegularFile fs |> ValueSome
+            | Other(st, aux) -> O.Other(st, aux) |> ValueSome
+            | _ -> ValueNone
+        
+        let ofTotal fd = tryOfTotal fd |> ValueOption.get
+
+        let toBufferWriterShim (fd: OCamlWritableFileDescriptor) =
+            match fd with
+            | O.StandardWriter(w, k) -> B.BinaryWriterWithPool (new BinaryWriterWithPool(null, w, Unchecked.defaultof<_>))
+            | s -> B.StreamWithByteArrayPool (new StreamWithByteArrayPool(null, (s |> toTotal |> toStream), Unchecked.defaultof<_>))
+            
 
     let writeByteSpanIfNotStdIn (fd: t) (bs: ReadOnlySpan<byte>) =
         match fd with
@@ -93,30 +156,7 @@ module internal OCamlFileDescriptors =
         let rbs = Obs.bytesToReadOnlySpan (Obs.bytesSlice bs pos len) in
         writeByteSpanWithOptionsIfNotStdIn fd rbs opt
 
-#if false    
-    let isStdIn (fd: t) = match fd with | StandardReader _ -> true | _ -> false
 
-    let writeByteCharWithEncodingIfNotStdIn (fd: t) (b: byte) (dstEncoding: Encoding) =
-        if Encodings.isUtf8 dstEncoding then
-            writeByteIfNotStdIn fd b
-        else
-            if isStdIn fd then () else
-            let converted = Encoding.Convert(Encodings.utf8NoBom, dstEncoding, [|b|]) in
-            writeByteSpanIfNotStdIn fd (converted.AsSpan())
-
-    let writeByteCharSpanWithEncodingIfNotStdIn (fd: t) (bs: ReadOnlySpan<byte>) (dstEncoding: Encoding) =
-        if Encodings.isUtf8 dstEncoding then
-            writeByteSpanIfNotStdIn fd bs
-        else
-            if isStdIn fd then () else
-            let converted = Encoding.Convert(Encodings.utf8NoBom, dstEncoding, bs.ToArray()) in
-            writeByteSpanIfNotStdIn fd (converted.AsSpan())
-
-    
-    let outChannelToStream (oc: out_channel) = oc.FileDescriptor |> toStream
-
-    let outChannelToTextWriter (oc: out_channel) = oc.FileDescriptor |> toTextWriter
-#endif
 
     let isTranscoderRequiredInTextMode = Environment.NewLine <> "\n"
 
@@ -125,6 +165,8 @@ module internal OCamlFileDescriptors =
         | true -> UseTranscoder
         | false -> None
 
+    let outChannelToFileDescriptor (oc: out_channel) = oc.FileDescriptor |> Writers.toTotal
+
     module OutChannelMonads =
 
         [<RequireQualifiedAccess>]
@@ -132,7 +174,7 @@ module internal OCamlFileDescriptors =
         [<NoEquality; NoComparison>]
         type Repr = { fd: OCamlFileDescriptor; opt: WriterOptions }
 
-        let extract oc = { Repr.fd = oc.FileDescriptor; Repr.opt = outChannelToWriterOptions oc }
+        let extract oc = { Repr.fd = outChannelToFileDescriptor oc; Repr.opt = outChannelToWriterOptions oc }
 
         [<NoEquality; NoComparison>]
         type Monad =
