@@ -107,3 +107,7 @@ module Operations =
             if (typedefof<FSharpFunc<_,_>>.IsAssignableFrom(typedefof<'a>)) then AlwaysUnknown().Check<'a> else tautology.Check<'a>
 
     let checkSelf (x: 'a) = toSelfCondition x x
+
+module TypeShadowing =
+
+    type invalid = Invalid

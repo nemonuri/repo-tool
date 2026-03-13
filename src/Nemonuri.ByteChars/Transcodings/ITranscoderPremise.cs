@@ -26,4 +26,6 @@ public readonly unsafe struct TranscoderHandle<TSource, TTarget, TConfig>
 
     public OperationStatus Transcode(ReadOnlySpan<TSource> source, Span<TTarget> destination, TConfig config, out int sourcesRead, out int targetsWritten) =>
         _fp(source, destination, config, out sourcesRead, out targetsWritten);
+
+    public bool HasValue => _fp != null;
 }

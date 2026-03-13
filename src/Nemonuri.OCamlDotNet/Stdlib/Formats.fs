@@ -14,34 +14,78 @@ open System.Runtime.CompilerServices
 module Bs = Nemonuri.OCamlDotNet.Primitives.ByteSpans
 module Obs = Nemonuri.OCamlDotNet.Primitives.OCamlByteSpanSources
 
-type OCamlFormatter = internal | OCamlFormatter of fp:nativeint * sourceType:System.Type
 
-
+[<NoEquality; NoComparison>]
 [<Struct>]
-type OCamlFormatStringSegment = 
-    | OCamlFormatStringSegment of leading:OCamlString * format:OCamlString * trailing:OCamlString
-
-
+type OCamlFormatSegment<'TSource> =
+    | OCamlFormatSegment of leading:OCamlString * format:OCamlString * trailing:OCamlString * transcoder:TranscoderHandle<'TSource,byte,OCamlString>
 
 
 [<NoEquality; NoComparison>]
 [<RequireQualifiedAccess>]
-type internal OCamlFormatCore<'THead, 'TTail> =  
+type internal OCamlFormatCore<'THead, 'TBuffer, 'TTail when 'TBuffer :> IBufferWriter<byte>> =  
     private
-    | Empty of writer:(BufferWriterShim -> unit -> BufferWriterShim) * headTypeProof:Teq<unit,'THead> * tailTypeProof:Teq<BufferWriterShim,'TTail>
-    | Cons of writer:(BufferWriterShim -> 'THead -> 'TTail)
+    | Empty of writer:('TBuffer -> unit -> 'TBuffer) * headTypeProof:Teq<unit,'THead> * tailTypeProof:Teq<'TBuffer,'TTail>
+    | Cons of writer:('TBuffer -> 'THead -> 'TTail) * formatSegment:OCamlFormatSegment<'THead>
 
 [<NoEquality; NoComparison>]
 [<Struct>]
-type OCamlFormat<'THead, 'TBuffer, 'TResult, 'TTail> =  
+type OCamlFormat<'THead, 'TBuffer, 'TResult, 'TTail when 'TBuffer :> IBufferWriter<byte>> =
     internal {
-        Factory: 'TBuffer -> BufferWriterShim;
-        Core: OCamlFormatCore<'THead, 'TTail>;
-        Disposer: BufferWriterShim -> 'TResult;
+        Core: OCamlFormatCore<'THead, 'TBuffer, 'TTail>;
+        Drainer: 'TBuffer -> 'TResult
     }
 
 module Formats =
 
+    [<RequireQualifiedAccess>]
+    module Segments = begin
+
+        open Nemonuri.PureTypeSystems.TypeShadowing
+
+        let nullSegment: OCamlFormatSegment<invalid> = Unchecked.defaultof<_>
+
+        let inline (|NullSegment|HasValueSegment|) (fs: OCamlFormatSegment<'s>) =
+            match fs with 
+            | OCamlFormatSegment(_,_,_,tc) -> 
+            match tc.HasValue with
+            | true -> HasValueSegment fs
+            | false -> NullSegment nullSegment
+
+        [<NoEquality; NoComparison>]
+        type List<'hd, 'tl> = 
+            private
+            | Empty of headProof:Teq<'hd, invalid> * tailProof:Teq<'tl, invalid>
+            | Cons of head:OCamlFormatSegment<'hd> * tail:ITail<'tl>
+            with
+                interface ITail<List<'hd, 'tl>> with
+                    member x.Value = x
+            end
+        and private ITail<'tl> =
+            interface
+                abstract member Value: 'tl
+            end
+
+        let empty : List<invalid, invalid> = Empty (Teq.refl, Teq.refl)
+
+        let cons (nhd: OCamlFormatSegment<'nhd>) (tl: List<'hd, 'tl>) : List<'nhd,List<'hd,'tl>> = Cons (nhd, tl)
+
+        
+
+
+        
+        
+
+    end
+
+    let inline (|NullFormatSegment|HasValueFormatSegment|) (fs: OCamlFormatSegment<'s>) =
+        match fs with 
+        | OCamlFormatSegment(_,_,_,tc) -> 
+        match tc.HasValue with
+        | true -> HasValueFormatSegment fs
+        | false -> NullFormatSegment
+
+#if false
     type transcoder<'a> = TranscoderHandle<'a,byte,OCamlString>
 
     let toFormatter (tc: transcoder<'a>) = 
@@ -58,69 +102,57 @@ module Formats =
         let mutable ni' = ni in
         let tc = Unsafe.As<nativeint, transcoder<'a>>(&ni') in
         ValueSome tc
+#endif
     
-    let init (factory: 'b -> BufferWriterShim) (disposer: BufferWriterShim -> 'r) : OCamlFormat<unit,'b,'r,BufferWriterShim> = 
+    let empty<'b when 'b :> IBufferWriter<byte>> : OCamlFormat<unit,'b,unit,'b> = 
         {
-            Factory = factory;
-            Core = OCamlFormatCore.Empty((fun bws _ -> bws), Teq.refl<unit>, Teq.refl<BufferWriterShim>)
-            Disposer = disposer;
+            Core = OCamlFormatCore.Empty((fun bws _ -> bws), Teq.refl<unit>, Teq.refl<'b>);
+            Drainer = fun _ -> ();
         }
-    
 
-    let emptyOfOutChannel = 
-        let factory (oc: OCamlOutChannel) = oc.FileDescriptor |> OCamlFileDescriptors.Writers.toBufferWriterShim in
-        let disposer shim =
-            match shim with
-            | BufferWriterShim.BinaryWriterWithPool b -> b.Dispose()
-            | BufferWriterShim.StreamWithByteArrayPool b -> b.Dispose()
-            | BufferWriterShim.Boxed b -> ()
-        init factory disposer
-
-    let private write_core<'b, 's when 'b :> IBufferWriter<byte>> (b: 'b) (ofsl: OCamlFormatStringSegment) (s: 's) (tc: transcoder<'s>) : 'b =
+    let private write_core<'b, 's when 'b :> IBufferWriter<byte>> (b: 'b) (OCamlFormatSegment(le, fo, tr, tc)) (s: 's) : 'b =
         let mutable b' = b in
         let mutable placeHolder: int = 0 in
         
         let inline writePlane src = TranscodeWhileDestinationTooSmall<byte,byte,Identity<byte>,'b>(Obs.stringToReadOnlySpan src, &b', &placeHolder); 
         let inline writeFormatted src fmt = tc.TranscodeSingletonWhileDestinationTooSmall(src,&b',fmt,&placeHolder);
 
-        match ofsl with
-        | OCamlFormatStringSegment(le, fo, tr) ->
-            writePlane le;
-            writeFormatted s fo;
-            writePlane tr;
-        
+        writePlane le;
+        writeFormatted s fo;
+        writePlane tr;
+
         b'
 
-    let internal extractWriter (ofc: OCamlFormatCore<'hd,'tl>) : BufferWriterShim -> 'hd -> 'tl =
+    let private toWriter_core (ofc: OCamlFormatCore<'hd,'b,'tl>) : 'b -> 'hd -> 'tl =
         match ofc with
         | OCamlFormatCore.Empty(writer, hf, tf) -> 
             let proof0 = Teq.Cong.func hf tf in
             let proof1 = Teq.Cong.func Teq.refl proof0 in
             Teq.cast proof1 writer
-        | OCamlFormatCore.Cons writer -> writer
+        | OCamlFormatCore.Cons(writer,_) -> writer
 
-    let private cons_core (prev: OCamlFormatCore<'hd,'tl>) (ofsl: OCamlFormatStringSegment) (tc: transcoder<'newHd>) : OCamlFormatCore<'newHd,'hd->'tl> =
-        let accImpl = extractWriter prev in
+    let private cons_core (prev: OCamlFormatCore<'hd,'b,'tl>) (fmtSeg: OCamlFormatSegment<'newHd>) : OCamlFormatCore<'newHd,'b,'hd->'tl> =
+        let accImpl = toWriter_core prev in
         let nextImpl bws (newHd: 'newHd) (hd: 'hd) =
             // last pushed, first written.
-            let nextB = write_core bws ofsl newHd tc in
+            let nextB = write_core bws fmtSeg newHd in
             accImpl nextB hd
         in
-        OCamlFormatCore.Cons nextImpl
-    
-    let cons (prev: OCamlFormat<'hd,'b,'r,'tl>) (ofsl: OCamlFormatStringSegment, tc: transcoder<'newHd>) =
-        let nextCore = cons_core prev.Core ofsl tc in
-        { Factory = prev.Factory; Core = nextCore; Disposer = prev.Disposer }
+        OCamlFormatCore.Cons (nextImpl,fmtSeg)
+
+    let cons (fmtSeg: OCamlFormatSegment<'newHd>) (fmt: OCamlFormat<'hd,'b,'r,'tl>) =
+        let nextCore = cons_core fmt.Core fmtSeg in
+        { Core = nextCore; Drainer = fmt.Drainer }
             
-    type internal IBufferFactory<'TBufferSource> =
-        interface
-            abstract member TryCreate<'TBuffer when 'TBuffer :> IBufferWriter<byte>> : source:'TBufferSource -> voption<'TBuffer>
-        end
+    let toWriter (fmt: OCamlFormat<'hd,'b,'r,'tl>) = fmt.Core |> toWriter_core
+
+    let tryGetHeadSegment (fmt: OCamlFormat<'hd,'b,'r,'tl>) =
+        match fmt.Core with
+        | OCamlFormatCore.Empty(_,_,_) -> ValueNone
+        | OCamlFormatCore.Cons(_,fs) -> ValueSome fs
+
+
         
-    type internal IBufferDisposer<'TResult> =
-        interface
-            abstract member FlushAndDispose<'TBuffer when 'TBuffer :> IBufferWriter<byte>> : buffer:byref<'TBuffer> -> 'TResult
-        end
 
 #if false
     [<Struct>]

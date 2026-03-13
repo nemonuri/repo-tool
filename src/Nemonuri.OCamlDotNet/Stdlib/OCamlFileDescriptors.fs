@@ -14,12 +14,52 @@ type internal OCamlStandardWriterKind =
 | Output
 | Error
 
-type OCamlFileDescriptor = 
+[<RequireQualifiedAccess>]
+[<NoComparison; NoEquality>]
+[<Struct>]
+type BufferWriterShim =
     internal
-    | StandardWriter of writer: BinaryWriter * kind: OCamlStandardWriterKind
-    | StandardReader of reader: BinaryReader
-    | RegularFile of fileStream: FileStream
-    | Other of stream: Stream * aux: objnull
+    // | Boxed of boxed:IBufferWriter<byte> * flusher:(IBufferWriter<byte> -> unit)
+    | BinaryWriterWithPool of binaryWriterWithPool:BinaryWriterWithPool
+    | StreamWithByteArrayPool of streamWithByteArrayPool:StreamWithByteArrayPool
+    with
+
+        member x.Advance (count: int) = 
+            match x with
+            // | Boxed (b, _) -> b.Advance(count)
+            | BinaryWriterWithPool b -> b.Advance(count)
+            | StreamWithByteArrayPool b -> b.Advance(count)
+        
+        member x.GetMemory (sizeHint: int) = 
+            match x with
+            // | Boxed (b, _) -> b.GetMemory(sizeHint)
+            | BinaryWriterWithPool b -> b.GetMemory(sizeHint)
+            | StreamWithByteArrayPool b -> b.GetMemory(sizeHint)
+
+        member x.GetSpan (sizeHint: int) = 
+            match x with
+            // | Boxed (b, _) -> b.GetSpan(sizeHint)
+            | BinaryWriterWithPool b -> b.GetSpan(sizeHint)
+            | StreamWithByteArrayPool b -> b.GetSpan(sizeHint)
+
+        member x.Flush (): unit = 
+            match x with
+            // | Boxed (b, f) -> f b;
+            | BinaryWriterWithPool b -> b.Dispose();
+            | StreamWithByteArrayPool b -> b.Dispose();
+
+        interface IBufferWriter<byte> with
+
+            member x.Advance (count: int) = x.Advance count
+            
+            member x.GetMemory (sizeHint: int) = x.GetMemory sizeHint
+
+            member x.GetSpan (sizeHint: int) = x.GetSpan sizeHint
+        
+        interface IFlushable with
+
+            member x.Flush (): unit = x.Flush()
+    end
 
 [<RequireQualifiedAccess>]
 type internal OCamlWritableFileDescriptor =
@@ -27,43 +67,91 @@ type internal OCamlWritableFileDescriptor =
     | RegularFile of fileStream: FileStream
     | Other of stream: Stream * aux: objnull
 
-type OCamlOutChannel = internal { FileDescriptor: OCamlWritableFileDescriptor; mutable BinaryMode: bool }
 
+module internal OCamlWritableFileDescriptors =
 
-[<Struct>]
-[<RequireQualifiedAccess>]
-[<NoComparison; NoEquality>]
-type BufferWriterShim =
-    internal
-    | Boxed of boxed:IBufferWriter<byte>
-    | BinaryWriterWithPool of binaryWriterWithPool:BinaryWriterWithPool
-    | StreamWithByteArrayPool of streamWithByteArrayPool:StreamWithByteArrayPool
-    with
+    type t = OCamlWritableFileDescriptor
+    type B = BufferWriterShim
 
+    let toStream (x: t) =
+        match x with
+        | t.StandardWriter (bw, _) -> bw.BaseStream
+        | t.RegularFile s -> s
+        | t.Other (s, _) -> s
+
+    let toBufferWriter (x: t) : BufferWriterShim =
+        match x with
+        | t.StandardWriter(w, _) -> B.BinaryWriterWithPool (new BinaryWriterWithPool(null, w, Unchecked.defaultof<_>))
+        | s -> B.StreamWithByteArrayPool (new StreamWithByteArrayPool(null, toStream s, Unchecked.defaultof<_>))
+    
+    let ensureBufferWriter (maybe: voption<BufferWriterShim>) (x: t) =
+        match maybe with
+        | ValueSome b -> b
+        | ValueNone -> toBufferWriter x
+
+module Wfd = OCamlWritableFileDescriptors
+
+type OCamlOutChannel =
+    class
+        val internal FileDescriptor : OCamlWritableFileDescriptor;
+        val mutable internal BinaryMode: bool;
+        val mutable private InnerBufferWriter: voption<BufferWriterShim>;
+        internal new(fd: OCamlWritableFileDescriptor, [<Struct>] ?binaryMode : bool) =
+            { FileDescriptor = fd; BinaryMode = defaultValueArg binaryMode false; InnerBufferWriter = ValueNone }
+        
+        member private x.EnsuredBufferWriter = 
+            match x.InnerBufferWriter with
+            | ValueSome v -> v
+            | ValueNone -> 
+                let v = Wfd.ensureBufferWriter x.InnerBufferWriter x.FileDescriptor in
+                x.InnerBufferWriter <- ValueSome v; 
+                v
+
+        member x.Advance (count: int) = x.EnsuredBufferWriter.Advance count
+
+        member x.GetMemory (sizeHint: int) = x.EnsuredBufferWriter.GetMemory sizeHint
+
+        member x.GetSpan (sizeHint: int) = x.EnsuredBufferWriter.GetSpan sizeHint
+
+        member x.Flush() = //x.EnsuredBufferWriter.Flush(); x.InnerBufferWriter <- ValueNone
+            match x.InnerBufferWriter with
+            | ValueSome v -> v.Flush(); x.InnerBufferWriter <- ValueNone
+            | ValueNone -> ()
+        
         interface IBufferWriter<byte> with
 
-            member this.Advance (count: int) = 
-                match this with
-                | Boxed b -> b.Advance(count)
-                | BinaryWriterWithPool b -> b.Advance(count)
-                | StreamWithByteArrayPool b -> b.Advance(count)
+            member x.Advance (count: int) = x.Advance count
             
-            member this.GetMemory (sizeHint: int) = 
-                match this with
-                | Boxed b -> b.GetMemory(sizeHint)
-                | BinaryWriterWithPool b -> b.GetMemory(sizeHint)
-                | StreamWithByteArrayPool b -> b.GetMemory(sizeHint)
+            member x.GetMemory (sizeHint: int) = x.GetMemory sizeHint
 
-            member this.GetSpan (sizeHint: int) = 
-                match this with
-                | Boxed b -> b.GetSpan(sizeHint)
-                | BinaryWriterWithPool b -> b.GetSpan(sizeHint)
-                | StreamWithByteArrayPool b -> b.GetSpan(sizeHint)
+            member x.GetSpan (sizeHint: int) = x.GetSpan sizeHint
+        
+        interface IFlushable with
+
+            member x.Flush (): unit = x.Flush()
     end
+
+
+[<RequireQualifiedAccess>]
+type OCamlFileDescriptor = 
+    internal
+    | OCamlWritableFileDescriptor of OCamlWritableFileDescriptor
+    | StandardReader of reader: BinaryReader
+
 
 module internal OCamlFileDescriptors =
 
     type t = OCamlFileDescriptor
+    type private tw = OCamlWritableFileDescriptor
+
+    let inline (|StandardWriter|StandardReader|RegularFile|Other|) (x: t) =
+        match x with
+        | t.OCamlWritableFileDescriptor v ->
+            match v with
+            | tw.StandardWriter (w, k) -> StandardWriter (w,k)
+            | tw.RegularFile fs -> RegularFile fs
+            | tw.Other (s, a) -> Other (s,a)
+        | t.StandardReader v -> StandardReader v
 
     type out_channel = OCamlOutChannel
 
@@ -103,11 +191,7 @@ module internal OCamlFileDescriptors =
         type private O = OCamlWritableFileDescriptor
         type private B = BufferWriterShim
 
-        let toTotal (fd: OCamlWritableFileDescriptor) =
-            match fd with
-            | O.StandardWriter(w, k) -> StandardWriter(w,k)
-            | O.RegularFile(fs) -> RegularFile fs
-            | O.Other(st, aux) -> Other(st, aux)
+        let toTotal (fd: OCamlWritableFileDescriptor) = OCamlFileDescriptor.OCamlWritableFileDescriptor fd
         
         let tryOfTotal (fd: OCamlFileDescriptor) : voption<OCamlWritableFileDescriptor> =
             match fd with
