@@ -14,6 +14,8 @@ module Refiners =
         | true, false -> False Judgement.False
         | true, true -> True Judgement.True
 
+    [<NoComparison; NoEquality>]
+    [<Struct>]
     type RefineResult<'a, 'r when 'r :> IRefinerPremise<'a> and 'r : unmanaged> =
     | RefineError of 'a * Judgement
     | RefineOk of Refined<'a, 'r>
@@ -23,5 +25,14 @@ module Refiners =
         let jud, rst = defaultof<'r>.Judge(&x) in
         match jud with
         | True _ -> Refined<'a, 'r>(rst) |> RefineOk
-        | _ -> RefineError(rst, jud)
-         
+        | _ -> RefineError(x, jud)
+        
+    let toResult (r: RefineResult<'a,'r>) : Result<Refined<'a, 'r>, ('a * Judgement)> =
+        match r with
+        | RefineOk v -> Ok v
+        | RefineError (a,j) -> Error (a,j)
+
+    let toValueOption (r: RefineResult<'a,'r>) =
+        match r with
+        | RefineOk v -> ValueSome v
+        | RefineError (a,j) -> ValueNone

@@ -48,11 +48,6 @@ public readonly struct Refined<T, TRefiner>(T value) where TRefiner : IRefinerPr
     public T Value => _value;
 }
 
-public readonly struct Bracket<T>(T value)
-{
-    public T Value {get;} = value;
-}
-
 
 public readonly struct TypeExpr<TExpr>(TExpr? witness)
 {
