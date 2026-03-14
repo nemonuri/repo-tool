@@ -53,7 +53,7 @@ module Formats =
 
         [<NoEquality; NoComparison>]
         [<Struct>]
-        type private Data = | Data of OCamlFormatSegmentString * transcoder:nativeint * tailExtractor:nativeint
+        type private Data = | Data of OCamlFormatSegmentString * transcoder:nativeint * tailExtractor:nativeint * typeCache:System.Type
         type private datas = list<Data>
 
         [<NoEquality; NoComparison>]
@@ -96,7 +96,7 @@ module Formats =
                         | false ->
                         match state.Datas with
                         | [] -> invalidOp $"Invalid deconstruction. {nameof(state)} is empty."
-                        | (Data(ofss, tc, te))::tailDatas ->
+                        | (Data(ofss, tc, te, _))::tailDatas ->
                             let handle: TranscoderHandle<'s> = ofNativeInt tc in
                             let extData : extData<'s> = struct ( ofss, handle ) in
                             let tail : SegmentList<'tctx> = { Extractor = CurriedExtractor te; Datas = tailDatas } in
@@ -107,7 +107,7 @@ module Formats =
         let cons (hd: OCamlFormatSegment<'s>) (tl: SegmentList<'ctx>) : SegmentList<'s -> 'ctx> = 
             let headExtractor: CurriedTypeFuncHandle<'s,SegmentList<'s -> 'ctx>,extResult<'s,'ctx>> = CurriedTypeFuncTheory.ToHandle<'s,SegmentList<'s->'ctx>,ExtractorPremise<'s,'ctx>,extResult<'s,'ctx>>() in
             let (OCamlFormatSegment(ofss: OCamlFormatSegmentString, tch: TranscoderHandle<'s>)) = hd in
-            let headData = Data(ofss, toNativeInt tch, toNativeInt tl.Extractor) in
+            let headData = Data(ofss, toNativeInt tch, toNativeInt tl.Extractor, typeof<'s>) in
             { Extractor = CurriedExtractor (toNativeInt headExtractor); Datas = headData::(tl.Datas) }
 
         let tryDecons (l: SegmentList<'s -> 'ctx>) : voption<System.ValueTuple<OCamlFormatSegment<'s>, SegmentList<'ctx>>> =
@@ -124,13 +124,19 @@ module Formats =
             match tryDecons l with
             | ValueNone -> Nil
             | ValueSome (struct (hd, tl)) -> Cons (hd, tl)
-        
-        type IListFolder<'TState> =
-            interface
-                abstract member Step<'T> : 'TState -> OCamlFormatSegment<'T> -> 'TState
-            end
 
 #if false
+        type IListFolder<'TState> =
+            interface
+                abstract member Step<'T> : 'TState -> 'T -> OCamlFormatSegment<'T> -> 'TState
+            end
+        
+        let tryFold (folder: #IListFolder<'state>) (seed: 'state) (l: SegmentList<'s -> 'ctx>) (s: 's) = 
+            match l with
+            | Nil -> Result.Error (seed, l)
+            | Cons (hd, tl) -> Result.Ok (folder.Step seed s hd, tl)
+        
+
         //type TypeHint<'T> = struct end
 
         //let getTypeHint<'T1,'T2>(tl: 'T1 -> 'T2) = Unchecked.defaultof
