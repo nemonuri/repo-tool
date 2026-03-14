@@ -19,18 +19,31 @@ module Obs = Nemonuri.OCamlDotNet.Primitives.OCamlByteSpanSources
 [<Struct>]
 type OCamlFormatSegmentString = | OCamlFormatSegmentString of leading:OCamlString * format:OCamlString * trailing:OCamlString
 
+
 [<NoEquality; NoComparison>]
 [<Struct>]
 type OCamlFormatSegment<'TSource> =
     | OCamlFormatSegment of string:OCamlFormatSegmentString * transcoder:TranscoderHandle<'TSource,byte,OCamlString>
 
+[<NoEquality; NoComparison>]
+[<Struct>]
+type private Data = | Data of OCamlFormatSegmentString * transcoder:nativeint * tailExtractor:nativeint //* typeCache:System.Type
+type private datas = list<Data>
+
+[<NoEquality; NoComparison>]
+[<Struct>]
+type private CurriedExtractor<'TContext> = | CurriedExtractor of nativeint
+
+[<NoEquality; NoComparison>]
+[<Struct>]
+type OCamlFormatSegmentList<'ctx> = private { Extractor: CurriedExtractor<'ctx>; Datas: datas }
 
 [<NoEquality; NoComparison>]
 [<RequireQualifiedAccess>]
 type internal OCamlFormatCore<'THead, 'TBuffer, 'TTail when 'TBuffer :> IBufferWriter<byte>> =  
     private
     | Empty of writer:('TBuffer -> unit -> 'TBuffer) * headTypeProof:Teq<unit,'THead> * tailTypeProof:Teq<'TBuffer,'TTail>
-    | Cons of writer:('TBuffer -> 'THead -> 'TTail) * formatSegment:OCamlFormatSegment<'THead>
+    | Cons of writer:('TBuffer -> 'THead -> 'TTail) * formatSegments:OCamlFormatSegmentList<'THead -> 'TTail>
 
 [<NoEquality; NoComparison>]
 [<Struct>]
@@ -51,79 +64,67 @@ module Formats =
         open Nemonuri.PureTypeSystems.TypeShadowing
         open DotNetNativeInts
 
-        [<NoEquality; NoComparison>]
-        [<Struct>]
-        type private Data = | Data of OCamlFormatSegmentString * transcoder:nativeint * tailExtractor:nativeint * typeCache:System.Type
-        type private datas = list<Data>
-
-        [<NoEquality; NoComparison>]
-        [<Struct>]
-        type private CurriedExtractor<'TContext> = | CurriedExtractor of nativeint
-
         type private TranscoderHandle<'TSource> = TranscoderHandle<'TSource,byte,OCamlString>
 
         let (|Flatten|) (OCamlFormatSegment(OCamlFormatSegmentString(le, fo, tr), tc)) = le,fo,tr,tc
 
-        let nullSegment: OCamlFormatSegment<invalid> = Unchecked.defaultof<_>
+        type EmptySegmentList<'TSentinel> = OCamlFormatSegmentList<'TSentinel>
+        let empty<'TSentinel> : EmptySegmentList<'TSentinel> = { Extractor = CurriedExtractor 0; Datas = [] }
 
         let inline (|NullSegment|HasValueSegment|) (fs: OCamlFormatSegment<'s>) =
             match fs with 
             | Flatten(_,_,_,tc) -> 
             match tc.HasValue with
             | true -> HasValueSegment fs
-            | false -> NullSegment nullSegment
-
-        [<NoEquality; NoComparison>]
-        [<Struct>]
-        type SegmentList<'ctx> = private { Extractor: CurriedExtractor<'ctx>; Datas: datas }
+            | false -> NullSegment empty
 
         type private extData<'s> = System.ValueTuple<OCamlFormatSegmentString, TranscoderHandle<'s>>
-        type private extResult<'s,'tctx> = System.ValueTuple<extData<'s>, SegmentList<'tctx>>
+        type private extResult<'s,'tctx> = System.ValueTuple<extData<'s>, OCamlFormatSegmentList<'tctx>>
 
-
-        type EmptySegmentList = SegmentList<invalid -> invalid>
-        let empty : EmptySegmentList = { Extractor = CurriedExtractor 0; Datas = [] }
 
         type private ExtractorPremise<'s,'tctx> =
             struct
-                interface ICurriedTypeFuncPremise<'s, SegmentList<'s -> 'tctx>> with
-                    member _.Invoke (state: SegmentList<'s -> 'tctx>): 'T = 
+                interface ICurriedTypeFuncPremise<'s, OCamlFormatSegmentList<'s -> 'tctx>> with
+                    member _.Invoke (state: OCamlFormatSegmentList<'s -> 'tctx>): 'T = 
                         match typeof<extResult<'s,'tctx>> = typeof<'T> with
                         | false -> invalidOp $"Invalid type. Expected = {typeof<extResult<'s,'tctx>>}, Actual = {typeof<'T>}"
                         | true ->
-                        match typeof<'s> = typeof<invalid> with
-                        | true -> invalidOp $"Invalid type. NotExpected = {typeof<invalid>}, Actual = {typeof<'s>}"
-                        | false ->
                         match state.Datas with
                         | [] -> invalidOp $"Invalid deconstruction. {nameof(state)} is empty."
-                        | (Data(ofss, tc, te, _))::tailDatas ->
+                        | (Data(ofss, tc, te))::tailDatas ->
                             let handle: TranscoderHandle<'s> = ofNativeInt tc in
                             let extData : extData<'s> = struct ( ofss, handle ) in
-                            let tail : SegmentList<'tctx> = { Extractor = CurriedExtractor te; Datas = tailDatas } in
+                            let tail : OCamlFormatSegmentList<'tctx> = { Extractor = CurriedExtractor te; Datas = tailDatas } in
                             let result : extResult<'s,'tctx> = struct ( extData, tail ) in
                             result |> unbox
             end
 
-        let cons (hd: OCamlFormatSegment<'s>) (tl: SegmentList<'ctx>) : SegmentList<'s -> 'ctx> = 
-            let headExtractor: CurriedTypeFuncHandle<'s,SegmentList<'s -> 'ctx>,extResult<'s,'ctx>> = CurriedTypeFuncTheory.ToHandle<'s,SegmentList<'s->'ctx>,ExtractorPremise<'s,'ctx>,extResult<'s,'ctx>>() in
+        let cons (hd: OCamlFormatSegment<'s>) (tl: OCamlFormatSegmentList<'ctx>) : OCamlFormatSegmentList<'s -> 'ctx> = 
+            let headExtractor: CurriedTypeFuncHandle<'s,OCamlFormatSegmentList<'s -> 'ctx>,extResult<'s,'ctx>> = CurriedTypeFuncTheory.ToHandle<'s,OCamlFormatSegmentList<'s->'ctx>,ExtractorPremise<'s,'ctx>,extResult<'s,'ctx>>() in
             let (OCamlFormatSegment(ofss: OCamlFormatSegmentString, tch: TranscoderHandle<'s>)) = hd in
-            let headData = Data(ofss, toNativeInt tch, toNativeInt tl.Extractor, typeof<'s>) in
+            let headData = Data(ofss, toNativeInt tch, toNativeInt tl.Extractor) in
             { Extractor = CurriedExtractor (toNativeInt headExtractor); Datas = headData::(tl.Datas) }
 
-        let tryDecons (l: SegmentList<'s -> 'ctx>) : voption<System.ValueTuple<OCamlFormatSegment<'s>, SegmentList<'ctx>>> =
-            if typeof<'s> = typeof<invalid> then
-                ValueNone
-            else
-                let (CurriedExtractor n) = l.Extractor in
-                let ext : CurriedTypeFuncHandle<'s,SegmentList<'s -> 'ctx>,extResult<'s,'ctx>> = ofNativeInt n in
-                let (struct (struct (ofss: OCamlFormatSegmentString, tch: TranscoderHandle<'s>), tl: SegmentList<'ctx>)) = ext.Invoke(l) in
-                let hd = OCamlFormatSegment(ofss, tch) in
-                struct ( hd, tl ) |> ValueSome
+        let decons (l: OCamlFormatSegmentList<'s -> 'ctx>) =
+            let (CurriedExtractor n) = l.Extractor in
+            let ext : CurriedTypeFuncHandle<'s,OCamlFormatSegmentList<'s -> 'ctx>,extResult<'s,'ctx>> = ofNativeInt n in
+            let (struct (struct (ofss: OCamlFormatSegmentString, tch: TranscoderHandle<'s>), tl: OCamlFormatSegmentList<'ctx>)) = ext.Invoke(l) in
+            let hd = OCamlFormatSegment(ofss, tch) in
+            struct ( hd, tl )
+
+        type TryDeconsPremise<'TSentinel> =
+            struct
+                static member TryDecons(_: OCamlFormatSegmentList<'TSentinel>) = struct (Unchecked.defaultof<TypeHint<'TSentinel>>, ValueNone)
+
+                static member TryDecons<'T1,'T2>(l: OCamlFormatSegmentList<'T1 -> 'T2>) = struct (Unchecked.defaultof<TypeHint<'TSentinel>>, ValueSome (decons l))
+            end
 
         let inline (|Nil|Cons|) l =
-            match tryDecons l with
-            | ValueNone -> Nil
-            | ValueSome (struct (hd, tl)) -> Cons (hd, tl)
+            let inline call (p: ^p) (l': ^l) = ((^p or ^l) : (static member TryDecons: _ -> _) l') in
+            let r = (call Unchecked.defaultof<TryDeconsPremise<_>> l) in
+            match r with
+            | struct (_: TypeHint<^TSentinel>, ValueNone) -> Nil
+            | struct (_: TypeHint<^TSentinel>, ValueSome (struct (hd, tl))) -> Cons (hd, tl)
 
 #if false
         type IListFolder<'TState> =
@@ -172,11 +173,7 @@ module Formats =
         //let rec inline fold (folder: ^Folder) (seed: ^State) l =
         //    let inline call 
 #endif
-        
-
-
-        
-        
+       
 
     end
 
@@ -199,8 +196,20 @@ module Formats =
         let mutable ni' = ni in
         let tc = Unsafe.As<nativeint, transcoder<'a>>(&ni') in
         ValueSome tc
+
+
+    let private teq_ofsl (p: Teq<'a,'b>) : Teq<OCamlFormatSegmentList<'a>,OCamlFormatSegmentList<'b>> = Teq.Cong.believeMe p
+
+    let private coreToSegmentList (fc: OCamlFormatCore<'hd,'b,'tl>) : OCamlFormatSegmentList<'hd->'tl> =
+        match fc with
+        | OCamlFormatCore.Cons(_,fs) -> fs
+        | OCamlFormatCore.Empty(_,hf,tf) -> 
+            let emt : OCamlFormatSegmentList<'b> = Segments.empty<'b> in
+            let proof0 = Teq.Cong.func hf tf in
+            let proof1: Teq<OCamlFormatSegmentList<(unit -> 'b)>,OCamlFormatSegmentList<('hd -> 'tl)>> = teq_ofsl proof0 in
+            Teq.cast proof1 emt
 #endif
-    
+
     let empty<'b when 'b :> IBufferWriter<byte>> : OCamlFormat<unit,'b,unit,'b> = 
         {
             Core = OCamlFormatCore.Empty((fun bws _ -> bws), Teq.refl<unit>, Teq.refl<'b>);
@@ -228,14 +237,26 @@ module Formats =
             Teq.cast proof1 writer
         | OCamlFormatCore.Cons(writer,_) -> writer
 
-    let private cons_core (prev: OCamlFormatCore<'hd,'b,'tl>) (fmtSeg: OCamlFormatSegment<'newHd>) : OCamlFormatCore<'newHd,'b,'hd->'tl> =
-        let accImpl = toWriter_core prev in
+    let private teq_ofsl (p: Teq<'a,'b>) : Teq<OCamlFormatSegmentList<'a>,OCamlFormatSegmentList<'b>> = Teq.Cong.believeMe p
+
+    let private cons_core (fmtSeg: OCamlFormatSegment<'newHd>) (prev: OCamlFormat<'hd,'b,'r,'tl>) : OCamlFormatCore<'newHd,'b,'hd->'tl> =
+        let prevCore: OCamlFormatCore<'hd,'b,'tl> = prev.Core in
+        let accImpl = toWriter_core prevCore in
         let nextImpl bws (newHd: 'newHd) (hd: 'hd) =
             // last pushed, first written.
             let nextB = write_core bws fmtSeg newHd in
             accImpl nextB hd
         in
-        OCamlFormatCore.Cons (nextImpl,fmtSeg)
+        match prevCore with
+        | OCamlFormatCore.Cons(_,fs) -> 
+            let nextFs = Segments.cons fmtSeg fs in
+            OCamlFormatCore.Cons(nextImpl, nextFs)
+        | OCamlFormatCore.Empty(_,hf,tf) ->
+            let emt = Segments.empty<unit -> 'b> in
+            let proof0 = teq_ofsl tf in
+            let emt0: OCamlFormatSegmentList<'tl> = Teq.cast proof0 emt in
+            let nextFs = Segments.cons fmtSeg emt0
+
 
     let cons (fmtSeg: OCamlFormatSegment<'newHd>) (fmt: OCamlFormat<'hd,'b,'r,'tl>) =
         let nextCore = cons_core fmt.Core fmtSeg in

@@ -19,3 +19,5 @@ public interface IFixedBracket<T, TFixed> : IBracket<T>
 {
     TFixed ToFixedBraket();
 }
+
+public readonly struct TypeHint<T> {}
