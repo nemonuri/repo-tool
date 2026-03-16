@@ -71,3 +71,13 @@ public readonly struct FormatterBasedTranscoder<T, TFormat, TFormatter> : ITrans
         return OperationStatus.Done;
     }
 }
+
+
+public readonly struct FormatterBasedTranscoder<T, TFormat, TFormatter, TMaxLength> : ITranscoderPremise<T, byte, TFormat>
+    where TFormatter : unmanaged, IFormatterPremise<T, TFormat>
+    where TMaxLength : unmanaged, IFixedSizePremise
+{
+    public OperationStatus Transcode(ReadOnlySpan<T> source, Span<byte> destination, TFormat format, out int sourcesRead, out int targetsWritten) =>
+        (new FormatterBasedTranscoder<T, TFormat, TFormatter>()).Transcode(source, destination, new(format, FixedSizeTheory.GetFixedSize<TMaxLength>()), out sourcesRead, out targetsWritten);
+}
+

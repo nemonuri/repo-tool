@@ -15,7 +15,9 @@
     <Compile Include="OCamlFileDescriptors.fs" />
     <Compile Include="ByteSpans.fs" />
     <Compile Include="Primitives.Exceptions.fs" />
-    <Compile Include="Formats.fs" /><Compile Include="TypeProxies.fs" />
+    <Compile Include="FormatBasics.fs" />
+    <Compile Include="Formats.fs" />
+    <Compile Include="TypeProxies.fs" />
     <Compile Include="Forwarded.Char.fs" />
     <Compile Include="Forwarded.Bytes.fs" />
     <Compile Include="Forwarded.String.fs" />

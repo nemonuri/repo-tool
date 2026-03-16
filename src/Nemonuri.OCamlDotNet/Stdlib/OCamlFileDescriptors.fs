@@ -17,8 +17,7 @@ type internal OCamlStandardWriterKind =
 [<RequireQualifiedAccess>]
 [<NoComparison; NoEquality>]
 [<Struct>]
-type BufferWriterShim =
-    internal
+type internal BufferWriterShim =
     // | Boxed of boxed:IBufferWriter<byte> * flusher:(IBufferWriter<byte> -> unit)
     | BinaryWriterWithPool of binaryWriterWithPool:BinaryWriterWithPool
     | StreamWithByteArrayPool of streamWithByteArrayPool:StreamWithByteArrayPool
@@ -138,12 +137,27 @@ type OCamlFileDescriptor =
     | OCamlWritableFileDescriptor of OCamlWritableFileDescriptor
     | StandardReader of reader: BinaryReader
 
+    with
+        interface IFlushable with
+            member x.Flush (): unit = 
+                match x with
+                | OCamlWritableFileDescriptor fd -> OCamlWritableFileDescriptors.toStream fd |> _.Flush()
+                | StandardReader _ -> ()
+    end
+
+module Flushables = begin
+
+    let flush (x: #IFlushable) = x.Flush()
+
+end
+
 
 module internal OCamlFileDescriptors =
 
     type t = OCamlFileDescriptor
     type private tw = OCamlWritableFileDescriptor
 
+//--- mock OCamlFileDescriptor cons/decons ---
     let inline (|StandardWriter|StandardReader|RegularFile|Other|) (x: t) =
         match x with
         | t.OCamlWritableFileDescriptor v ->
@@ -152,6 +166,20 @@ module internal OCamlFileDescriptors =
             | tw.RegularFile fs -> RegularFile fs
             | tw.Other (s, a) -> Other (s,a)
         | t.StandardReader v -> StandardReader v
+
+    let private wfd v = t.OCamlWritableFileDescriptor v
+
+    let StandardWriter v = wfd (tw.StandardWriter v)
+    let RegularFile v = wfd (tw.RegularFile v)
+    let Other v = wfd (tw.Other v)
+    let StandardReader v = t.StandardReader v
+//---|
+
+    let tryToWritable = function
+    | t.OCamlWritableFileDescriptor fd -> Some fd
+    | _ -> None
+
+    let toWritable fd = tryToWritable fd |> Option.get
 
     type out_channel = OCamlOutChannel
 

@@ -23,15 +23,15 @@ module Out_channel =
     | Open_nonblock (* open in non-blocking mode. *)
 
 
-    let stdout = { FileDescriptor = Unix.stdout |> Ofd.Writers.ofTotal; BinaryMode = false }
+    let stdout = OCamlOutChannel(Ofd.toWritable Unix.stdout, binaryMode = false)
 
-    let stderr = { FileDescriptor = Unix.stderr |> Ofd.Writers.ofTotal; BinaryMode = false }
+    let stderr = OCamlOutChannel(Ofd.toWritable Unix.stderr, binaryMode = false)
 
     let set_binary_mode (oc: t) (b: bool) = oc.BinaryMode <- b
 
     let is_binary_mode (oc: t) = oc.BinaryMode
 
-    let flush (oc: t) = Ofd.flush (oc.FileDescriptor |> Ofd.Writers.toTotal)
+    let flush (oc: t) = Flushables.flush oc //Ofd.flush (oc.FileDescriptor |> Ofd.Writers.toTotal)
 
     let output_char (oc: t) (c: OCamlChar) = Ofd.writeByteToOutChannel oc c
 

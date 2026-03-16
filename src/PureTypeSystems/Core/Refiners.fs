@@ -36,3 +36,6 @@ module Refiners =
         match r with
         | RefineOk v -> ValueSome v
         | RefineError (a,j) -> ValueNone
+    
+    let tryRefineV<'a, 'r when 'r :> IRefinerPremise<'a> and 'r : unmanaged> (x: 'a) : voption<Refined<'a, 'r>> = x |> refine |> toValueOption
+

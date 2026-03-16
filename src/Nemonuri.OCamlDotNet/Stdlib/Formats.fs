@@ -11,175 +11,66 @@ open Nemonuri.Transcodings
 open type Nemonuri.Transcodings.TranscoderTheory
 open Nemonuri.Transcodings.Utf8Encodings
 open System.Runtime.CompilerServices
+open Nemonuri.OCamlDotNet.Primitives.FormatBasics
 module Bs = Nemonuri.OCamlDotNet.Primitives.ByteSpans
 module Obs = Nemonuri.OCamlDotNet.Primitives.OCamlByteSpanSources
 
 
 [<NoEquality; NoComparison>]
 [<Struct>]
-type OCamlFormatSegmentString = | OCamlFormatSegmentString of leading:OCamlString * format:OCamlString * trailing:OCamlString
+type OCamlFormat<'TContext, 'TBuffer, 'TResult, 'TFinal> =
+    private | OCamlFormat of LegacyFormat<'TContext, 'TBuffer, 'TResult> //* Fb.IFinalizer<'TBuffer, 'TResult, 'TFinal>
 
+#if false
+type IStateMonadPremise<'TState> =
+    interface
+        abstract member Return<'T> : 'T -> ('TState -> ('T * 'TState))
 
-[<NoEquality; NoComparison>]
-[<Struct>]
-type OCamlFormatSegment<'TSource> =
-    | OCamlFormatSegment of string:OCamlFormatSegmentString * transcoder:TranscoderHandle<'TSource,byte,OCamlString>
+        abstract member Bind<'T1,'T2> : (('TState -> ('T1 * 'TState)) * ('T1 -> 'TState -> ('T2 * 'TState))) -> ('TState -> ('T2 * 'TState))
+    end
 
-[<NoEquality; NoComparison>]
-[<Struct>]
-type private Data = | Data of OCamlFormatSegmentString * transcoder:nativeint * tailExtractor:nativeint //* typeCache:System.Type
-type private datas = list<Data>
+type IFolderPremise<'TState> =
+    interface
+        abstract member Fold<'T> : 'TState -> 'T -> 'TState
+    end
 
-[<NoEquality; NoComparison>]
-[<Struct>]
-type private CurriedExtractor<'TContext> = | CurriedExtractor of nativeint
+// OCamlFormatSegment<'TSource>
 
-[<NoEquality; NoComparison>]
-[<Struct>]
-type OCamlFormatSegmentList<'ctx> = private { Extractor: CurriedExtractor<'ctx>; Datas: datas }
-
-[<NoEquality; NoComparison>]
-[<RequireQualifiedAccess>]
-type internal OCamlFormatCore<'THead, 'TBuffer, 'TTail when 'TBuffer :> IBufferWriter<byte>> =  
-    private
-    | Empty of writer:('TBuffer -> unit -> 'TBuffer) * headTypeProof:Teq<unit,'THead> * tailTypeProof:Teq<'TBuffer,'TTail>
-    | Cons of writer:('TBuffer -> 'THead -> 'TTail) * formatSegments:OCamlFormatSegmentList<'THead -> 'TTail>
-
-[<NoEquality; NoComparison>]
-[<Struct>]
-type OCamlFormat<'THead, 'TBuffer, 'TResult, 'TTail when 'TBuffer :> IBufferWriter<byte>> =
-    internal {
-        Core: OCamlFormatCore<'THead, 'TBuffer, 'TTail>;
-        Drainer: 'TBuffer -> 'TResult
-    }
+type IOCamlFormatter<'TBuffer> =
+    interface
+        abstract member Format<'TSource> : ('TBuffer * OCamlFormatSegment<'TSource> * 'TSource) -> 'TBuffer
+    end
+#endif
 
 module Formats =
 
-    [<RequireQualifiedAccess>]
-    module Segments = begin
+    let write (fin: IFinalizer<_,_,_>) env (OCamlFormat(lfmt)) ctx =
+        let exnOpt =
+            try
+                Legacies.toWriterFactory lfmt env ctx; None
+            with e -> 
+                Some e
+        in
+        fin.Finalize(&env.BufferState, &env.ResultState, exnOpt)
 
-        open Microsoft.FSharp.NativeInterop
-        open System.Runtime.CompilerServices
-        open Nemonuri.PureTypeSystems.Primitives
-        open Nemonuri.PureTypeSystems.TypeShadowing
-        open DotNetNativeInts
+    let empty = OCamlFormat(Legacies.empty)
 
-        type private TranscoderHandle<'TSource> = TranscoderHandle<'TSource,byte,OCamlString>
-
-        let (|Flatten|) (OCamlFormatSegment(OCamlFormatSegmentString(le, fo, tr), tc)) = le,fo,tr,tc
-
-        type EmptySegmentList<'TSentinel> = OCamlFormatSegmentList<'TSentinel>
-        let empty<'TSentinel> : EmptySegmentList<'TSentinel> = { Extractor = CurriedExtractor 0; Datas = [] }
-
-        let inline (|NullSegment|HasValueSegment|) (fs: OCamlFormatSegment<'s>) =
-            match fs with 
-            | Flatten(_,_,_,tc) -> 
-            match tc.HasValue with
-            | true -> HasValueSegment fs
-            | false -> NullSegment empty
-
-        type private extData<'s> = System.ValueTuple<OCamlFormatSegmentString, TranscoderHandle<'s>>
-        type private extResult<'s,'tctx> = System.ValueTuple<extData<'s>, OCamlFormatSegmentList<'tctx>>
-
-
-        type private ExtractorPremise<'s,'tctx> =
-            struct
-                interface ICurriedTypeFuncPremise<'s, OCamlFormatSegmentList<'s -> 'tctx>> with
-                    member _.Invoke (state: OCamlFormatSegmentList<'s -> 'tctx>): 'T = 
-                        match typeof<extResult<'s,'tctx>> = typeof<'T> with
-                        | false -> invalidOp $"Invalid type. Expected = {typeof<extResult<'s,'tctx>>}, Actual = {typeof<'T>}"
-                        | true ->
-                        match state.Datas with
-                        | [] -> invalidOp $"Invalid deconstruction. {nameof(state)} is empty."
-                        | (Data(ofss, tc, te))::tailDatas ->
-                            let handle: TranscoderHandle<'s> = ofNativeInt tc in
-                            let extData : extData<'s> = struct ( ofss, handle ) in
-                            let tail : OCamlFormatSegmentList<'tctx> = { Extractor = CurriedExtractor te; Datas = tailDatas } in
-                            let result : extResult<'s,'tctx> = struct ( extData, tail ) in
-                            result |> unbox
-            end
-
-        let cons (hd: OCamlFormatSegment<'s>) (tl: OCamlFormatSegmentList<'ctx>) : OCamlFormatSegmentList<'s -> 'ctx> = 
-            let headExtractor: CurriedTypeFuncHandle<'s,OCamlFormatSegmentList<'s -> 'ctx>,extResult<'s,'ctx>> = CurriedTypeFuncTheory.ToHandle<'s,OCamlFormatSegmentList<'s->'ctx>,ExtractorPremise<'s,'ctx>,extResult<'s,'ctx>>() in
-            let (OCamlFormatSegment(ofss: OCamlFormatSegmentString, tch: TranscoderHandle<'s>)) = hd in
-            let headData = Data(ofss, toNativeInt tch, toNativeInt tl.Extractor) in
-            { Extractor = CurriedExtractor (toNativeInt headExtractor); Datas = headData::(tl.Datas) }
-
-        let decons (l: OCamlFormatSegmentList<'s -> 'ctx>) =
-            let (CurriedExtractor n) = l.Extractor in
-            let ext : CurriedTypeFuncHandle<'s,OCamlFormatSegmentList<'s -> 'ctx>,extResult<'s,'ctx>> = ofNativeInt n in
-            let (struct (struct (ofss: OCamlFormatSegmentString, tch: TranscoderHandle<'s>), tl: OCamlFormatSegmentList<'ctx>)) = ext.Invoke(l) in
-            let hd = OCamlFormatSegment(ofss, tch) in
-            struct ( hd, tl )
-
-        type TryDeconsPremise<'TSentinel> =
-            struct
-                static member TryDecons(_: OCamlFormatSegmentList<'TSentinel>) = struct (Unchecked.defaultof<TypeHint<'TSentinel>>, ValueNone)
-
-                static member TryDecons<'T1,'T2>(l: OCamlFormatSegmentList<'T1 -> 'T2>) = struct (Unchecked.defaultof<TypeHint<'TSentinel>>, ValueSome (decons l))
-            end
-
-        let inline (|Nil|Cons|) l =
-            let inline call (p: ^p) (l': ^l) = ((^p or ^l) : (static member TryDecons: _ -> _) l') in
-            let r = (call Unchecked.defaultof<TryDeconsPremise<_>> l) in
-            match r with
-            | struct (_: TypeHint<^TSentinel>, ValueNone) -> Nil
-            | struct (_: TypeHint<^TSentinel>, ValueSome (struct (hd, tl))) -> Cons (hd, tl)
-
-#if false
-        type IListFolder<'TState> =
-            interface
-                abstract member Step<'T> : 'TState -> 'T -> OCamlFormatSegment<'T> -> 'TState
-            end
-        
-        let tryFold (folder: #IListFolder<'state>) (seed: 'state) (l: SegmentList<'s -> 'ctx>) (s: 's) = 
-            match l with
-            | Nil -> Result.Error (seed, l)
-            | Cons (hd, tl) -> Result.Ok (folder.Step seed s hd, tl)
-        
-
-        //type TypeHint<'T> = struct end
-
-        //let getTypeHint<'T1,'T2>(tl: 'T1 -> 'T2) = Unchecked.defaultof
-
-        type FoldPremise<'TState, 'TFolder when 'TFolder :> IListFolder<'TState>> =
-            struct
-                static member TryFold(folder: 'TFolder, seed: 'TState, l: SegmentList<_>) =
-                    match l with
-                    | Cons (hd, tl) -> (folder.Step<_> seed hd, tl)
-                    | Nil -> (seed, { Extractor = Unchecked.defaultof<_> ; Datas = [] })
-                
-                static member Fold(folder, seed, l) =
-                    let (ns, nl) = FoldPremise<'TState, 'TFolder>.TryFold(folder, seed, l) in
-                    match nl with
-                    | Cons (nhd, ntl) -> 
-                        let nl2 = cons nhd ntl in
-
-                    //FoldPremise<'TState, 'TFolder>.Fold(folder, ns, nl)
-            end
-
-
-
-        let inline fold (folder: #IListFolder<'state>) (seed: 'state) l =
-            match l with
-            | Nil -> seed
-            | Cons (hd, tl) ->
-                let rec fold_rec seed0 hd0 = function
-                    | Nil -> folder.Step seed0 hd0
-                    | Cons (hd1, tl2) -> fold_rec (folder.Step seed0 hd0) hd1 tl2
-                fold_rec seed hd tl
-
-
-        //let rec inline fold (folder: ^Folder) (seed: ^State) l =
-        //    let inline call 
-#endif
-       
-
-    end
+    let cons hd (tl: OCamlFormat<_,_,_,_>) = 
+        let (OCamlFormat(ltl)) = tl in
+        OCamlFormat(Legacies.cons hd ltl)
 
 
 
 #if false
+    type IFinalizer<'TBuffer, 'TOk, 'TError> = Fb.IFinalizer<'TBuffer, 'TOk, ('TOk * 'TError)>
+
+    type ToFinalizerPremise =
+        struct
+            static member ToFinalizer
+        end
+
+
+
     type transcoder<'a> = TranscoderHandle<'a,byte,OCamlString>
 
     let toFormatter (tc: transcoder<'a>) = 
@@ -208,7 +99,7 @@ module Formats =
             let proof0 = Teq.Cong.func hf tf in
             let proof1: Teq<OCamlFormatSegmentList<(unit -> 'b)>,OCamlFormatSegmentList<('hd -> 'tl)>> = teq_ofsl proof0 in
             Teq.cast proof1 emt
-#endif
+
 
     let empty<'b when 'b :> IBufferWriter<byte>> : OCamlFormat<unit,'b,unit,'b> = 
         {
@@ -271,8 +162,6 @@ module Formats =
 
 
         
-
-#if false
     [<Struct>]
     [<NoEquality; NoComparison>]
     [<RequireQualifiedAccess>]

@@ -42,8 +42,7 @@ module DotNetNativeInts =
                 member _.Judge (pre: inref<'l>, post: byref<'l>): Judgement = EqualSize<'l, 'r>.Judge(&pre, &post)
         end
 
-    let private tryRefineOfEqualSize (handle: 'h) =
-        Rf.refine<'h, EqualSize<'h, nativeint>>(handle) |> Rf.toValueOption
+    let private tryRefineOfEqualSize (handle: 'h) = Rf.tryRefineV<'h, EqualSize<'h, nativeint>>(handle)
     
     let private refinedToNativeInt (h: Refined<'h, EqualSize<'h, nativeint>>) : nativeint =
         let mutable h' = h.Value in
@@ -52,8 +51,7 @@ module DotNetNativeInts =
     
     let toNativeInt (h: 'handle) = tryRefineOfEqualSize h |> ValueOption.get |> refinedToNativeInt
 
-    let private tryRefineToEqualSize<'h when 'h : unmanaged>(n: nativeint) =
-        Rf.refine<nativeint, EqualSize<nativeint, 'h>>(n) |> Rf.toValueOption
+    let private tryRefineToEqualSize<'h when 'h : unmanaged>(n: nativeint) = Rf.tryRefineV<nativeint, EqualSize<nativeint, 'h>>(n) 
     
     let private ofRefinedNativeInt (n: Refined<nativeint, EqualSize<nativeint, 'h>>) : 'h =
         let mutable n' = n.Value in

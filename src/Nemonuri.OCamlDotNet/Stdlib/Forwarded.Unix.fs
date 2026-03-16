@@ -86,15 +86,15 @@ module Unix =
 
     type file_descr = OCamlFileDescriptor
 
-    let stdin = StandardReader StandardIOTheory.Input
+    let stdin = Ofd.StandardReader StandardIOTheory.Input
     
-    let stdout = StandardWriter (StandardIOTheory.Output, Output)
+    let stdout = Ofd.StandardWriter (StandardIOTheory.Output, Output)
 
-    let stderr = StandardWriter (StandardIOTheory.Error, Error)
+    let stderr = Ofd.StandardWriter (StandardIOTheory.Error, Error)
 
     let isatty (fd: file_descr) = 
         match fd with
-        | StandardReader _ | StandardWriter _ -> true
+        | Ofd.StandardReader _ | Ofd.StandardWriter _ -> true
         | _ -> false
 
     let single_write (fd: file_descr) (buf: OCamlBytes) (pos: OCamlInt) (len: OCamlInt) = 
