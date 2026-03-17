@@ -8,113 +8,68 @@ open Nemonuri.Transcodings
 open Nemonuri.ByteChars
 open Nemonuri.ByteChars.IO
 open Microsoft.FSharp.NativeInterop
+open Nemonuri.OCamlDotNet.Primitives.FileDescriptorBasics
 module Obs = Nemonuri.OCamlDotNet.Primitives.OCamlByteSpanSources
-
-type internal OCamlStandardWriterKind =
-| Output
-| Error
-
-[<RequireQualifiedAccess>]
-[<NoComparison; NoEquality>]
-[<Struct>]
-type internal BufferWriterShim =
-    // | Boxed of boxed:IBufferWriter<byte> * flusher:(IBufferWriter<byte> -> unit)
-    | BinaryWriterWithPool of binaryWriterWithPool:BinaryWriterWithPool
-    | StreamWithByteArrayPool of streamWithByteArrayPool:StreamWithByteArrayPool
-    with
-
-        member x.Advance (count: int) = 
-            match x with
-            // | Boxed (b, _) -> b.Advance(count)
-            | BinaryWriterWithPool b -> b.Advance(count)
-            | StreamWithByteArrayPool b -> b.Advance(count)
-        
-        member x.GetMemory (sizeHint: int) = 
-            match x with
-            // | Boxed (b, _) -> b.GetMemory(sizeHint)
-            | BinaryWriterWithPool b -> b.GetMemory(sizeHint)
-            | StreamWithByteArrayPool b -> b.GetMemory(sizeHint)
-
-        member x.GetSpan (sizeHint: int) = 
-            match x with
-            // | Boxed (b, _) -> b.GetSpan(sizeHint)
-            | BinaryWriterWithPool b -> b.GetSpan(sizeHint)
-            | StreamWithByteArrayPool b -> b.GetSpan(sizeHint)
-
-        member x.Flush (): unit = 
-            match x with
-            // | Boxed (b, f) -> f b;
-            | BinaryWriterWithPool b -> b.Dispose();
-            | StreamWithByteArrayPool b -> b.Dispose();
-
-        interface IBufferWriter<byte> with
-
-            member x.Advance (count: int) = x.Advance count
-            
-            member x.GetMemory (sizeHint: int) = x.GetMemory sizeHint
-
-            member x.GetSpan (sizeHint: int) = x.GetSpan sizeHint
-        
-        interface IFlushable with
-
-            member x.Flush (): unit = x.Flush()
-    end
-
-[<RequireQualifiedAccess>]
-type internal OCamlWritableFileDescriptor =
-    | StandardWriter of writer: BinaryWriter * kind: OCamlStandardWriterKind
-    | RegularFile of fileStream: FileStream
-    | Other of stream: Stream * aux: objnull
+module Wi = Writables.Internals
 
 
-module internal OCamlWritableFileDescriptors =
 
-    type t = OCamlWritableFileDescriptor
-    type B = BufferWriterShim
 
-    let toStream (x: t) =
-        match x with
-        | t.StandardWriter (bw, _) -> bw.BaseStream
-        | t.RegularFile s -> s
-        | t.Other (s, _) -> s
-
-    let toBufferWriter (x: t) : BufferWriterShim =
-        match x with
-        | t.StandardWriter(w, _) -> B.BinaryWriterWithPool (new BinaryWriterWithPool(null, w, Unchecked.defaultof<_>))
-        | s -> B.StreamWithByteArrayPool (new StreamWithByteArrayPool(null, toStream s, Unchecked.defaultof<_>))
-    
-    let ensureBufferWriter (maybe: voption<BufferWriterShim>) (x: t) =
-        match maybe with
-        | ValueSome b -> b
-        | ValueNone -> toBufferWriter x
-
-module Wfd = OCamlWritableFileDescriptors
 
 type OCamlOutChannel =
     class
-        val internal FileDescriptor : OCamlWritableFileDescriptor;
+        val internal Writable : Writable;
         val mutable internal BinaryMode: bool;
-        val mutable private InnerBufferWriter: voption<BufferWriterShim>;
-        internal new(fd: OCamlWritableFileDescriptor, [<Struct>] ?binaryMode : bool) =
-            { FileDescriptor = fd; BinaryMode = defaultValueArg binaryMode false; InnerBufferWriter = ValueNone }
+        val mutable private BinaryModeWriterSlot: voption<BinaryModeWriter>;
+        val mutable private TextModeWriterSlot: voption<TextModeWriter>;
+        internal new(writable: Writable, [<Struct>] ?binaryMode : bool) =
+            { 
+                Writable = writable; 
+                BinaryMode = defaultValueArg binaryMode false; 
+                BinaryModeWriterSlot = ValueNone;
+                TextModeWriterSlot = ValueNone;
+            }
         
-        member private x.EnsuredBufferWriter = 
-            match x.InnerBufferWriter with
+        member private x.EnsuredBinaryModeWriter = 
+            match x.BinaryModeWriterSlot with
             | ValueSome v -> v
             | ValueNone -> 
-                let v = Wfd.ensureBufferWriter x.InnerBufferWriter x.FileDescriptor in
-                x.InnerBufferWriter <- ValueSome v; 
+                let v = Wi.toEnsuredBinaryModeWriter x.BinaryModeWriterSlot x.Writable in
+                x.BinaryModeWriterSlot <- ValueSome v; 
                 v
 
-        member x.Advance (count: int) = x.EnsuredBufferWriter.Advance count
+        member private x.EnsuredTextModeWriter = 
+            match x.TextModeWriterSlot with
+            | ValueSome v -> v
+            | ValueNone -> 
+                let v = Wi.toEnsuredTextModeWriter x.TextModeWriterSlot x.Writable in
+                x.TextModeWriterSlot <- ValueSome v; 
+                v
 
-        member x.GetMemory (sizeHint: int) = x.EnsuredBufferWriter.GetMemory sizeHint
+        member x.Advance (count: int) = 
+            if x.BinaryMode then
+                x.EnsuredBinaryModeWriter.Advance count
+            else
+                x.EnsuredTextModeWriter.Advance count
 
-        member x.GetSpan (sizeHint: int) = x.EnsuredBufferWriter.GetSpan sizeHint
+        member x.GetMemory (sizeHint: int) = 
+            if x.BinaryMode then
+                x.EnsuredBinaryModeWriter.GetMemory sizeHint
+            else
+                x.EnsuredTextModeWriter.GetMemory sizeHint
 
-        member x.Flush() = //x.EnsuredBufferWriter.Flush(); x.InnerBufferWriter <- ValueNone
-            match x.InnerBufferWriter with
-            | ValueSome v -> v.Flush(); x.InnerBufferWriter <- ValueNone
+        member x.GetSpan (sizeHint: int) = 
+            if x.BinaryMode then
+                x.EnsuredBinaryModeWriter.GetSpan sizeHint
+            else
+                x.EnsuredTextModeWriter.GetSpan sizeHint
+
+        member x.Flush() = 
+            match x.BinaryModeWriterSlot with
+            | ValueSome v -> v.Dispose(); x.BinaryModeWriterSlot <- ValueNone
+            | ValueNone -> ()
+            match x.TextModeWriterSlot with
+            | ValueSome v -> v.Dispose(); x.TextModeWriterSlot <- ValueNone
             | ValueNone -> ()
         
         interface IBufferWriter<byte> with
@@ -130,32 +85,20 @@ type OCamlOutChannel =
             member x.Flush (): unit = x.Flush()
     end
 
-
-[<RequireQualifiedAccess>]
-type OCamlFileDescriptor = 
-    internal
-    | OCamlWritableFileDescriptor of OCamlWritableFileDescriptor
-    | StandardReader of reader: BinaryReader
-
+type OCamlFileDescriptor = internal { Writable: Writable option; Readable: Readable option }
     with
+        member x.Flush () =
+            match x.Writable with | Some w -> w.Flush() | None -> ();
+            
         interface IFlushable with
-            member x.Flush (): unit = 
-                match x with
-                | OCamlWritableFileDescriptor fd -> OCamlWritableFileDescriptors.toStream fd |> _.Flush()
-                | StandardReader _ -> ()
+            member x.Flush (): unit = x.Flush ()
     end
 
-module Flushables = begin
 
-    let flush (x: #IFlushable) = x.Flush()
-
-end
-
-
+#if false
 module internal OCamlFileDescriptors =
 
     type t = OCamlFileDescriptor
-    type private tw = OCamlWritableFileDescriptor
 
 //--- mock OCamlFileDescriptor cons/decons ---
     let inline (|StandardWriter|StandardReader|RegularFile|Other|) (x: t) =
@@ -217,7 +160,7 @@ module internal OCamlFileDescriptors =
     module Writers =
 
         type private O = OCamlWritableFileDescriptor
-        type private B = BufferWriterShim
+        type private B = BinaryModeWriter
 
         let toTotal (fd: OCamlWritableFileDescriptor) = OCamlFileDescriptor.OCamlWritableFileDescriptor fd
         
@@ -308,3 +251,4 @@ module internal OCamlFileDescriptors =
 
     let writeOCamlBytesToOutChannel (oc: out_channel) bs pos len =
         O.monad { let! oc' = oc in return! writeOCamlBytesWithOptionsIfNotStdIn oc'.fd bs pos len oc'.opt }
+#endif

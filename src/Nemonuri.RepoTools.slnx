@@ -23,6 +23,9 @@
     <Project Path="test/Nemonuri.ByteChars.UnitTests/Nemonuri.ByteChars.UnitTests.csproj" />
     <Project Path="test/Nemonuri.OCamlDotNet/PPrint/Sample1/Nemonuri.OCamlDotNet.PPrint.Sample1.fsproj" />
   </Folder>
+  <Folder Name="/Posix/" >
+    <Project Path="Posix/Core/Nemonuri.Posix.Core.csproj" />
+  </Folder>
   <Folder Name="/PureTypeSystems/">
     <Project Path="PureTypeSystems/Primitives/Nemonuri.PureTypeSystems.Primitives.csproj" />
     <Project Path="PureTypeSystems/Core/Nemonuri.PureTypeSystems.Core.fsproj" />

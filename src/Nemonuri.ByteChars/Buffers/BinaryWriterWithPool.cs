@@ -25,14 +25,6 @@ public struct BinaryWriterWithPool : IBufferWriter<byte>, IDisposable
 
     private readonly BinaryWriter Writer => _writer ?? BinaryWriter.Null;
 
-    private readonly int DefaultBufferSize => _defaultBufferSize > 0 ? _defaultBufferSize : InternalConstants.StackAllocThreshold;
-
-    private readonly int GetNewSize(int sizeHint)
-    {
-        Guard.IsGreaterThanOrEqualTo(sizeHint, 0);
-        return sizeHint is 0 ? DefaultBufferSize : sizeHint;
-    }
-
     public void Advance(int count)
     {
         var buffer = Interlocked.Exchange(ref _buffer, null);
@@ -43,19 +35,10 @@ public struct BinaryWriterWithPool : IBufferWriter<byte>, IDisposable
         }
     }
 
-    public Memory<byte> GetMemory(int sizeHint = 0)
-    {
-        int newSize = GetNewSize(sizeHint);
-        Pool.Resize(ref _buffer, newSize);
-        return new(_buffer, 0, newSize);
-    }
+    public Memory<byte> GetMemory(int sizeHint = 0) =>
+        ArrayPoolTheory.ResizeAndSlice(Pool, ref _buffer, sizeHint, _defaultBufferSize).AsMemory();
 
-    public Span<byte> GetSpan(int sizeHint = 0)
-    {
-        int newSize = GetNewSize(sizeHint);
-        Pool.Resize(ref _buffer, newSize);
-        return new(_buffer, 0, newSize);
-    }
+    public Span<byte> GetSpan(int sizeHint = 0) => GetMemory(sizeHint).Span;
 
     public void Dispose()
     {

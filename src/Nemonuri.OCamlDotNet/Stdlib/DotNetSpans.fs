@@ -59,3 +59,54 @@ module DotNetNativeInts =
         r
     
     let ofNativeInt (n: nativeint) = tryRefineToEqualSize n |> ValueOption.get |> ofRefinedNativeInt
+
+module DotNetStreams = begin
+
+    open System.IO
+    open Unchecked
+    open Nemonuri.PureTypeSystems
+    open Nemonuri.PureTypeSystems.Primitives
+    module Rf = Nemonuri.PureTypeSystems.Refiners
+
+    type CanRead<'TStream when 'TStream :> Stream> = struct
+
+        static member Judge (pre: inref<'TStream>, post: byref<'TStream>): Judgement = 
+            match pre.CanRead with
+            | true -> post <- pre; Judgement.True
+            | false -> post <- defaultof<_>; Judgement.False
+
+        interface IRefinerPremise<'TStream> with
+            member _.Judge (pre, post): Judgement = CanRead.Judge(&pre, &post)
+    end
+
+    type CanWrite<'TStream when 'TStream :> Stream> = struct
+
+        static member Judge (pre: inref<'TStream>, post: byref<'TStream>): Judgement = 
+            match pre.CanWrite with
+            | true -> post <- pre; Judgement.True
+            | false -> post <- defaultof<_>; Judgement.False
+
+        interface IRefinerPremise<'TStream> with
+            member _.Judge (pre, post): Judgement = CanRead.Judge(&pre, &post)
+    end
+
+    let tryRefineToCanRead (s: 's) = Rf.tryRefineV<'s,CanRead<'s>> s
+
+    let tryRefineToCanWrite (s: 's) = Rf.tryRefineV<'s,CanWrite<'s>> s
+
+end
+
+namespace Nemonuri.OCamlDotNet.Primitives.DotNetBasics
+
+module ByteBufferWriters = begin
+
+    open System
+    open Nemonuri.Transcodings
+
+    // <'bw when 'bw :> IBufferWriter<byte>>
+    let write (bw: byref<'bw>) (rbs: ReadOnlySpan<byte>) =
+        let mutable sourcesRead = 0 in
+        TranscoderTheory.TranscodeWhileDestinationTooSmall<byte,byte,Identity<byte>,'bw>(rbs, &bw, &sourcesRead);
+        sourcesRead
+
+end

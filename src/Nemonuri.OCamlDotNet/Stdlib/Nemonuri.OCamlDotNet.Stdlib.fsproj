@@ -12,6 +12,8 @@
     <Compile Include="HashMultiMap.fs" />
     <Compile Include="Primitives.fs" />
     <Compile Include="OCamlByteSpanSources.fs" />
+    
+    <Compile Include="FileDescriptorBasics.fs" />
     <Compile Include="OCamlFileDescriptors.fs" />
     <Compile Include="ByteSpans.fs" />
     <Compile Include="Primitives.Exceptions.fs" />
@@ -39,5 +41,8 @@
     <PackageReference Include="FSharp.Core" />
     <ProjectReference Include="..\..\Nemonuri.ByteChars\Nemonuri.ByteChars.csproj" />
     <ProjectReference Include="..\..\PureTypeSystems\Core\Nemonuri.PureTypeSystems.Core.fsproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\Posix\Core\Nemonuri.Posix.Core.csproj" />
   </ItemGroup>
 </Project>

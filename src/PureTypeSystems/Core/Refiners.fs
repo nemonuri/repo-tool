@@ -39,3 +39,4 @@ module Refiners =
     
     let tryRefineV<'a, 'r when 'r :> IRefinerPremise<'a> and 'r : unmanaged> (x: 'a) : voption<Refined<'a, 'r>> = x |> refine |> toValueOption
 
+    let trustMe<'a, 'r when 'r :> IRefinerPremise<'a>> (a: 'a) = Refined<'a, 'r>(a)
