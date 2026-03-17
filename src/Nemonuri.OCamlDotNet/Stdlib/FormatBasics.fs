@@ -338,6 +338,14 @@ module internal Finalizers = begin
                 member _.Tap (arg: byref<'T>): unit = DisposeTap<'T>.Tap(&arg)
         end
 
+    type FlushTap<'T when 'T :> Nemonuri.Buffers.IFlushable> =
+        struct
+            static member Tap (arg: byref<'T>) = arg.Flush()
+
+            interface ITapPremise<'T> with
+                member _.Tap (arg: byref<'T>): unit = FlushTap<'T>.Tap(&arg)
+        end
+
     type TapFinalizer<'b,'r,'bt,'rt 
                         when 'bt :> ITapPremise<'b> 
                         and 'bt : unmanaged
