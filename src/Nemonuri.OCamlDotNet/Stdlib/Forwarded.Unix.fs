@@ -5,11 +5,15 @@ open System.Text
 open System.Diagnostics
 open Nemonuri.ByteChars.IO
 open Nemonuri.OCamlDotNet.Primitives
+open Nemonuri.Transcodings
 module Obs = Nemonuri.OCamlDotNet.Primitives.OCamlByteSpanSources
+module Fd = Nemonuri.OCamlDotNet.Primitives.FileDiscriptors
 module Ofd = Nemonuri.OCamlDotNet.Primitives.OCamlFileDescriptors
 
 /// https://ocaml.org/manual/5.4/api/Unix.html
 module Unix =
+
+    type private Th = Nemonuri.Transcodings.TranscoderTheory
 
     type error = 
     | E2BIG    (* Argument list too long *)
@@ -84,19 +88,15 @@ module Unix =
 
     exception Unix_error of error * OCamlString * OCamlString
 
-    type file_descr = OCamlFileDescriptor
-
-    let stdin = Ofd.StandardReader StandardIOTheory.Input
+    let stdin = Ofd.ofFileDescriptor Fd.stdin
     
-    let stdout = Ofd.StandardWriter (StandardIOTheory.Output, Output)
+    let stdout = Ofd.ofFileDescriptor Fd.stdout
 
-    let stderr = Ofd.StandardWriter (StandardIOTheory.Error, Error)
+    let stderr = Ofd.ofFileDescriptor Fd.stderr
 
-    let isatty (fd: file_descr) = 
-        match fd with
-        | Ofd.StandardReader _ | Ofd.StandardWriter _ -> true
-        | _ -> false
+    let isatty (fd: OCamlFileDescriptor) = Ofd.toFileDescriptor fd |> _.IsAtty()
 
-    let single_write (fd: file_descr) (buf: OCamlBytes) (pos: OCamlInt) (len: OCamlInt) = 
-        Ofd.writeOCamlBytesWithOptionsIfNotStdIn fd buf pos len Ofd.None
-        len
+    let single_write (fd: OCamlFileDescriptor) (buf: OCamlBytes) (pos: OCamlInt) (len: OCamlInt) : OCamlInt = 
+        let mutable fd' = fd in
+        let sliced = Obs.bytesSlice buf pos len in
+        Th.TranscodeWhileDestinationTooSmall<byte,byte,Identity<byte>,OCamlFileDescriptor>((Obs.bytesToReadOnlySpan sliced), &fd')

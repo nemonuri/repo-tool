@@ -54,4 +54,28 @@ public class PosixFileInfo : IDisposable
             _stream?.Dispose();
         }
     }
+
+    public bool CanRead
+    {
+        get
+        {
+            if (IsClosed) { return false; }
+            if (!HasStream) { return false; }
+            if (!Stream.CanRead) { return false; }
+            return true;
+        }
+    }
+
+    public bool CanWrite
+    {
+        get
+        {
+            if (IsClosed) { return false; }
+            if (!HasStream) { return false; }
+            if (!Stream.CanWrite) { return false; }
+            return true;
+        }
+    }
+
+    public FileDescriptor? FileDiscriptorOrNull => _fileDescriptor;
 }

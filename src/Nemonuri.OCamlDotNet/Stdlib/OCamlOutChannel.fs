@@ -3,17 +3,53 @@ namespace Nemonuri.OCamlDotNet.Primitives
 open System
 open System.IO
 open System.Buffers
+open Nemonuri.Posix
 open Nemonuri.Buffers
 open Nemonuri.Transcodings
 open Nemonuri.ByteChars
 open Nemonuri.ByteChars.IO
 open Microsoft.FSharp.NativeInterop
-open Nemonuri.OCamlDotNet.Primitives.FileDescriptorBasics
+open Nemonuri.OCamlDotNet.Primitives.FileBasics
 module Obs = Nemonuri.OCamlDotNet.Primitives.OCamlByteSpanSources
-module Wi = Writables.Internals
+module Vo = Nemonuri.OCamlDotNet.Primitives.Internals.ValueOptions
 
 
+[<NoComparison; NoEquality>]
+type OCamlFileDescriptor =  
+    internal { 
+        FileDescriptor: FileDescriptor; 
+        mutable WriterSlot: voption<BinaryModeWriter>;
+        mutable ReaderSlot: voption<DrainableArrayBuilder<byte>>
+    }
+    with
+        member private x.EnsuredWriter = Vo.defaultWithRef &x.WriterSlot (fun _ -> x.FileDescriptor |> Files.createWriter)
 
+        member x.Advance (count: int) = x.EnsuredWriter.Advance count
+        
+        member x.GetMemory (sizeHint: int) = x.EnsuredWriter.GetMemory sizeHint
+
+        member x.GetSpan (sizeHint: int) = x.EnsuredWriter.GetSpan sizeHint
+
+        member x.FlushWriter () =
+            Vo.flushRef &x.WriterSlot (fun x -> x.Dispose())
+            
+        interface IBufferWriter<byte> with
+
+            member x.Advance (count: int) = x.Advance count
+            
+            member x.GetMemory (sizeHint: int) = x.GetMemory sizeHint
+
+            member x.GetSpan (sizeHint: int) = x.GetSpan sizeHint
+
+        interface IFlushable with
+            member x.Flush (): unit = x.FlushWriter ()
+    end
+
+module OCamlFileDescriptors =
+
+    let ofFileDescriptor (fd: FileDescriptor) = { FileDescriptor = fd; WriterSlot = ValueNone; ReaderSlot = ValueNone }
+
+    let toFileDescriptor (ofd: OCamlFileDescriptor) = ofd.FileDescriptor
 
 
 type OCamlOutChannel =
@@ -30,21 +66,9 @@ type OCamlOutChannel =
                 TextModeWriterSlot = ValueNone;
             }
         
-        member private x.EnsuredBinaryModeWriter = 
-            match x.BinaryModeWriterSlot with
-            | ValueSome v -> v
-            | ValueNone -> 
-                let v = Wi.toEnsuredBinaryModeWriter x.BinaryModeWriterSlot x.Writable in
-                x.BinaryModeWriterSlot <- ValueSome v; 
-                v
+        member private x.EnsuredBinaryModeWriter = Vo.defaultWithRef &x.BinaryModeWriterSlot (fun _ -> x.Writable |> Writables.createBinaryModeWriter)
 
-        member private x.EnsuredTextModeWriter = 
-            match x.TextModeWriterSlot with
-            | ValueSome v -> v
-            | ValueNone -> 
-                let v = Wi.toEnsuredTextModeWriter x.TextModeWriterSlot x.Writable in
-                x.TextModeWriterSlot <- ValueSome v; 
-                v
+        member private x.EnsuredTextModeWriter = Vo.defaultWithRef &x.TextModeWriterSlot (fun _ -> x.Writable |> Writables.createTextModeWriter)
 
         member x.Advance (count: int) = 
             if x.BinaryMode then
@@ -65,12 +89,8 @@ type OCamlOutChannel =
                 x.EnsuredTextModeWriter.GetSpan sizeHint
 
         member x.Flush() = 
-            match x.BinaryModeWriterSlot with
-            | ValueSome v -> v.Dispose(); x.BinaryModeWriterSlot <- ValueNone
-            | ValueNone -> ()
-            match x.TextModeWriterSlot with
-            | ValueSome v -> v.Dispose(); x.TextModeWriterSlot <- ValueNone
-            | ValueNone -> ()
+            Vo.flushRef &x.BinaryModeWriterSlot (fun x -> x.Dispose());
+            Vo.flushRef &x.TextModeWriterSlot (fun x -> x.Dispose());
         
         interface IBufferWriter<byte> with
 
@@ -85,14 +105,7 @@ type OCamlOutChannel =
             member x.Flush (): unit = x.Flush()
     end
 
-type OCamlFileDescriptor = internal { Writable: Writable option; Readable: Readable option }
-    with
-        member x.Flush () =
-            match x.Writable with | Some w -> w.Flush() | None -> ();
-            
-        interface IFlushable with
-            member x.Flush (): unit = x.Flush ()
-    end
+
 
 
 #if false

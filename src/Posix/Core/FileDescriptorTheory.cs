@@ -11,4 +11,22 @@ public static class FileDescriptorTheory
 
         return PosixFileInfoTheory.TryGetStandardFromFileDiscriptor(fd, out posixFileInfo);
     }
+
+    public static bool CanWrite(FileDescriptor fd)
+    {
+        if (!TryToPosixFileInfo(fd, out var pfi)) { return false; }
+        return pfi.CanWrite;
+    }
+
+    public static bool CanRead(FileDescriptor fd)
+    {
+        if (!TryToPosixFileInfo(fd, out var pfi)) { return false; }
+        return pfi.CanRead;
+    }
+
+    public static bool IsClosed(FileDescriptor fd)
+    {
+        if (!TryToPosixFileInfo(fd, out var pfi)) { return false; }
+        return pfi.IsClosed;
+    }
 }

@@ -41,6 +41,21 @@ module Transcoders = begin
             | (L "X"B) | (L "x"B) -> Sf('X')
             | _ -> Sf()
 
+        type private ByteChar = struct // Identity
+            interface IUtf8Formatter<byte> with
+                member _.TryFormat (value: byte, destination: Span<byte>, format: OCamlString, bytesWritten: byref<int>): bool = 
+                    if destination.Length > 0 then
+                        destination[0] <- value; true
+                    else
+                        false
+        end
+
+        type private ByteCharLen = struct
+            interface IFixedSizePremise with member _.FixedSize = 1
+        end
+
+        let ofChar = ofUtf8Formatter defaultof<TypeHint<byte * ByteChar * ByteCharLen>>
+
         type private Bool = struct
 
             interface IUtf8Formatter<bool> with

@@ -1,14 +1,15 @@
 namespace Nemonuri.OCamlDotNet.Forwarded
 
 open Nemonuri.Buffers
+open Nemonuri.Transcodings
 open Nemonuri.ByteChars.IO
 open Nemonuri.OCamlDotNet.Primitives
 module Obs = Nemonuri.OCamlDotNet.Primitives.OCamlByteSpanSources
-module Ofd = Nemonuri.OCamlDotNet.Primitives.OCamlFileDescriptors
 
 module Buffer =
 
     type private bd = DrainableArrayBuilder<byte>
+    type private Th = Nemonuri.Transcodings.TranscoderTheory
     let private mnd = TargetToSourceMonad<bd, OCamlBuffer>((fun v -> { Value = v }), (fun v -> v.Value))
 
     
@@ -22,8 +23,12 @@ module Buffer =
 
     let clear (b: t) = mnd { let! b' = b in return! b'.Clear() }
 
-    let output_buffer (oc: OCamlOutChannel) (b: t) = mnd { 
-            let! b':bd = b in return! Ofd.writeByteSpanToOutChannel oc (b'.AsSpan())
+    let output_buffer (oc: OCamlOutChannel) (b: t) = 
+        mnd { 
+            let mutable oc' = oc in
+            let mutable ph : int = 0 in
+            let! b':bd = b in 
+            return! Th.TranscodeWhileDestinationTooSmall<byte,byte,Identity<byte>,OCamlOutChannel>(b'.AsSpan(),&oc',&ph)
         }
 
     let add_char (b: t) (c: OCamlChar) = mnd { let! b' = b in return! b'.Add(c) }

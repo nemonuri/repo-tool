@@ -1,7 +1,11 @@
 namespace Nemonuri.OCamlDotNet.Forwarded
 
 open System
+open Nemonuri.Transcodings
+open type Nemonuri.Transcodings.TranscoderTheory
 open Nemonuri.OCamlDotNet.Primitives
+open Nemonuri.OCamlDotNet.Primitives.FileBasics
+open Nemonuri.OCamlDotNet.Primitives.FormatBasics
 module Unix = Nemonuri.OCamlDotNet.Forwarded.Unix
 module Ofd = Nemonuri.OCamlDotNet.Primitives.OCamlFileDescriptors
 module Obs = Nemonuri.OCamlDotNet.Primitives.OCamlByteSpanSources
@@ -23,21 +27,28 @@ module Out_channel =
     | Open_nonblock (* open in non-blocking mode. *)
 
 
-    let stdout = OCamlOutChannel(Ofd.toWritable Unix.stdout, binaryMode = false)
+    let stdout = OCamlOutChannel(Ofd.toFileDescriptor Unix.stdout |> Writables.tryOfFileDescriptor |> ValueOption.get, binaryMode = false)
 
-    let stderr = OCamlOutChannel(Ofd.toWritable Unix.stderr, binaryMode = false)
+    let stderr = OCamlOutChannel(Ofd.toFileDescriptor Unix.stderr |> Writables.tryOfFileDescriptor |> ValueOption.get, binaryMode = false)
 
     let set_binary_mode (oc: t) (b: bool) = oc.BinaryMode <- b
 
     let is_binary_mode (oc: t) = oc.BinaryMode
 
-    let flush (oc: t) = Flushables.flush oc //Ofd.flush (oc.FileDescriptor |> Ofd.Writers.toTotal)
+    let flush (oc: t) = oc.Flush()
 
-    let output_char (oc: t) (c: OCamlChar) = Ofd.writeByteToOutChannel oc c
+    let output_char (oc: t) (c: OCamlChar) = 
+        let mutable oc' = oc in
+        let _ = Transcoders.Utf8Formatters.ofChar.TranscodeSingletonWhileDestinationTooSmall(c,&oc',Unchecked.defaultof<_>) in
+        ()
 
     let output_byte (oc: t) (n: OCamlInt) = output_char oc (byte n)
 
-    let output (oc: t) (b: OCamlBytes) (pos: OCamlInt) (len: OCamlInt) = Ofd.writeOCamlBytesToOutChannel oc b pos len
+    let output (oc: t) (b: OCamlBytes) (pos: OCamlInt) (len: OCamlInt) = 
+        let mutable oc' = oc: t in
+        let sliced = Obs.bytesSlice b pos len in
+        let _  = TranscodeWhileDestinationTooSmall<byte,byte,Identity<byte>,t>((Obs.bytesToReadOnlySpan sliced), &oc') in
+        ()
 
     let output_bytes (oc: t) (b: OCamlBytes) = output oc b 0 (Bytes.length b)
         

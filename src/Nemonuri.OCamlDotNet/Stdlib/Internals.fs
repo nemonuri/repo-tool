@@ -70,3 +70,20 @@ module internal UnsafeOCamlByteSpanSources =
             use p1 = fixed sp1 in
             use p2 = fixed sp2 in
             p1 = p2 && sp1.Length = sp2.Length
+
+module internal ValueOptions =
+
+    let defaultWithRef (voptionRef: byref<voption<'a>>) (defThunk: unit -> 'a) =
+        match voptionRef with
+        | ValueSome v -> v
+        | ValueNone ->
+            let v = defThunk() in
+            voptionRef <- ValueSome v;
+            v
+
+    let flushRef (voptionRef: byref<voption<'a>>) (tab: 'a -> unit) =
+        match voptionRef with
+        | ValueNone -> ()
+        | ValueSome v ->
+            tab v;
+            voptionRef <- ValueNone

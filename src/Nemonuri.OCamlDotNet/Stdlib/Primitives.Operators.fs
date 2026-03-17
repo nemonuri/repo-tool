@@ -65,15 +65,3 @@ module Operators =
             match call l r with
             | true -> ValueSome r
             | false -> ValueNone
-
-module TypeShadowing =
-
-    type char = OCamlChar
-
-    type string = OCamlString
-
-    type out_channel = OCamlOutChannel
-
-    type format4<'a,'b,'c,'d> = OCamlFormat<'a,'b,'c,'d>
-
-    type format<'a,'b,'c> = OCamlFormat<'a,'b,'c,BufferWriterShim>

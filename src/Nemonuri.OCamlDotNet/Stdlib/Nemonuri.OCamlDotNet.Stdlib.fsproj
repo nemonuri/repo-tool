@@ -12,9 +12,9 @@
     <Compile Include="HashMultiMap.fs" />
     <Compile Include="Primitives.fs" />
     <Compile Include="OCamlByteSpanSources.fs" />
-    
-    <Compile Include="FileDescriptorBasics.fs" />
-    <Compile Include="OCamlFileDescriptors.fs" />
+    <Compile Include="FileDiscriptors.fs" />
+    <Compile Include="FileBasics.fs" />
+    <Compile Include="OCamlOutChannel.fs" />
     <Compile Include="ByteSpans.fs" />
     <Compile Include="Primitives.Exceptions.fs" />
     <Compile Include="FormatBasics.fs" />
@@ -23,6 +23,7 @@
     <Compile Include="Forwarded.Char.fs" />
     <Compile Include="Forwarded.Bytes.fs" />
     <Compile Include="Forwarded.String.fs" />
+    <Compile Include="TypeShadowing.fs" />
     <Compile Include="Primitives.Operators.fs" />
     <Compile Include="Forwarded.Buffer.fs" />
     <Compile Include="Forwarded.Array.fs" />
