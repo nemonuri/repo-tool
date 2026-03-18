@@ -141,7 +141,7 @@ module PPrintEngine =
                     ()
                 (* If this is a blank string (which we recognize by its address), then
                     its content is withheld. *)
-                else if Obs.stringReferenceEqual s blank_buffer then
+                else if s == blank_buffer then
                     buffered <- buffered + len
                 (* If this is not a blank string, then the blank characters that were
                     withheld up to this point can now be flushed. *)

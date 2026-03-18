@@ -9,31 +9,35 @@ public interface IFormatterPremise<T, TFormat>
     bool TryFormat(T value, Span<byte> destination, TFormat format, out int bytesWritten);
 }
 
-public readonly struct FormatConfig<TFormat>(TFormat format, int maxLength)
+public readonly struct FormatConfig<T, TFormat>(TFormat format, MaxLengthHandle<T, TFormat> maxLengthHandle)
 {
     public TFormat Format {get;} = format;
-    public int MaxLength {get;} = maxLength;
+    public MaxLengthHandle<T, TFormat> MaxLengthHandle {get;} = maxLengthHandle;
 }
 
-public readonly struct FormatterBasedTranscoder<T, TFormat, TFormatter> : ITranscoderPremise<T, byte, FormatConfig<TFormat>>
+public readonly struct FormatterBasedTranscoder<T, TFormat, TFormatter> : ITranscoderPremise<T, byte, FormatConfig<T, TFormat>>
     where TFormatter : unmanaged, IFormatterPremise<T, TFormat>
 {
-    public OperationStatus Transcode(ReadOnlySpan<T> source, Span<byte> destination, FormatConfig<TFormat> formatConfig, out int sourcesRead, out int targetsWritten)
+    public OperationStatus Transcode(ReadOnlySpan<T> source, Span<byte> destination, FormatConfig<T, TFormat> formatConfig, out int sourcesRead, out int targetsWritten)
     {
         TFormatter th = new();
         TFormat format = formatConfig.Format;
-        int tempStorageLength = formatConfig.MaxLength;
+        Guard.IsTrue(formatConfig.MaxLengthHandle.HasValue);
 
         sourcesRead = 0;
         targetsWritten = 0;
 
         Span<byte> stepDest = destination;
-        byte[]? buffer = null;
-        Span<byte> tempStorage = (tempStorageLength < InternalConstants.StackAllocThreshold) ? 
-                                    stackalloc byte[tempStorageLength] : (buffer = ArrayPool<byte>.Shared.Rent(tempStorageLength)).AsSpan()[..tempStorageLength];
+        int tempStorageLength; //= formatConfig.MaxLength;
+        byte[]? tempBuffer = null;
+        //Span<byte> tempStorage; // = (tempStorageLength < InternalConstants.StackAllocThreshold) ? stackalloc byte[tempStorageLength] : (buffer = ArrayPool<byte>.Shared.Rent(tempStorageLength)).AsSpan()[..tempStorageLength];
 
+#pragma warning disable CA2014 // Do not use stackalloc in loops
         foreach (var elem in source)
         {
+            tempStorageLength = formatConfig.MaxLengthHandle.GetMaxLength(in elem, in format);
+            Span<byte> tempStorage = (tempStorageLength < InternalConstants.StackAllocThreshold) ? stackalloc byte[tempStorageLength] : (tempBuffer = ArrayPool<byte>.Shared.Rent(tempStorageLength)).AsSpan()[..tempStorageLength];
+            
             if (!th.TryFormat(elem, tempStorage, format, out int stepBw))
             {
                 /**
@@ -45,7 +49,7 @@ public readonly struct FormatterBasedTranscoder<T, TFormat, TFormatter> : ITrans
 
                 // Do not touch`destination`, `sourcesRead` and `targetsWritten`.
 
-                ReturnAndNullToShared(ref buffer);
+                ReturnAndNullToShared(ref tempBuffer);
                 return OperationStatus.InvalidData;
             }
 
@@ -56,7 +60,7 @@ public readonly struct FormatterBasedTranscoder<T, TFormat, TFormatter> : ITrans
             {
                 // Destination is too small.
 
-                ReturnAndNullToShared(ref buffer);
+                ReturnAndNullToShared(ref tempBuffer);
                 return OperationStatus.DestinationTooSmall;
             }
 
@@ -64,10 +68,11 @@ public readonly struct FormatterBasedTranscoder<T, TFormat, TFormatter> : ITrans
             sourcesRead += 1;
             targetsWritten += stepBw;
             stepDest = stepDest[stepBw..];
+            ReturnAndNullToShared(ref tempBuffer);
         }
+#pragma warning restore CA2014 // Do not use stackalloc in loops
 
         // Done!
-        ReturnAndNullToShared(ref buffer);
         return OperationStatus.Done;
     }
 }
@@ -75,9 +80,17 @@ public readonly struct FormatterBasedTranscoder<T, TFormat, TFormatter> : ITrans
 
 public readonly struct FormatterBasedTranscoder<T, TFormat, TFormatter, TMaxLength> : ITranscoderPremise<T, byte, TFormat>
     where TFormatter : unmanaged, IFormatterPremise<T, TFormat>
-    where TMaxLength : unmanaged, IFixedSizePremise
+    where TMaxLength : unmanaged, IMaxLengthPremise<T, TFormat>
 {
     public OperationStatus Transcode(ReadOnlySpan<T> source, Span<byte> destination, TFormat format, out int sourcesRead, out int targetsWritten) =>
-        (new FormatterBasedTranscoder<T, TFormat, TFormatter>()).Transcode(source, destination, new(format, FixedSizeTheory.GetFixedSize<TMaxLength>()), out sourcesRead, out targetsWritten);
+        (new FormatterBasedTranscoder<T, TFormat, TFormatter>()).Transcode(source, destination, new(format, MaxLengthTheory.ToHandle<T,TFormat,TMaxLength>()), out sourcesRead, out targetsWritten);
 }
 
+
+public readonly struct FormatterBasedFixedSizeTranscoder<T, TFormat, TFormatter, TFixedSize> : ITranscoderPremise<T, byte, TFormat>
+    where TFormatter : unmanaged, IFormatterPremise<T, TFormat>
+    where TFixedSize : unmanaged, IFixedSizePremise
+{
+    public OperationStatus Transcode(ReadOnlySpan<T> source, Span<byte> destination, TFormat format, out int sourcesRead, out int targetsWritten) =>
+        (new FormatterBasedTranscoder<T, TFormat, TFormatter, FixedMaxLength<T, TFormat, TFixedSize>>()).Transcode(source, destination, format, out sourcesRead, out targetsWritten);
+}

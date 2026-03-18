@@ -16,9 +16,8 @@ module Printf =
 
     let fprintf (outchan: out_channel) (format: format<_, out_channel, unit>) =
         let fin = TapFinalizer<out_channel,unit,FlushTap<out_channel>,NoneTap<unit>>.Instance
-        let cfg = WriterFactories.toConfig outchan () in
-        let env = WriterFactories.toEnv outchan () cfg in
-        Formats.write fin env format
+        let cfg = WriterFactories.toConfigAuto outchan () in
+        Formats.write fin cfg format
 
     let printf format = fprintf Out_channel.stdout format
 
@@ -41,21 +40,20 @@ module Printf =
                 member _.Format str seg s: string = StringWriter.Format str seg s
         end
 
-    let private sprintfEnv() =
-        let cfg: WriterFactoryConfig<unit,string> = { BufferWriter = ValueNone; ResultWriter = ValueSome StringWriter.Instance } in
-        let env = WriterFactories.toEnv () S.empty cfg in
-        env
+    let private sprintfCfg() =
+        let cfg: WriterFactoryConfig<unit,string> = { BufferWriter = ValueNone; ResultWriter = ValueSome StringWriter.Instance; InitialBuffer = (); InitialResult = S.empty } in
+        cfg
 
     let sprintf (format: format<_, unit, string>) =
         let fin = TapFinalizer<unit,string,NoneTap<unit>,NoneTap<string>>.Instance in
-        let env = sprintfEnv() in
-        Formats.write fin env format
+        let cfg = sprintfCfg() in
+        Formats.write fin cfg format
     
     let ksprintf (cont: string -> 'd) (format: format4<_, unit, string, 'd>) =
         let fin = 
             { new IFinalizer<unit, string, 'd> with 
                 member x.Finalize (b: byref<unit>, r: byref<string>, e: exn option): 'd = cont r }
         in
-        let env = sprintfEnv() in
-        Formats.write fin env format
+        let cfg = sprintfCfg() in
+        Formats.write fin cfg format
         

@@ -1,5 +1,6 @@
 namespace Nemonuri.Transcodings.Utf8Encodings;
 
+#if false
 public static class FormatterTheory
 {
     extension<T, TFormat, TFormatter>(TFormatter)
@@ -34,3 +35,4 @@ public static class FormatterTheory
         }
     }
 }
+#endif

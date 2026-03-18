@@ -21,9 +21,13 @@ module Transcoders = begin
 
     type private IUtf8Formatter<'s> = IFormatterPremise<'s, OCamlString>
     type private U8 = System.Buffers.Text.Utf8Formatter
+    type private Cc = Nemonuri.ByteChars.ByteCharConstants
 
     let private stringEqual (o: OCamlString) (bytes: byte array) = Obs.stringEqual o (Obs.Unsafe.stringOfArray bytes)
     let private (|L|_|) (bytes: byte array) (o: OCamlString) = stringEqual o bytes
+
+    let ofFixedSizeUtf8Formatter (_: TypeHint<'src * 'fmt * 'fix>) =
+        ToHandle<'src, byte, OCamlString, FormatterBasedFixedSizeTranscoder<'src, OCamlString, 'fmt, 'fix>>()
 
     let ofUtf8Formatter (_: TypeHint<'src * 'fmt * 'len>) =
         ToHandle<'src, byte, OCamlString, FormatterBasedTranscoder<'src, OCamlString, 'fmt, 'len>>()
@@ -35,65 +39,181 @@ module Transcoders = begin
 
         let toStandardFormat o =
             match o with
-            | (L "I"B) -> Sf('I')
-            | (L "D"B) | (L "d"B) -> Sf('D')
-            | (L "N"B) | (L "n"B) -> Sf('N')
-            | (L "X"B) | (L "x"B) -> Sf('X')
+            | (L "B"B) -> Sf('I')
+            | (L "d"B) | (L "ld"B) | (L "Ld"B) | (L "nd"B) -> Sf('D')
+            | (L "x"B) -> Sf('X')
             | _ -> Sf()
 
-        type private ByteChar = struct // Identity
-            interface IUtf8Formatter<byte> with
-                member _.TryFormat (value: byte, destination: Span<byte>, format: OCamlString, bytesWritten: byref<int>): bool = 
-                    if destination.Length > 0 then
-                        destination[0] <- value; true
-                    else
-                        false
+        type private Unit<'T> = struct
+
+            static member TryFormat (value: 'T, destination: Span<byte>, format: OCamlString, bytesWritten: byref<int>): bool = bytesWritten <- 0; true
+
+            interface IUtf8Formatter<'T> with
+                member _.TryFormat (value, destination, format, bytesWritten): bool = 
+                    Unit<'T>.TryFormat(value, destination, format, &bytesWritten)
+
+            interface IFixedSizePremise with
+                member _.FixedSize = 0
         end
 
-        type private ByteCharLen = struct
-            interface IFixedSizePremise with member _.FixedSize = 1
-        end
-
-        let ofChar = ofUtf8Formatter defaultof<TypeHint<byte * ByteChar * ByteCharLen>>
+        let ofUnit<'u> = ofFixedSizeUtf8Formatter defaultof<TypeHint<'u * Unit<'u> * Unit<'u>>>
 
         type private Bool = struct
 
+            static member TryFormat (value: bool, destination: Span<byte>, format: OCamlString, bytesWritten: byref<int>): bool = 
+                U8.TryFormat(value, destination, &bytesWritten, toStandardFormat format)
+
             interface IUtf8Formatter<bool> with
-                member _.TryFormat (value: bool, destination: Span<byte>, format: OCamlString, bytesWritten: byref<int>): bool = 
-                    U8.TryFormat(value, destination, &bytesWritten, toStandardFormat format)
+                member _.TryFormat (value, destination, format, bytesWritten): bool = 
+                    Bool.TryFormat(value, destination, format, &bytesWritten)
         end
 
         type private BoolLen = struct
             interface IFixedSizePremise with member _.FixedSize = 8
         end
         
-        let ofBool = ofUtf8Formatter defaultof<TypeHint<bool * Bool * BoolLen>>
+        let ofBool = ofFixedSizeUtf8Formatter defaultof<TypeHint<bool * Bool * BoolLen>>
 
         type private Int = struct
 
-            interface IUtf8Formatter<int> with
-                member _.TryFormat (value: int, destination: Span<byte>, format: OCamlString, bytesWritten: byref<int>): bool = 
+            static member TryFormat (value: int, destination: Span<byte>, format: OCamlString, bytesWritten: byref<int>): bool = 
                     U8.TryFormat (value, destination, &bytesWritten, toStandardFormat format)
+
+            interface IUtf8Formatter<int> with
+                member _.TryFormat (value, destination, format, bytesWritten): bool = 
+                    Int.TryFormat(value, destination, format, &bytesWritten)
         end
 
         type private IntLen = struct
             interface IFixedSizePremise with member _.FixedSize = 16
         end
 
-        let ofInt = ofUtf8Formatter defaultof<TypeHint<int * Int * IntLen>>
+        let ofInt = ofFixedSizeUtf8Formatter defaultof<TypeHint<int * Int * IntLen>>
 
         type private Int64 = struct
 
-            interface IUtf8Formatter<int64> with
-                member _.TryFormat (value: int64, destination: Span<byte>, format: OCamlString, bytesWritten: byref<int>): bool = 
+            static member TryFormat (value: int64, destination: Span<byte>, format: OCamlString, bytesWritten: byref<int>): bool = 
                     U8.TryFormat (value, destination, &bytesWritten, toStandardFormat format)
+
+
+            interface IUtf8Formatter<int64> with
+                member _.TryFormat (value, destination, format, bytesWritten): bool = 
+                    Int64.TryFormat(value, destination, format, &bytesWritten)
         end
 
         type private Int64Len = struct
             interface IFixedSizePremise with member _.FixedSize = 32
         end
 
-        let ofInt64 = ofUtf8Formatter defaultof<TypeHint<int64 * Int64 * Int64Len>>
+        let ofInt64 = ofFixedSizeUtf8Formatter defaultof<TypeHint<int64 * Int64 * Int64Len>>
+
+        type private IntPtr = struct
+            static member TryFormat (value: nativeint, destination: Span<byte>, format: OCamlString, bytesWritten: byref<int>): bool = 
+                if sizeof<nativeint> = sizeof<int> then
+                    Int.TryFormat((int value), destination, format, &bytesWritten)
+                else
+                    Int64.TryFormat((int64 value), destination, format, &bytesWritten)
+
+            interface IUtf8Formatter<nativeint> with
+                member _.TryFormat (value, destination, format, bytesWritten): bool = 
+                    IntPtr.TryFormat(value, destination, format, &bytesWritten)
+        end
+
+        type private IntPtrLen = struct
+            interface IFixedSizePremise with 
+                member _.FixedSize = 
+                    if sizeof<nativeint> = sizeof<int> then
+                        FixedSizeTheory.GetFixedSize<IntLen>()
+                    else
+                        FixedSizeTheory.GetFixedSize<Int64Len>()
+        end
+
+        let ofIntPtr = ofFixedSizeUtf8Formatter defaultof<TypeHint<nativeint * IntPtr * IntPtrLen>>
+
+
+        type private CharPremise = struct
+
+            static member EscapeRequired (format: OCamlString) = 
+                (* C: convert a character argument to OCaml syntax (single quotes, escapes). *)
+                stringEqual format "C"B
+
+            static member GetMaxLength (c: inref<OCamlChar>, format: inref<OCamlString>): int =
+                if CharPremise.EscapeRequired format then
+                    1 + (ByteSpans.charToEscapedLength c) + 1
+                else
+                    1
+
+            static member TryFormat (value: OCamlChar, destination: Span<byte>, format: OCamlString, bytesWritten: byref<int>): bool = 
+                if destination.Length < CharPremise.GetMaxLength(&value, &format) then
+                    bytesWritten <- 0;
+                    false
+                else if CharPremise.EscapeRequired format then
+                    destination[0] <- Cc.AsciiSingleQuote;
+                    let escapedCount = ByteSpans.escapeCharAndCount(destination.Slice(1)) value in
+                    destination[1 + escapedCount] <- Cc.AsciiSingleQuote;
+                    bytesWritten <- 1 + escapedCount + 1;
+                    true
+                else
+                    destination[0] <- value;
+                    bytesWritten <- 1;
+                    true
+
+            interface IUtf8Formatter<OCamlChar> with
+                member _.TryFormat (value, destination, format, bytesWritten): bool = 
+                    CharPremise.TryFormat(value, destination, format, &bytesWritten)
+
+            interface IMaxLengthPremise<OCamlChar, OCamlString> with
+                member _.GetMaxLength (source, format): int = 
+                    CharPremise.GetMaxLength(&source, &format)
+        end
+
+        let ofChar = ofUtf8Formatter defaultof<TypeHint<byte * CharPremise * CharPremise>>
+
+        let rec private stringToEscaped_aux (source: ReadOnlySpan<byte>) (destination: Span<byte>) (acc: int) : int =
+            if source.IsEmpty then acc else
+            let escapedCount = ByteSpans.escapeCharAndCount destination source[0] in
+            let nextAcc = acc + escapedCount in
+            stringToEscaped_aux (source.Slice(1)) (destination.Slice(escapedCount)) nextAcc
+
+        type private StringPremise = struct
+
+            static member EscapeRequired (format: OCamlString) = 
+                (* S: convert a string argument to OCaml syntax (double quotes, escapes). *)
+                stringEqual format "S"B
+            
+            static member GetMaxLength (s: inref<OCamlString>, format: inref<OCamlString>): int =
+                if StringPremise.EscapeRequired format then
+                    1 + (ByteSpans.toEscapedLength (Obs.stringToReadOnlySpan s)) + 1
+                else
+                    (Obs.stringToReadOnlySpan s).Length
+
+            static member TryFormat (value: OCamlString, destination: Span<byte>, format: OCamlString, bytesWritten: byref<int>): bool = 
+                if destination.Length < StringPremise.GetMaxLength(&value, &format) then
+                    bytesWritten <- 0;
+                    false
+                else 
+                    let span = (Obs.stringToReadOnlySpan value) in
+                    if StringPremise.EscapeRequired format then
+                        destination[0] <- Cc.AsciiDoubleQuote;
+                        let escapedCount = stringToEscaped_aux span (destination.Slice(1)) 0 in
+                        destination[1 + escapedCount] <- Cc.AsciiDoubleQuote;
+                        bytesWritten <- 1 + escapedCount + 1;
+                        true
+                    else
+                        span.CopyTo(destination);
+                        bytesWritten <- span.Length;
+                        true
+
+            interface IUtf8Formatter<OCamlString> with
+                member _.TryFormat (value, destination, format, bytesWritten): bool = 
+                    StringPremise.TryFormat(value, destination, format, &bytesWritten)
+
+            interface IMaxLengthPremise<OCamlString, OCamlString> with
+                member _.GetMaxLength (source, format): int = 
+                    StringPremise.GetMaxLength(&source, &format)
+        end
+
+        let ofString = ofUtf8Formatter defaultof<TypeHint<OCamlString * StringPremise * StringPremise>>
 
     end
 
@@ -113,19 +233,41 @@ type Segment<'TSource> = | Segment of string:SegmentString * transcoder:Transcod
 module Segments = begin
 
     open Transcoders
-    module U = Utf8Formatters
+    module T8 = Utf8Formatters
 
     let (|FlattenSegment|) (Segment(SegmentString(le, fo, tr), tc)) = le,fo,tr,tc
 
+    let ofFlatten le fo tr tc = (Segment(SegmentString(le, fo, tr), tc))
+
     let private b2f format = SegmentString(Obs.emptyString, Obs.Unsafe.stringOfArray format, Obs.emptyString)
 
-    let ``%I``  = Segment(b2f "I"B, U.ofBool)
+    let toIgnore<'u> (b: byte array) = ofFlatten (Obs.Unsafe.stringOfArray b) Obs.emptyString Obs.emptyString (T8.ofUnit<'u>)
 
-    let ``%d``= Segment(b2f "d"B, U.ofInt)
+    let toUnit b = toIgnore<unit> b
 
-    let ``%ld``= ``%d``
+    [<RequireQualifiedAccess>]
+    module Literals = begin
 
-    let ``%Ld``= Segment(b2f "d"B, U.ofInt)
+        let B  = Segment(b2f "B"B, T8.ofBool)
+        
+        let d= Segment(b2f "d"B, T8.ofInt)
+        
+        let ld = Segment(b2f "ld"B, T8.ofInt)
+        
+        let Ld = Segment(b2f "Ld"B, T8.ofInt64)
+
+        let nd = Segment(b2f "nd"B, T8.ofIntPtr)
+
+        let c = Segment(b2f "c"B, T8.ofChar)
+
+        let C = Segment(b2f "C"B, T8.ofChar)
+
+        let s = Segment(b2f "s"B, T8.ofString)
+
+        let S = Segment(b2f "S"B, T8.ofString)
+
+
+    end
 
 end
 
@@ -188,6 +330,12 @@ module SegmentLists = begin
         let (DeconsResult(hd, tl)) = dch.Invoke(l) in
         hd, tl
 
+    let head l = match decons l with | hd, tl -> hd
+
+    let replaceHead (hd: Segment<'hd>) (l: SegmentList<'hd -> 'tl>) =
+        let (_, tl) = decons l in
+        cons hd tl
+
     type TryDeconsPremise =
         struct
             static member TryDecons(_: SegmentList<unit>) = None
@@ -214,13 +362,17 @@ type IFormatter<'TBuffer> =
 type WriterFactoryConfig<'TBuffer, 'TResult> = {
     BufferWriter: IFormatter<'TBuffer> voption;
     ResultWriter: IFormatter<'TResult> voption;
+    InitialBuffer: 'TBuffer;
+    InitialResult: 'TResult;
 }
 
 [<NoEquality; NoComparison>]
-type WriterFactoryEnvironment<'TBuffer, 'TResult> = {
+[<Struct>]
+type WriterFactoryEnvironment<'TContext, 'TBuffer, 'TResult> = {
     Config: WriterFactoryConfig<'TBuffer, 'TResult>;
-    mutable BufferState: 'TBuffer;
-    mutable ResultState: 'TResult;
+    Segments: SegmentList<'TContext>;
+    BufferState: 'TBuffer;
+    ResultState: 'TResult;
 }
 
 [<NoEquality; NoComparison>]
@@ -229,7 +381,7 @@ type LegacyFormat<'TContext, 'TBuffer, 'TResult> =
     private
     | LegacyFormat of 
         segments: SegmentList<'TContext> * 
-        writerFactory: (WriterFactoryEnvironment<'TBuffer, 'TResult> -> 'TContext) (* '타입'을 맞추기 위해, TBuffer 와 TResult 를 뒤로 뺐다. *)
+        writerFactory: (WriterFactoryEnvironment<'TContext, 'TBuffer, 'TResult> -> 'TContext) (* '타입'을 맞추기 위해, TBuffer 와 TResult 를 앞으로 뺐다. *)
 
 
 module Legacies = begin
@@ -247,14 +399,25 @@ module Legacies = begin
         match tl with
         | LegacyFormat(slTail, factoryTail) ->
             let nextSl = S.cons hd slTail in
-            let nextFactory (env: WriterFactoryEnvironment<'b,'r>) (source: 'hd) : 'tl =
-                format env.Config.BufferWriter &env.BufferState hd source;
-                format env.Config.ResultWriter &env.ResultState hd source;
-                factoryTail env
+            let nextFactory (env: WriterFactoryEnvironment<'hd -> 'tl,'b,'r>) (source: 'hd) : 'tl =
+                let slHd,slTl = SegmentLists.decons env.Segments in
+                let mutable bs = env.BufferState in
+                let mutable rs = env.ResultState in
+                format env.Config.BufferWriter &bs slHd source;
+                format env.Config.ResultWriter &rs slHd source;
+                let nextEnv = { Config = env.Config; Segments = slTl; BufferState = bs; ResultState = rs } in
+                factoryTail nextEnv
             in
             LegacyFormat(nextSl, nextFactory)
 
     // decons 는...없음!
+
+    let head (LegacyFormat(sl, _)) = S.head sl
+
+    let replaceHead (hd: Segment<'hd>) (l: LegacyFormat<'hd->'tl,'b,'r>) =
+        match l with
+        | LegacyFormat(sl, factoryTail) ->
+            LegacyFormat(S.replaceHead hd sl, factoryTail)
 
     let toWriterFactory (LegacyFormat(_, factory)) = factory
 
@@ -302,9 +465,13 @@ module WriterFactories = begin
         let inline call (p: ^p) (b': ^b) = ((^p or ^b) : (static member TryToFormatter: _->_) b') in
         call Unchecked.defaultof<TryToFormatterPremise> b
 
-    let inline toConfig b r = { BufferWriter = tryToFormatter b; ResultWriter = tryToFormatter r }
+    let inline toConfigAuto b r = { BufferWriter = tryToFormatter b; ResultWriter = tryToFormatter r; InitialBuffer = b; InitialResult = r }
 
-    let toEnv b r (config: WriterFactoryConfig<'b,'r>) = { Config = config; BufferState = b; ResultState = r }
+    let segmentListToEnv (config: WriterFactoryConfig<'b,'r>) (sl: SegmentList<'ctx>) = { Config = config; Segments = sl; BufferState = config.InitialBuffer; ResultState = config.InitialResult }
+
+    let legacyFormatToEnv (config: WriterFactoryConfig<'b,'r>) (fmt: LegacyFormat<'ctx,'b,'r>) = 
+        match fmt with
+        | LegacyFormat(sl,_) -> segmentListToEnv config sl
         
 end
 

@@ -9,6 +9,7 @@ open Nemonuri.OCamlDotNet.Primitives.FormatBasics
 module Unix = Nemonuri.OCamlDotNet.Forwarded.Unix
 module Ofd = Nemonuri.OCamlDotNet.Primitives.OCamlFileDescriptors
 module Obs = Nemonuri.OCamlDotNet.Primitives.OCamlByteSpanSources
+module T8 = Nemonuri.OCamlDotNet.Primitives.FormatBasics.Transcoders.Utf8Formatters
 
 /// reference: https://ocaml.org/manual/5.4/api/Out_channel.html
 module Out_channel =
@@ -39,7 +40,7 @@ module Out_channel =
 
     let output_char (oc: t) (c: OCamlChar) = 
         let mutable oc' = oc in
-        let _ = Transcoders.Utf8Formatters.ofChar.TranscodeSingletonWhileDestinationTooSmall(c,&oc',Unchecked.defaultof<_>) in
+        let _ = T8.ofChar.TranscodeSingletonWhileDestinationTooSmall(c,&oc',Unchecked.defaultof<_>) in
         ()
 
     let output_byte (oc: t) (n: OCamlInt) = output_char oc (byte n)

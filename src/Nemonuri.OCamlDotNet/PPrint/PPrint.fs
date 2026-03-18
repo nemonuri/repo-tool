@@ -8,6 +8,7 @@ namespace Nemonuri.OCamlDotNet
 
 open Nemonuri.OCamlDotNet.Forwarded
 open Nemonuri.OCamlDotNet.Primitives
+open Nemonuri.OCamlDotNet.Primitives.TypeShadowing
 open Nemonuri.OCamlDotNet.Primitives.Operators
 open Nemonuri.OCamlDotNet.Primitives.Operators.Literals
 open Nemonuri.OCamlDotNet.PPrintEngine
@@ -323,16 +324,16 @@ module PPrint =
 
     module OCaml = begin
 
-#if false
+
         open Printf
-#endif
+        open Formats.Literals
 
         type constructor = string
         type type_name = string
         type record_field = string
         type tag = int
 
-#if false
+
         (* -------------------------------------------------------------------------- *)
 
         (* This internal [sprintf]-like function produces a document. We use [string],
@@ -355,13 +356,13 @@ module PPrint =
             let rec loop i =
                 if i >= l then
                     (* If we reach the end of the string and have found only characters in
-            the set '0' .. '9' and '-', then this string will be considered as an
-            integer literal by OCaml. Adding a trailing dot makes it a float
-            literal. *)
-                    s ^ "."
+                    the set '0' .. '9' and '-', then this string will be considered as an
+                    integer literal by OCaml. Adding a trailing dot makes it a float
+                    literal. *)
+                    s ^ %"."B
                 else
                     match s.[i] with
-                    | '0'B .. '9'B | '-'B -> loop (i + 1)
+                    | R '0'B '9'B | '-'B -> loop (i + 1)
                     | _ -> s
             in loop 0
 
@@ -374,7 +375,7 @@ module PPrint =
             | FP_nan ->
                 "nan"
             | FP_infinite ->
-                    if f < 0.0 then "neg_infinity" else "infinity"
+                    if f < 0.0 then %"neg_infinity"B else %"infinity"B
             | _ ->
                     (* Try increasing precisions and validate. *)
                     let s = sprintf "%.12g" f in
@@ -384,7 +385,7 @@ module PPrint =
                     sprintf "%.18g" f
 
         (* -------------------------------------------------------------------------- *)
-#endif
+
 
         (* A few constants and combinators, used below. *)
 
@@ -452,37 +453,37 @@ module PPrint =
         let ref f x =
             record %"ref"B [%"contents"B, f !x]
 
-#if false
+
         let float f =
             string (float_representation f)
 
         let int =
-            dsprintf "%d"
+            dsprintf %d
 
         let int32 =
-            dsprintf "%ld"
+            dsprintf %ld
 
         let int64 =
-            dsprintf "%Ld"
+            dsprintf %Ld
 
         let nativeint =
-            dsprintf "%nd"
+            dsprintf %nd
 
         let char =
-            dsprintf "%C"
+            dsprintf %C
 
         let bool =
-            dsprintf "%B"
+            dsprintf %B
 
         let unit =
-            dsprintf "()"
+            dsprintf %``()``
 
         let string =
-            dsprintf "%S"
+            dsprintf %S
 
         let unknown tyname _ =
-            dsprintf "<abstr:%s>" tyname
-#endif
+            dsprintf (%"<abstr:"B ^ %s ^ %">"B) tyname
+
 
         type representation =
             document

@@ -107,8 +107,27 @@ module internal ByteSpans =
 
     let [<Literal>] private ``/`` = Cc.AsciiBackslash
     
-    let internal escapeCharAndCount (dest: Span<OCamlChar>) (c: OCamlChar) =
-        let inline divRem10 n = let d = 10uy in n / d, Cth.Modulus(n, d) |> Cth.UncheckedIntegerToDecimalDigit
+    let inline divRem10 n = let d = 10uy in n / d, Cth.Modulus(n, d) |> Cth.UncheckedIntegerToDecimalDigit
+
+    let charToEscapedLength (c: OCamlChar) =
+        match c with
+        | Cc.AsciiBackslash | Cc.AsciiDoubleQuote | Cc.AsciiSingleQuote
+        | Cc.AsciiLineFeed
+        | Cc.AsciiCarriageReturn
+        | Cc.AsciiHorizontalTabulation
+        | Cc.AsciiBackspace
+        | Cc.AsciiSpace -> 2
+        | c0 when Cc.AsciiPrintableMinimum <= c0 && c0 <= Cc.AsciiPrintableMaximum -> 1
+        | _ -> 4
+
+    let rec private toEscapedLength_aux (s: rbs) (acc: int) : int =
+        if s.IsEmpty then acc else
+        let nextAcc = (charToEscapedLength s[0]) + acc in
+        toEscapedLength_aux (s.Slice(1)) nextAcc
+
+    let toEscapedLength (s: rbs) = toEscapedLength_aux s 0
+
+    let escapeCharAndCount (dest: Span<OCamlChar>) (c: OCamlChar) =    
         match c with
         | Cc.AsciiBackslash | Cc.AsciiDoubleQuote | Cc.AsciiSingleQuote -> Dns.WriteAndCount(dest, ``/``, c)
         | Cc.AsciiLineFeed -> Dns.WriteAndCount(dest, ``/``, 'n'B)
