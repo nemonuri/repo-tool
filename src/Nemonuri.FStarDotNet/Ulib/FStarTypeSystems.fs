@@ -1,8 +1,10 @@
 namespace Nemonuri.FStarDotNet.Primitives.FStarTypeSystems
 
 open Nemonuri.PureTypeSystems
+open Nemonuri.PureTypeSystems.Primitives
 module Pts = Nemonuri.PureTypeSystems.Operations
 
+#if false
 type ISupportWitness<'T> =
     interface
         abstract member Witness: 'T
@@ -10,45 +12,44 @@ type ISupportWitness<'T> =
 
 [<NoEquality; NoComparison>]
 [<Struct>]
-type FStarGhostType<'TKinds, 'TRefiner when 'TRefiner :> ITypeRefiner> = { Kinds: Kind<'TKinds>; Refiner: 'TRefiner; Witness: objnull }
+type FStarGhostType<'TExpr, 'TRefiner when 'TRefiner :> IRefinerPremise<'TExpr> and 'TRefiner : unmanaged> = { Witness: TypeExpr<'TExpr> }
     with
-        member this.Check(x: 'T) = this.Refiner.GetCondition<'T>() x
+        interface IRefinerPremise<'TExpr> with
+            member _.Judge(pre, post) = Unchecked.defaultof<'TRefiner>.Judge(&pre, &post)
 
-        interface ITypeRefiner with
-            member this.GetCondition (): Condition<'T> = this.Check<'T>
-        interface ISupportWitness<objnull> with
+        interface ISupportWitness<TypeExpr<'TExpr>> with
             member this.Witness = this.Witness
     end
 
 [<NoEquality; NoComparison>]
 [<Struct>]
-type FStarType<'TKinds, 'TRefiner, 'TWitness when 'TRefiner :> ITypeRefiner> = { Kinds: Kind<'TKinds>; Refiner: 'TRefiner; Witness: 'TWitness }
+type FStarType<'TExpr, 'TRefiner when 'TRefiner :> IRefinerPremise<'TExpr> and 'TRefiner : unmanaged> = { Witness: 'TExpr }
     with
-        member this.Check(_: 'T) = 
-            let selfCond = Pts.toSelfCondition this.Witness in
-            Pts.conditionAnd selfCond (this.Refiner.GetCondition<'TWitness>()) this.Witness
+        interface IRefinerPremise<'TExpr> with
+            member _.Judge(pre, post) = Unchecked.defaultof<'TRefiner>.Judge(&pre, &post)
 
-        interface ITypeRefiner with
-            member this.GetCondition (): Condition<'T> = this.Check<'T>
-        interface ISupportWitness<'TWitness> with
+        interface ISupportWitness<'TExpr> with
             member this.Witness = this.Witness
     end
+#endif
 
+type FStarKind<'TExpr, 'TRefiner when 'TRefiner :> IRefinerPremise<TypeExpr<'TExpr>> and 'TRefiner : unmanaged> = Refined<TypeExpr<'TExpr>, 'TRefiner>
 
-type Type0 = FStarGhostType<unit, Tautology>
+type FStarType<'T, 'TRefiner when 'TRefiner :> IRefinerPremise<'T> and 'TRefiner : unmanaged> = Refined<'T, 'TRefiner>
 
-type EqType<'a when 'a : equality> = FStarType<unit, Tautology, 'a>
+type Type0 = FStarType<obj, Tautology<obj>>
+
+type EqType<'a when 'a : equality> = FStarType<'a, Tautology<'a>>
 
 
 module Operations =
 
     open TypeEquality
 
-    let unitKind = Pts.unitKind
-
     let tautology = Pts.tautology
 
-    let toFStarType kinds refiner witness = { Kinds = kinds; Refiner = refiner; Witness = witness }
+#if false
+    let toFStarType (witness: 'e) (refiner: 'r) : FStarType<'e,'r> = { Witness = witness }
 
     let toFStarEqType (s: 'a) : EqType<'a> = toFStarType unitKind tautology s
 
@@ -57,4 +58,5 @@ module Operations =
         | None -> None
         | Some v -> Teq.cast v x |> Some
     
-    let toType0 (s: objnull) : Type0 = { Kinds = unitKind; Refiner = tautology; Witness = s }
+    let toType0 (s: objnull) : Type0 = { TypeExpr = unitKind; Refiner = tautology; Witness = s }
+#endif

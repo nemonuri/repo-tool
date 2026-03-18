@@ -33,6 +33,15 @@ type IConstant<'T> =
         abstract member Value: 'T
     end
 
+type Tautology<'T> =
+    struct
+        static member Judge (pre: inref<'T>, post: byref<'T>): Judgement = post <- pre; Judgement.True
+            
+        interface IRefinerPremise<'T> with
+            member x.Judge (pre: inref<'T>, post: byref<'T>): Judgement = Tautology<'T>.Judge(&pre, &post)
+    end
+
+#if false
 [<NoEquality; NoComparison>]
 type Tautology =
     struct
@@ -41,7 +50,7 @@ type Tautology =
         interface ITypeRefiner with
             member this.GetCondition (): Condition<'T> = this.Check<'T>
     end
-
+#endif
 [<NoEquality; NoComparison>]
 type AlwaysUnknown =
     struct
@@ -99,7 +108,8 @@ module Operations =
         match box x with
         | :? ITypeRefiner as v -> Some v
         | _ -> None
-    
+
+#if false
     let toSelfCondition (x: 'a) =
         match tryToRefiner x with
         | Some v -> v.GetCondition<'a>()
@@ -107,6 +117,7 @@ module Operations =
             if (typedefof<FSharpFunc<_,_>>.IsAssignableFrom(typedefof<'a>)) then AlwaysUnknown().Check<'a> else tautology.Check<'a>
 
     let checkSelf (x: 'a) = toSelfCondition x x
+#endif
 
 module TypeShadowing =
 
