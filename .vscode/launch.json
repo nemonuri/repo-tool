@@ -1,0 +1,16 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Launch Nemonuri.OCamlDotNet.PPrint.Sample1 (Debug)",
+            "type": "coreclr",
+            "request": "launch",
+            //"preLaunchTask": "build",
+            "program": "${workspaceFolder}/artifacts/bin/Nemonuri.OCamlDotNet.PPrint.Sample1/debug/Nemonuri.OCamlDotNet.PPrint.Sample1.dll",
+            "args": [],
+            "cwd": "${workspaceFolder}",
+            "stopAtEntry": true,
+            "console": "internalConsole"
+        }
+    ]
+}

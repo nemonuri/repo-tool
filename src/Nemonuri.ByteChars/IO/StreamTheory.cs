@@ -1,3 +1,5 @@
+using System.Text;
+
 namespace Nemonuri.ByteChars.IO;
 
 public static class StreamTheory

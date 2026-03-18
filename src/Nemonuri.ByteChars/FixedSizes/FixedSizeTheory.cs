@@ -13,7 +13,7 @@ public static partial class FixedSizeTheory
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool IsFixedSizeGreaterThanZero() => GetFixedSize<TPremise>() <= 0;
+        public static bool IsFixedSizeGreaterThanZero() => GetFixedSize<TPremise>() > 0;
 
         /// <exception cref="System.ArgumentOutOfRangeException" />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -27,7 +27,7 @@ public static partial class FixedSizeTheory
                     (
                         name: $"{typeof(TPremise).ToTypeString()}.{nameof(GetFixedSize)}()",
                         value: GetFixedSize<TPremise>(),
-                        message: $"{nameof(IsFixedSizeGreaterThanZero)} should {false}."
+                        message: $"{nameof(IsFixedSizeGreaterThanZero)} should {true}."
                     );
                 }
                 else

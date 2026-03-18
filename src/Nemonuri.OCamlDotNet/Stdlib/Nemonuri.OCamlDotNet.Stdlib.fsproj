@@ -8,6 +8,7 @@
   <ItemGroup>
     <Compile Include="Encodings.fs" />
     <Compile Include="DotNetSpans.fs" />
+    <Compile Include="ByRefOption.fs" />
     <Compile Include="Internals.fs" />
     <Compile Include="HashMultiMap.fs" />
     <Compile Include="Primitives.fs" />

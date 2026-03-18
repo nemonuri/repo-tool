@@ -11,18 +11,27 @@ open Nemonuri.ByteChars.IO
 open Microsoft.FSharp.NativeInterop
 open Nemonuri.OCamlDotNet.Primitives.FileBasics
 module Obs = Nemonuri.OCamlDotNet.Primitives.OCamlByteSpanSources
-module Vo = Nemonuri.OCamlDotNet.Primitives.Internals.ValueOptions
+module Bro = Nemonuri.OCamlDotNet.Primitives.ByRefOptions
+
+module private Tappers = begin
+
+    let binaryModeWriter: Bro.Tapper<BinaryModeWriter> = Bro.Tapper<_>(fun x -> x.Dispose())
+
+    let textModeWriter: Bro.Tapper<TextModeWriter> = Bro.Tapper<_>(fun x -> x.Dispose())
+
+end
 
 
 [<NoComparison; NoEquality>]
 type OCamlFileDescriptor =  
     internal { 
         FileDescriptor: FileDescriptor; 
-        mutable WriterSlot: voption<BinaryModeWriter>;
-        mutable ReaderSlot: voption<DrainableArrayBuilder<byte>>
+        mutable WriterSlot: ByRefOption<BinaryModeWriter>;
+        mutable ReaderSlot: ByRefOption<DrainableArrayBuilder<byte>>
     }
     with
-        member private x.EnsuredWriter = Vo.defaultWithRef &x.WriterSlot (fun _ -> x.FileDescriptor |> Files.createWriter)
+        member private x.EnsuredWriter = 
+             &(Bro.ensureSome &x.WriterSlot (fun _ -> x.FileDescriptor |> Files.createWriter))
 
         member x.Advance (count: int) = x.EnsuredWriter.Advance count
         
@@ -31,7 +40,7 @@ type OCamlFileDescriptor =
         member x.GetSpan (sizeHint: int) = x.EnsuredWriter.GetSpan sizeHint
 
         member x.FlushWriter () =
-            Vo.flushRef &x.WriterSlot (fun x -> x.Dispose())
+            Bro.ensureNone &x.WriterSlot Tappers.binaryModeWriter
             
         interface IBufferWriter<byte> with
 
@@ -47,7 +56,7 @@ type OCamlFileDescriptor =
 
 module OCamlFileDescriptors =
 
-    let ofFileDescriptor (fd: FileDescriptor) = { FileDescriptor = fd; WriterSlot = ValueNone; ReaderSlot = ValueNone }
+    let ofFileDescriptor (fd: FileDescriptor) = { FileDescriptor = fd; WriterSlot = Bro.none; ReaderSlot = Bro.none }
 
     let toFileDescriptor (ofd: OCamlFileDescriptor) = ofd.FileDescriptor
 
@@ -56,19 +65,21 @@ type OCamlOutChannel =
     class
         val internal Writable : Writable;
         val mutable internal BinaryMode: bool;
-        val mutable private BinaryModeWriterSlot: voption<BinaryModeWriter>;
-        val mutable private TextModeWriterSlot: voption<TextModeWriter>;
+        val mutable private BinaryModeWriterSlot: ByRefOption<BinaryModeWriter>;
+        val mutable private TextModeWriterSlot: ByRefOption<TextModeWriter>;
         internal new(writable: Writable, [<Struct>] ?binaryMode : bool) =
             { 
                 Writable = writable; 
                 BinaryMode = defaultValueArg binaryMode false; 
-                BinaryModeWriterSlot = ValueNone;
-                TextModeWriterSlot = ValueNone;
+                BinaryModeWriterSlot = Bro.none;
+                TextModeWriterSlot = Bro.none;
             }
         
-        member private x.EnsuredBinaryModeWriter = Vo.defaultWithRef &x.BinaryModeWriterSlot (fun _ -> x.Writable |> Writables.createBinaryModeWriter)
+        member private x.EnsuredBinaryModeWriter = 
+            &(Bro.ensureSome &x.BinaryModeWriterSlot (fun _ -> x.Writable |> Writables.createBinaryModeWriter))
 
-        member private x.EnsuredTextModeWriter = Vo.defaultWithRef &x.TextModeWriterSlot (fun _ -> x.Writable |> Writables.createTextModeWriter)
+        member private x.EnsuredTextModeWriter = 
+            &(Bro.ensureSome &x.TextModeWriterSlot (fun _ -> x.Writable |> Writables.createTextModeWriter))
 
         member x.Advance (count: int) = 
             if x.BinaryMode then
@@ -89,8 +100,8 @@ type OCamlOutChannel =
                 x.EnsuredTextModeWriter.GetSpan sizeHint
 
         member x.Flush() = 
-            Vo.flushRef &x.BinaryModeWriterSlot (fun x -> x.Dispose());
-            Vo.flushRef &x.TextModeWriterSlot (fun x -> x.Dispose());
+            Bro.ensureNone &x.BinaryModeWriterSlot Tappers.binaryModeWriter;
+            Bro.ensureNone &x.TextModeWriterSlot Tappers.textModeWriter;
         
         interface IBufferWriter<byte> with
 

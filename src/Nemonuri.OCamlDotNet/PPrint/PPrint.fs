@@ -365,7 +365,7 @@ module PPrint =
                     | R '0'B '9'B | '-'B -> loop (i + 1)
                     | _ -> s
             in loop 0
-
+#if false // TODO
         (* This function constructs a string representation of a floating point
             number. This representation is supposed to be accepted by OCaml as a
             valid floating point literal. *)
@@ -373,7 +373,7 @@ module PPrint =
         let float_representation (f : float) : string =
             match classify_float f with
             | FP_nan ->
-                "nan"
+                %"nan"B
             | FP_infinite ->
                     if f < 0.0 then %"neg_infinity"B else %"infinity"B
             | _ ->
@@ -383,6 +383,7 @@ module PPrint =
                     let s = sprintf "%.15g" f in
                     if f = float_of_string s then valid_float_lexeme s else
                     sprintf "%.18g" f
+#endif
 
         (* -------------------------------------------------------------------------- *)
 
@@ -453,9 +454,10 @@ module PPrint =
         let ref f x =
             record %"ref"B [%"contents"B, f !x]
 
-
+#if false // TODO
         let float f =
             string (float_representation f)
+#endif
 
         let int =
             dsprintf %d

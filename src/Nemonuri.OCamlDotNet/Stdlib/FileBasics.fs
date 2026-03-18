@@ -19,25 +19,17 @@ type internal OCamlStandardWriterKind =
 | Error
 
 [<NoComparison; NoEquality; Struct>]
-type internal BinaryModeWriter =
-    | BinaryModeWriter of streamWithByteArrayPool:StreamWithByteArrayPool
+type internal BinaryModeWriter = { mutable InnerWriter: StreamWithByteArrayPool; }
+    //| BinaryModeWriter of streamWithByteArrayPool:StreamWithByteArrayPool
     with
 
-        member x.Advance (count: int) = 
-            match x with
-            | BinaryModeWriter b -> b.Advance(count)
+        member x.Advance (count: int) = x.InnerWriter.Advance count
         
-        member x.GetMemory (sizeHint: int) = 
-            match x with
-            | BinaryModeWriter b -> b.GetMemory(sizeHint)
+        member x.GetMemory (sizeHint: int) = x.InnerWriter.GetMemory sizeHint
 
-        member x.GetSpan (sizeHint: int) = 
-            match x with
-            | BinaryModeWriter b -> b.GetSpan(sizeHint)
+        member x.GetSpan (sizeHint: int) = x.InnerWriter.GetSpan sizeHint
 
-        member x.Dispose (): unit = 
-            match x with
-            | BinaryModeWriter b -> b.Dispose();
+        member x.Dispose (): unit = x.InnerWriter.Dispose()
 
         interface IBufferWriter<byte> with
 
@@ -66,8 +58,8 @@ module Writables = begin
     let toStream (w: Writable) = Fd.toStream w.Value
 
     let internal createBinaryModeWriter (w: Writable) = 
-        new StreamWithByteArrayPool(null, toStream w, Unchecked.defaultof<_>)
-        |> BinaryModeWriter
+        let w = new StreamWithByteArrayPool(null, toStream w, Unchecked.defaultof<_>)
+        { InnerWriter = w }
 
     let internal createTextModeWriter (w: Writable) = new TextModeWriter(createBinaryModeWriter w)
 
@@ -77,8 +69,8 @@ end
 module Files = begin
 
     let internal createNullBinaryModeWriter() = 
-        new StreamWithByteArrayPool(null, Stream.Null, Unchecked.defaultof<_>)
-        |> BinaryModeWriter
+        let w = new StreamWithByteArrayPool(null, Stream.Null, Unchecked.defaultof<_>) in
+        { InnerWriter = w }
 
     let internal createWriter (fd: FileDescriptor) =
         Fd.tryRefineToCanWrite fd 

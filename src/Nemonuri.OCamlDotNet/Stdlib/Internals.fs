@@ -71,9 +71,10 @@ module internal UnsafeOCamlByteSpanSources =
             use p2 = fixed sp2 in
             p1 = p2 && sp1.Length = sp2.Length
 
+#if false
 module internal ValueOptions =
 
-    let defaultWithRef (voptionRef: byref<voption<'a>>) (defThunk: unit -> 'a) =
+    let ensureRef (voptionRef: byref<voption<'a>>) (defThunk: unit -> 'a) =
         match voptionRef with
         | ValueSome v -> v
         | ValueNone ->
@@ -87,3 +88,4 @@ module internal ValueOptions =
         | ValueSome v ->
             tab v;
             voptionRef <- ValueNone
+#endif
