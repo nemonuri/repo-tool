@@ -4,32 +4,28 @@ using System.Runtime.CompilerServices;
 namespace Nemonuri.PureTypeSystems.Primitives;
 
 
-public interface IImplyPremise<TAntecedent, TConsequent>
+public interface IImplyPremise<TAntecedent, TPreJudge, TConsequent, TPostJudge>
+    where TPreJudge : IJudgePremise<TAntecedent>
+    where TPostJudge : IJudgePremise<(TAntecedent, TConsequent)>
 {
-    JudgeHandle<TAntecedent> PreJudge {get;}
-
-    JudgeHandle<(TAntecedent Pre, TConsequent Post)> PostJudge {get;}
-
     TConsequent Apply(in TAntecedent pre);
 }
 
-public readonly struct Identity<T> : IImplyPremise<T,T>
+
+public readonly struct Identity<T> : IImplyPremise<T, Tautology<T>, T, Tautology<(T,T)>>
 {
     public static T Apply(in T pre) => pre;
 
-    JudgeHandle<T> IImplyPremise<T, T>.PreJudge => JudgeTheory.GetTautologyHandle<T>();
-
-    JudgeHandle<(T Pre, T Post)> IImplyPremise<T, T>.PostJudge => JudgeTheory.GetTautologyHandle<(T,T)>();
-
-    T IImplyPremise<T, T>.Apply(in T pre) => Identity<T>.Apply(in pre);
+    T IImplyPremise<T, Tautology<T>, T, Tautology<(T, T)>>.Apply(in T pre) => Identity<T>.Apply(in pre);
 }
 
-public static class ImplyTheory
+public readonly struct Failure<TP, TQ> : IImplyPremise<TP, Tautology<TP>, TQ, Negation<(TP,TQ)>>
 {
-    public const nint IdentityPointer = 0;
+    public static TQ Apply(in TP pre) => throw new InvalidOperationException(/* TODO */);
 
-    public static ImplyHandle<TP, TQ> GetIdentityHandle<TP, TQ>() => default;
+    TQ IImplyPremise<TP, Tautology<TP>, TQ, Negation<(TP, TQ)>>.Apply(in TP pre) => Failure<TP, TQ>.Apply(in pre);
 }
+
 
 [StructLayout(LayoutKind.Sequential)]
 public unsafe readonly struct ImplyHandle<TP, TQ> : IHandle
@@ -72,7 +68,7 @@ public unsafe readonly struct ImplyHandle<TP, TQ> : IHandle
             }
             else
             {
-                throw new InvalidOperationException(/* TODO */);
+                return Failure<TP, TQ>.Apply(in pre);
             }
         }
         else
@@ -81,3 +77,4 @@ public unsafe readonly struct ImplyHandle<TP, TQ> : IHandle
         }
     }
 }
+

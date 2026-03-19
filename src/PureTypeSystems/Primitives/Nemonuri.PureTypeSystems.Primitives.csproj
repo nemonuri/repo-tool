@@ -20,6 +20,8 @@
         <PolySharpIncludeGeneratedTypes>
           $(PolySharpIncludeGeneratedTypes)
           System.Runtime.CompilerServices.IsExternalInit;
+          System.Diagnostics.CodeAnalysis.NotNullWhenAttribute;
+          System.Diagnostics.CodeAnalysis.UnscopedRefAttribute;
         </PolySharpIncludeGeneratedTypes>
       </PropertyGroup>
     </When>

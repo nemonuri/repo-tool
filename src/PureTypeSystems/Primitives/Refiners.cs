@@ -18,17 +18,7 @@ public interface IRefinerPremise<T>
 }
 
 
-[StructLayout(LayoutKind.Sequential)]
-public readonly record struct Judgement(bool Determinate, bool Truthy)
-{
-    public static Judgement Unknown => new(false,false);
 
-    public static Judgement Thunk => new(false,true);
-
-    public static Judgement False => new(true,false);
-
-    public static Judgement True => new(true,true);
-}
 
 public readonly unsafe struct RefinerHandle<TPre, TPost>(delegate*<in TPre?, out TPost?, Judgement> fp)
 {
@@ -40,13 +30,6 @@ public readonly unsafe struct RefinerHandle<TPre, TPost>(delegate*<in TPre?, out
 }
 
 
-[StructLayout(LayoutKind.Sequential)]
-public readonly struct Refined<T, TRefiner>(T value) where TRefiner : IRefinerPremise<T>
-{
-    private readonly T _value = value;
-
-    public T Value => _value;
-}
 
 
 public readonly struct TypeExpr<TExpr>(TExpr? witness)
