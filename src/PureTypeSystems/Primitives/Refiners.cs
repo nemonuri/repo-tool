@@ -14,7 +14,7 @@ public interface IRefinerPremise<TPre, TPost>
 
 public interface IRefinerPremise<T>
 {
-    Judgement Judge(in T? pre, out T? post);
+    Judgement Judge(in T? pre);
 }
 
 
@@ -52,9 +52,4 @@ public readonly struct Refined<T, TRefiner>(T value) where TRefiner : IRefinerPr
 public readonly struct TypeExpr<TExpr>(TExpr? witness)
 {
     public TExpr? Witness {get;} = witness;
-}
-
-public interface IKindPremise<TExpr, TResult>
-{
-    TResult ToDotNet(TExpr typeExpr);
 }

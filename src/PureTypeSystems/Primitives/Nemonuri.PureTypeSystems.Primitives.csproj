@@ -14,6 +14,7 @@
     <When Condition="$(TargetFramework.ToLowerInvariant().StartsWith('netstandard2.'))">
       <ItemGroup>
         <PackageReference Include="PolySharp" PrivateAssets="all" />
+        <PackageReference Include="System.Runtime.CompilerServices.Unsafe" />
       </ItemGroup>
       <PropertyGroup>
         <PolySharpIncludeGeneratedTypes>
