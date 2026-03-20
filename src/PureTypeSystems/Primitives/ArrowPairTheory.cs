@@ -1,0 +1,48 @@
+namespace Nemonuri.PureTypeSystems.Primitives;
+
+public static class ArrowPairTheory
+{
+    private static ArrowHandle<TConsequent, TAntecedent> ToContraHandle<TAntecedent, TConsequent, TImplyPair>()
+        where TImplyPair : unmanaged, IArrowPairPremise<TAntecedent, TConsequent>
+    {
+        return ArrowTheory.ToHandle<TConsequent, TAntecedent, ContraArrow<TAntecedent, TConsequent, TImplyPair>>();
+    }
+
+    extension<TAntecedent, TConsequent, TImplyPair>(TImplyPair)
+        where TImplyPair : unmanaged, IArrowPairPremise<TAntecedent, TConsequent>
+    {
+        public static ArrowHandlePair<TAntecedent, TConsequent> ToHandlePair()
+        {
+            return new
+            (
+                ArrowTheory.ToHandle<TAntecedent, TConsequent, TImplyPair>(),
+                ToContraHandle<TAntecedent, TConsequent, TImplyPair>()
+            );
+        }
+    }
+
+    extension<TAntecedent, TPreJudge, TConsequent, TPostJudge, TContraPreJudge, TContraPostJudge, TImplyPair>(TImplyPair)
+        where TPreJudge : unmanaged, IJudgePremise<TAntecedent>
+        where TPostJudge : unmanaged, IJudgePremise<(TAntecedent, TConsequent)>
+        where TContraPreJudge : unmanaged, IJudgePremise<TConsequent>
+        where TContraPostJudge : unmanaged, IJudgePremise<(TConsequent, TAntecedent)>
+        where TImplyPair : unmanaged, IArrowPairPremise<TAntecedent, TPreJudge, TConsequent, TPostJudge, TContraPreJudge, TContraPostJudge>
+    {
+        public static ArrowHandlePair<TAntecedent, TConsequent> ToHandlePair()
+        {
+            var handle = ArrowTheory.ToHandle<TAntecedent, TPreJudge, TConsequent, TPostJudge, TImplyPair>();
+            var contraHandle = ToContraHandle<TAntecedent, TConsequent, TImplyPair>()
+                                .WithJudges
+                                (
+                                    JudgeTheory.ToHandle<TConsequent, TContraPreJudge>(),
+                                    JudgeTheory.ToHandle<(TConsequent, TAntecedent), TContraPostJudge>()
+                                );
+            return new(handle, contraHandle);
+        }
+    }
+
+    public static ArrowHandlePair<TP, TQ> GetFailureHandlePair<TP, TQ>()
+    {
+        return ToHandlePair<TP, Tautology<TP>, TQ, Negation<(TP, TQ)>, Tautology<TQ>, Negation<(TQ, TP)>, FailurePair<TP, TQ>>();
+    }
+}

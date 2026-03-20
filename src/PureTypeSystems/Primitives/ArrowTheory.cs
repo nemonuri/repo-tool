@@ -6,15 +6,15 @@ public readonly record struct ApplyJudgement(Judgement Pre, Judgement? Post)
 }
 
 
-public static class ImplyTheory
+public static class ArrowTheory
 {
     public const nint IdentityPointer = 0;
 
-    public static ImplyHandle<TP, TQ> GetIdentityHandle<TP, TQ>() => default;
+    public static ArrowHandle<TP, TQ> GetIdentityHandle<TP, TQ>() => default;
 
     public static bool TryApplyTrue<TP, TQ>
     (
-        in ImplyHandle<TP, TQ> implyHandle, 
+        in ArrowHandle<TP, TQ> implyHandle, 
         in TP? pre, 
         [NotNullWhen(true)] out TQ? post,
         out ApplyJudgement applyJudgement
@@ -35,51 +35,45 @@ public static class ImplyTheory
         return ok;
     }
 
-    public static bool IsTotalHandle<TP, TQ>(ImplyHandle<TP, TQ> handle)
+    public static bool IsTotalHandle<TP, TQ>(ArrowHandle<TP, TQ> handle)
     {
         return handle.PreJudge.IsTautology && handle.PostJudge.IsTautology;
     }
 
     private static TConsequent ImplInternal<TAntecedent, TConsequent, T>(in TAntecedent ant)
-        where T : unmanaged
+        where T : unmanaged, IArrowPremise<TAntecedent, TConsequent>
     {
-        if ((new T()) is IImplyPremise<TAntecedent, TConsequent> p)
+        return (new T()).Apply(in ant);
+    }
+
+    extension<TAntecedent, TConsequent, TArrow>(TArrow)
+        where TArrow : unmanaged, IArrowPremise<TAntecedent, TConsequent>
+    {
+        public unsafe static ArrowHandle<TAntecedent, TConsequent> ToHandle()
         {
-            return p.Apply(in ant);
-        }
-        else
-        {
-            throw new InvalidOperationException(/* TODO */);
+            return new(&ImplInternal<TAntecedent, TConsequent, TArrow>);
         }
     }
 
-    extension<TAntecedent, TConsequent, TImply>(TImply)
-        where TImply : unmanaged, IImplyPremise<TAntecedent, TConsequent>
-    {
-        public unsafe static ImplyHandle<TAntecedent, TConsequent> ToHandle()
-        {
-            return new(&ImplInternal<TAntecedent, TConsequent, TImply>);
-        }
-    }
-
-    extension<TAntecedent, TPreJudge, TConsequent, TPostJudge, TImply>(TImply)
+    extension<TAntecedent, TPreJudge, TConsequent, TPostJudge, TArrow>(TArrow)
         where TPreJudge : unmanaged, IJudgePremise<TAntecedent>
         where TPostJudge : unmanaged, IJudgePremise<(TAntecedent, TConsequent)>
-        where TImply : unmanaged, IImplyPremise<TAntecedent, TPreJudge, TConsequent, TPostJudge>
+        where TArrow : unmanaged, IArrowPremise<TAntecedent, TPreJudge, TConsequent, TPostJudge>
     {
-        public static ImplyHandle<TAntecedent, TConsequent> ToHandle() =>
-            ToHandle<TAntecedent, TConsequent, TImply>().WithJudges
+        public static ArrowHandle<TAntecedent, TConsequent> ToHandle() =>
+            ToHandle<TAntecedent, TConsequent, TArrow>().WithJudges
             (
                 JudgeTheory.ToHandle<TAntecedent, TPreJudge>(),
                 JudgeTheory.ToHandle<(TAntecedent, TConsequent), TPostJudge>()
             );
     }
 
-    public unsafe static ImplyHandle<TAntecedent, TConsequent> ToHandleForce<TAntecedent, TConsequent, T>()
+#if false
+    public unsafe static ArrowHandle<TAntecedent, TConsequent> ToHandleForce<TAntecedent, TConsequent, T>()
         where T : unmanaged
     {
-        ImplyHandle<TAntecedent, TConsequent> impHnd = new(&ImplInternal<TAntecedent, TConsequent, T>);
-        if ((new T()) is IImplyPremise<TAntecedent, TConsequent>)
+        ArrowHandle<TAntecedent, TConsequent> impHnd = new(&ImplInternal<TAntecedent, TConsequent, T>);
+        if ((new T()) is IArrowPremise<TAntecedent, TConsequent>)
         {
             return impHnd;
         }
@@ -88,4 +82,5 @@ public static class ImplyTheory
             return impHnd.WithJudges(JudgeTheory.GetTautologyHandle<TAntecedent>(), JudgeTheory.GetNegationHandle<(TAntecedent, TConsequent)>());
         }
     }
+#endif
 }

@@ -2,35 +2,35 @@ using System.Runtime.CompilerServices;
 
 namespace Nemonuri.PureTypeSystems.Primitives;
 
-public interface IImplyPremise<TAntecedent, TConsequent>
+public interface IArrowPremise<TAntecedent, TConsequent>
 {
     TConsequent Apply(in TAntecedent pre);
 }
 
-public interface IImplyPremise<TAntecedent, TPreJudge, TConsequent, TPostJudge> : IImplyPremise<TAntecedent, TConsequent>
+public interface IArrowPremise<TAntecedent, TPreJudge, TConsequent, TPostJudge> : IArrowPremise<TAntecedent, TConsequent>
     where TPreJudge : IJudgePremise<TAntecedent>
     where TPostJudge : IJudgePremise<(TAntecedent, TConsequent)>
 {
 }
 
 
-public readonly struct Identity<T> : IImplyPremise<T, Tautology<T>, T, Tautology<(T,T)>>
+public readonly struct Identity<T> : IArrowPremise<T, Tautology<T>, T, Tautology<(T,T)>>
 {
     public static T Apply(in T pre) => pre;
 
-    T IImplyPremise<T, T>.Apply(in T pre) => Apply(in pre);
+    T IArrowPremise<T, T>.Apply(in T pre) => Apply(in pre);
 }
 
-public readonly struct Failure<TP, TQ> : IImplyPremise<TP, Tautology<TP>, TQ, Negation<(TP,TQ)>>
+public readonly struct Failure<TP, TQ> : IArrowPremise<TP, Tautology<TP>, TQ, Negation<(TP,TQ)>>
 {
     public static TQ Apply(in TP pre) => throw new InvalidOperationException(/* TODO */);
 
-    TQ IImplyPremise<TP, TQ>.Apply(in TP pre) => Failure<TP, TQ>.Apply(in pre);
+    TQ IArrowPremise<TP, TQ>.Apply(in TP pre) => Failure<TP, TQ>.Apply(in pre);
 }
 
 
 [StructLayout(LayoutKind.Sequential)]
-public unsafe readonly struct ImplyHandle<TP, TQ> : IHandle
+public unsafe readonly struct ArrowHandle<TP, TQ> : IHandle
 {
     private readonly JudgeHandle<TP> _preJudge;
 
@@ -38,18 +38,18 @@ public unsafe readonly struct ImplyHandle<TP, TQ> : IHandle
 
     private readonly delegate*<in TP, TQ> _fp;
 
-    private ImplyHandle(JudgeHandle<TP> preJudge, JudgeHandle<(TP, TQ)> postJudge, delegate*<in TP, TQ> fp)
+    private ArrowHandle(JudgeHandle<TP> preJudge, JudgeHandle<(TP, TQ)> postJudge, delegate*<in TP, TQ> fp)
     {
         _preJudge = preJudge;
         _postJudge = postJudge;
         _fp = fp;
     }
 
-    internal ImplyHandle(delegate*<in TP, TQ> fp) : 
+    internal ArrowHandle(delegate*<in TP, TQ> fp) : 
         this(default, default, fp)
     {}
 
-    public ImplyHandle<TP, TQ> WithJudges(JudgeHandle<TP> preJudge, JudgeHandle<(TP, TQ)> postJudge)
+    public ArrowHandle<TP, TQ> WithJudges(JudgeHandle<TP> preJudge, JudgeHandle<(TP, TQ)> postJudge)
     {
         return new(preJudge, postJudge, _fp);
     }
@@ -60,7 +60,7 @@ public unsafe readonly struct ImplyHandle<TP, TQ> : IHandle
 
     public nint ToIntPtr() => (nint)_fp;
 
-    private bool IsIdentityInternal => ToIntPtr() == ImplyTheory.IdentityPointer;
+    private bool IsIdentityInternal => ToIntPtr() == ArrowTheory.IdentityPointer;
 
     public bool IsIdentity => _preJudge.IsTautology && _postJudge.IsTautology && IsIdentityInternal;
 

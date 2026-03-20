@@ -60,9 +60,9 @@ public unsafe readonly struct JudgeHandle<T> : IHandle
     reference: https://plato.stanford.edu/entries/logic-intuitionistic/#FormSystMathMath
 */
 
-public readonly struct ForAll<TContext, T> : IJudgePremise<ImplyHandle<TContext, T>>
+public readonly struct ForAll<TContext, T> : IJudgePremise<ArrowHandle<TContext, T>>
 {
-    public static Judgement Judge(in ImplyHandle<TContext, T> item)
+    public static Judgement Judge(in ArrowHandle<TContext, T> item)
     {
         var pre = item.PreJudge;
         var post = item.PostJudge;
@@ -97,12 +97,12 @@ public readonly struct ForAll<TContext, T> : IJudgePremise<ImplyHandle<TContext,
         }
     }
 
-    Judgement IJudgePremise<ImplyHandle<TContext, T>>.Judge(in ImplyHandle<TContext, T> pre) => Judge(in pre);
+    Judgement IJudgePremise<ArrowHandle<TContext, T>>.Judge(in ArrowHandle<TContext, T> pre) => Judge(in pre);
 }
 
-public readonly struct Exist<T, TContext> : IJudgePremise<ImplyHandle<T, TContext>>
+public readonly struct Exist<T, TContext> : IJudgePremise<ArrowHandle<T, TContext>>
 {
-    public static Judgement Judge(in ImplyHandle<T, TContext> item)
+    public static Judgement Judge(in ArrowHandle<T, TContext> item)
     {
         var pre = item.PreJudge;
         var post = item.PostJudge;
@@ -137,5 +137,5 @@ public readonly struct Exist<T, TContext> : IJudgePremise<ImplyHandle<T, TContex
         }
     }
 
-    Judgement IJudgePremise<ImplyHandle<T, TContext>>.Judge(in ImplyHandle<T, TContext> pre) => Judge(in pre);
+    Judgement IJudgePremise<ArrowHandle<T, TContext>>.Judge(in ArrowHandle<T, TContext> pre) => Judge(in pre);
 }
