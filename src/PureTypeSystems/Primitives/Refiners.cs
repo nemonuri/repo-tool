@@ -28,11 +28,3 @@ public readonly unsafe struct RefinerHandle<TPre, TPost>(delegate*<in TPre?, out
 
     public Judgement Judge(in TPre? pre, out TPost? post) => _fp(in pre, out post);
 }
-
-
-
-
-public readonly struct TypeExpr<TExpr>(TExpr? witness)
-{
-    public TExpr? Witness {get;} = witness;
-}

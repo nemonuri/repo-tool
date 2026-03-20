@@ -40,14 +40,25 @@ public static class ImplyTheory
         return handle.PreJudge.IsTautology && handle.PostJudge.IsTautology;
     }
 
+    private static TConsequent ImplInternal<TAntecedent, TConsequent, T>(in TAntecedent ant)
+        where T : unmanaged
+    {
+        if ((new T()) is IImplyPremise<TAntecedent, TConsequent> p)
+        {
+            return p.Apply(in ant);
+        }
+        else
+        {
+            throw new InvalidOperationException(/* TODO */);
+        }
+    }
+
     extension<TAntecedent, TConsequent, TImply>(TImply)
         where TImply : unmanaged, IImplyPremise<TAntecedent, TConsequent>
     {
         public unsafe static ImplyHandle<TAntecedent, TConsequent> ToHandle()
         {
-            static TConsequent Impl(in TAntecedent ant) => (new TImply()).Apply(in ant);
-
-            return new(&Impl);
+            return new(&ImplInternal<TAntecedent, TConsequent, TImply>);
         }
     }
 
@@ -62,5 +73,19 @@ public static class ImplyTheory
                 JudgeTheory.ToHandle<TAntecedent, TPreJudge>(),
                 JudgeTheory.ToHandle<(TAntecedent, TConsequent), TPostJudge>()
             );
+    }
+
+    public unsafe static ImplyHandle<TAntecedent, TConsequent> ToHandleForce<TAntecedent, TConsequent, T>()
+        where T : unmanaged
+    {
+        ImplyHandle<TAntecedent, TConsequent> impHnd = new(&ImplInternal<TAntecedent, TConsequent, T>);
+        if ((new T()) is IImplyPremise<TAntecedent, TConsequent>)
+        {
+            return impHnd;
+        }
+        else
+        {
+            return impHnd.WithJudges(JudgeTheory.GetTautologyHandle<TAntecedent>(), JudgeTheory.GetNegationHandle<(TAntecedent, TConsequent)>());
+        }
     }
 }
