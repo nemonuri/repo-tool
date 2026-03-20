@@ -1,14 +1,16 @@
-using System.Runtime.InteropServices;
 using System.Runtime.CompilerServices;
 
 namespace Nemonuri.PureTypeSystems.Primitives;
 
+public interface IImplyPremise<TAntecedent, TConsequent>
+{
+    TConsequent Apply(in TAntecedent pre);
+}
 
-public interface IImplyPremise<TAntecedent, TPreJudge, TConsequent, TPostJudge>
+public interface IImplyPremise<TAntecedent, TPreJudge, TConsequent, TPostJudge> : IImplyPremise<TAntecedent, TConsequent>
     where TPreJudge : IJudgePremise<TAntecedent>
     where TPostJudge : IJudgePremise<(TAntecedent, TConsequent)>
 {
-    TConsequent Apply(in TAntecedent pre);
 }
 
 
@@ -16,14 +18,14 @@ public readonly struct Identity<T> : IImplyPremise<T, Tautology<T>, T, Tautology
 {
     public static T Apply(in T pre) => pre;
 
-    T IImplyPremise<T, Tautology<T>, T, Tautology<(T, T)>>.Apply(in T pre) => Identity<T>.Apply(in pre);
+    T IImplyPremise<T, T>.Apply(in T pre) => Apply(in pre);
 }
 
 public readonly struct Failure<TP, TQ> : IImplyPremise<TP, Tautology<TP>, TQ, Negation<(TP,TQ)>>
 {
     public static TQ Apply(in TP pre) => throw new InvalidOperationException(/* TODO */);
 
-    TQ IImplyPremise<TP, Tautology<TP>, TQ, Negation<(TP, TQ)>>.Apply(in TP pre) => Failure<TP, TQ>.Apply(in pre);
+    TQ IImplyPremise<TP, TQ>.Apply(in TP pre) => Failure<TP, TQ>.Apply(in pre);
 }
 
 
@@ -36,16 +38,21 @@ public unsafe readonly struct ImplyHandle<TP, TQ> : IHandle
 
     private readonly delegate*<in TP, TQ> _fp;
 
-    public ImplyHandle(JudgeHandle<TP> preJudge, JudgeHandle<(TP, TQ)> postJudge, delegate*<in TP, TQ> fp)
+    private ImplyHandle(JudgeHandle<TP> preJudge, JudgeHandle<(TP, TQ)> postJudge, delegate*<in TP, TQ> fp)
     {
         _preJudge = preJudge;
         _postJudge = postJudge;
         _fp = fp;
     }
 
-    public ImplyHandle(delegate*<in TP, TQ> fp) : 
+    internal ImplyHandle(delegate*<in TP, TQ> fp) : 
         this(default, default, fp)
     {}
+
+    public ImplyHandle<TP, TQ> WithJudges(JudgeHandle<TP> preJudge, JudgeHandle<(TP, TQ)> postJudge)
+    {
+        return new(preJudge, postJudge, _fp);
+    }
 
     public JudgeHandle<TP> PreJudge => _preJudge;
 

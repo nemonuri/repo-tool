@@ -1,5 +1,3 @@
-using System.Runtime.InteropServices;
-
 namespace Nemonuri.PureTypeSystems.Primitives;
 
 [StructLayout(LayoutKind.Sequential)]
