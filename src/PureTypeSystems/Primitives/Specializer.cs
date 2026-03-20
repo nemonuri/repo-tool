@@ -19,3 +19,17 @@ public static class SpecializerTheory
         public static ImplyHandle<TAnt, ImplyHandle<THead, TTail>> Specialize<TAnt>(in ImplyHandle<THead, TTail> con) => (new TSpec()).Specialize<TAnt>(in con);
     }
 }
+
+public unsafe readonly struct SpecializerHandle<TCon, TAnt> : IHandle
+{
+    private readonly delegate*<in TCon, ImplyHandle<TAnt, TCon>> _fp;
+
+    internal SpecializerHandle(delegate*<in TCon, ImplyHandle<TAnt, TCon>> fp)
+    {
+        _fp = fp;
+    }
+
+    public nint ToIntPtr() => (nint)_fp;
+
+    public ImplyHandle<TAnt, TCon> Specialize(in TCon con) => _fp(in con);
+}
