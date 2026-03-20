@@ -31,6 +31,18 @@ public static class EliminatorTheory
 
             return new(&Impl);
         }
+
+        public static TCon Eliminate<TCon>(in TAnt ant)
+        {
+            var elim = ToHandle<TAnt, TEliminator, TCon>();
+            return Eliminate(elim, in ant);
+        }
+    }
+
+    public static TCon Eliminate<TAnt, TCon>(EliminatorHandle<TAnt, TCon> eliminator, in TAnt subject)
+    {
+        var impHnd = eliminator.ToImplyHandle(in subject);
+        return impHnd.Apply(in subject);
     }
 
     public static bool TryEliminate<TAnt, TCon>(EliminatorHandle<TAnt, TCon> eliminator, in TAnt subject, [NotNullWhen(true)] out TCon? result)
