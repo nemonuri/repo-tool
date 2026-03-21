@@ -425,11 +425,13 @@ end
 
 module WriterFactories = begin
 
+    type private Id<'a> = Nemonuri.Transcodings.Identity<'a>
+
     let private write_core<'b, 's when 'b :> IBufferWriter<byte>> (b: 'b) (Segments.FlattenSegment(le, fo, tr, tc)) (s: 's) : 'b =
         let mutable b' = b in
         let mutable placeHolder: int = 0 in
         
-        let inline writePlane src = TranscodeWhileDestinationTooSmall<byte,byte,Identity<byte>,'b>(Obs.stringToReadOnlySpan src, &b', &placeHolder); 
+        let inline writePlane src = TranscodeWhileDestinationTooSmall<byte,byte,Id<byte>,'b>(Obs.stringToReadOnlySpan src, &b', &placeHolder); 
         let inline writeFormatted src fmt = tc.TranscodeSingletonWhileDestinationTooSmall(src,&b',fmt,&placeHolder);
 
         writePlane le;

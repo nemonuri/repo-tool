@@ -2,8 +2,9 @@ namespace Nemonuri.OCamlDotNet.Primitives
 
 open System.IO
 open Nemonuri.Posix
+open Nemonuri.PureTypeSystems.Refiners
 open Nemonuri.PureTypeSystems.Primitives
-open Nemonuri.PureTypeSystems.Predicates
+open type Nemonuri.PureTypeSystems.Primitives.JudgementTheory
 
 module FileDiscriptors =
 
@@ -12,40 +13,40 @@ module FileDiscriptors =
     type private Pth = PosixFileInfoTheory
 
     [<RequireQualifiedAccess>]
-    module Predicates = begin
+    module Judges = begin
 
         type CanWrite =
             struct
-                static member Judge (arg: inref<t>): bool = Fth.CanWrite(arg)
+                static member Judge (arg: inref<t>) = Fth.CanWrite(arg) |> FromBoolean
 
-                interface IPredicatePremise<t> with
-                    member _.Judge (arg: inref<t>): bool = CanWrite.Judge(&arg)
+                interface IJudgePremise<t> with
+                    member _.Judge arg = CanWrite.Judge(&arg)
             end
 
         type CanRead =
             struct
-                static member Judge (arg: inref<t>): bool = Fth.CanRead(arg)
+                static member Judge (arg: inref<t>) = Fth.CanRead(arg) |> FromBoolean
 
-                interface IPredicatePremise<t> with
-                    member _.Judge (arg: inref<t>): bool = CanRead.Judge(&arg)
+                interface IJudgePremise<t> with
+                    member _.Judge arg = CanRead.Judge(&arg)
             end
 
         type IsClosed =
             struct
-                static member Judge (arg: inref<t>): bool = Fth.IsClosed(arg)
+                static member Judge (arg: inref<t>) = Fth.IsClosed(arg) |> FromBoolean
 
-                interface IPredicatePremise<t> with
-                    member _.Judge (arg: inref<t>): bool = IsClosed.Judge(&arg)
+                interface IJudgePremise<t> with
+                    member _.Judge (arg: inref<t>) = IsClosed.Judge(&arg)
             end
     end
 
-    module P = Predicates
+    module J = Judges
 
-    let tryRefineToCanWrite x = tryRefineV<_,P.CanWrite> x
+    let tryRefineToCanWrite x = tryRefineV<_,J.CanWrite> x
 
-    let tryRefineToCanRead x = tryRefineV<_,P.CanRead> x
+    let tryRefineToCanRead x = tryRefineV<_,J.CanRead> x
 
-    let tryRefineToIsClosed x = tryRefineV<_,P.IsClosed> x
+    let tryRefineToIsClosed x = tryRefineV<_,J.IsClosed> x
 
     let private trustMe x : FileDescriptor = x |> ValueOption.ofNullable |> ValueOption.get
 

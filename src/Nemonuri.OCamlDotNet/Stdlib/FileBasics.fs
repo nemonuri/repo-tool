@@ -47,9 +47,9 @@ type internal BinaryModeWriter = { mutable InnerWriter: StreamWithByteArrayPool;
 
 type internal TextModeWriter = DisposableByteBufferWriterWithTranscoder<BinaryModeWriter,UncheckedUtf8UnixToWindowsNewLine>
 
-type Writable = Refined<FileDescriptor, Predicates.Refiner<FileDescriptor, Fd.Predicates.CanWrite>>
+type Writable = Refined<FileDescriptor, Fd.Judges.CanWrite>
 
-type Readable = Refined<FileDescriptor, Predicates.Refiner<FileDescriptor, Fd.Predicates.CanRead>>
+type Readable = Refined<FileDescriptor, Fd.Judges.CanRead>
 
 module Writables = begin
 

@@ -30,16 +30,11 @@ module DotNetNativeInts =
 
     type private EqualSize<'l, 'r when 'l : unmanaged and 'r : unmanaged> =
         struct
-            static member Judge (pre: inref<'l>, post: byref<'l>): Judgement =
-                if sizeof<'l> = sizeof<nativeint> then    
-                    post <- pre;
-                    Judgement.True
-                else
-                    post <- Unchecked.defaultof<_>;
-                    Judgement.False
+            static member Judge (expr: inref<'l>): Judgement =
+                (sizeof<'l> = sizeof<'r>) |> JudgementTheory.FromBoolean
 
-            interface IRefinerPremise<'l> with
-                member _.Judge (pre: inref<'l>, post: byref<'l>): Judgement = EqualSize<'l, 'r>.Judge(&pre, &post)
+            interface IJudgePremise<'l> with
+                member _.Judge (expr: inref<'l>): Judgement = EqualSize<'l,'r>.Judge(&expr)
         end
 
     let private tryRefineOfEqualSize (handle: 'h) = Rf.tryRefineV<'h, EqualSize<'h, nativeint>>(handle)
@@ -70,24 +65,19 @@ module DotNetStreams = begin
 
     type CanRead<'TStream when 'TStream :> Stream> = struct
 
-        static member Judge (pre: inref<'TStream>, post: byref<'TStream>): Judgement = 
-            match pre.CanRead with
-            | true -> post <- pre; Judgement.True
-            | false -> post <- defaultof<_>; Judgement.False
+        static member Judge (pre: inref<'TStream>): Judgement = pre.CanRead |> JudgementTheory.FromBoolean
+            
 
-        interface IRefinerPremise<'TStream> with
-            member _.Judge (pre, post): Judgement = CanRead.Judge(&pre, &post)
+        interface IJudgePremise<'TStream> with
+            member _.Judge pre = CanRead.Judge(&pre)
     end
 
     type CanWrite<'TStream when 'TStream :> Stream> = struct
 
-        static member Judge (pre: inref<'TStream>, post: byref<'TStream>): Judgement = 
-            match pre.CanWrite with
-            | true -> post <- pre; Judgement.True
-            | false -> post <- defaultof<_>; Judgement.False
+        static member Judge (pre: inref<'TStream>): Judgement = pre.CanWrite |> JudgementTheory.FromBoolean
 
-        interface IRefinerPremise<'TStream> with
-            member _.Judge (pre, post): Judgement = CanRead.Judge(&pre, &post)
+        interface IJudgePremise<'TStream> with
+            member _.Judge pre = CanRead.Judge(&pre)
     end
 
     let tryRefineToCanRead (s: 's) = Rf.tryRefineV<'s,CanRead<'s>> s

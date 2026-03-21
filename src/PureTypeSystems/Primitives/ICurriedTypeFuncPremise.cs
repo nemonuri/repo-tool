@@ -1,5 +1,7 @@
 namespace Nemonuri.PureTypeSystems.Primitives;
 
+// TODO: Remove
+
 public interface ICurriedTypeFuncPremise<TContext>
 {
     T Invoke<T>();
