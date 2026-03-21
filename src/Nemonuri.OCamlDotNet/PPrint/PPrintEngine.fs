@@ -5,7 +5,7 @@
 
 namespace Nemonuri.OCamlDotNet
 
-open Nemonuri.PureTypeSystems
+open Nemonuri.PureTypeSystems.Primitives
 open Nemonuri.OCamlDotNet.Forwarded
 open Nemonuri.OCamlDotNet.Primitives
 open Nemonuri.OCamlDotNet.Primitives.Operators

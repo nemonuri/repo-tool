@@ -72,12 +72,32 @@ module Kinds =
         let inline call (k': ^k) (q': ^q) = ((^k or ^q) : (static member Decons : _ -> _) q') in
         call kind q
 
-    type Data = IdentityKind
+    //type Data = IdentityKind
     type Data<'a> = TypeExpressions.Data<'a>
 
     let dotNetToData (dn: 'dn) = Data<'dn>(dn)
 
     let dotNetOfData (d: Data<'dn>) = d.Value
+
+    type Data = struct
+
+        static member Cons (x: 'p) = KindTheory.Cons<Data,'p,Data<'p>>(&x)
+        static member Decons x = KindTheory.Decons<Data,'p,Data<'p>>(&x)
+
+        interface IKindPremise<Data> with
+
+            member _.TryToPair (handlePair: byref<ArrowHandlePair<'p,'q>>): bool = 
+                if typeof<'q> <> typeof<Data<'p>> then false else
+                handlePair <- ArrowPairTheory.ToTypeEqualHandlePair<'p,Data<'p>,DataImpl<'p>,_,_>();
+                true
+    end
+    and private DataImpl<'p> = struct
+
+        interface IArrowPairPremise<'p,Data<'p>> with
+            member _.Apply (pre: inref<'p>) = dotNetToData pre
+            member _.ContraApply (post: inref<Data<'p>>) = dotNetOfData post
+    end
+
 
     type App<'k, 'kd> = TypeExpressions.App<'k, 'kd>
 

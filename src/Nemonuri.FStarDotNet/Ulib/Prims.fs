@@ -58,7 +58,6 @@ module Prims =
     open Nemonuri.FStarDotNet.Primitives.FStarTypeSystems
     open Nemonuri.FStarDotNet.Primitives.FStarTypeSystems.Operations
     module Obs = Nemonuri.OCamlDotNet.Primitives.OCamlByteSpanSources
-    module Pts = Nemonuri.PureTypeSystems.Operations
 
 
     (***** Begin trusted primitives *****)

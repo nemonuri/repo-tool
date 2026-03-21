@@ -1,3 +1,5 @@
+using System.Runtime.CompilerServices;
+
 namespace Nemonuri.PureTypeSystems.Primitives;
 
 public static class ArrowPairTheory
@@ -18,6 +20,17 @@ public static class ArrowPairTheory
                 ArrowTheory.ToHandle<TAntecedent, TConsequent, TImplyPair>(),
                 ToContraHandle<TAntecedent, TConsequent, TImplyPair>()
             );
+        }
+
+        public static ArrowHandlePair<T1, T2> ToTypeEqualHandlePair<T1, T2>()
+        {
+            if (!(typeof(T1) == typeof(TAntecedent) && typeof(T2) == typeof(TConsequent)))
+            {
+                throw new InvalidCastException(/* TODO */);
+            }
+
+            var original = ToHandlePair<TAntecedent, TConsequent, TImplyPair>();
+            return Unsafe.As<ArrowHandlePair<TAntecedent, TConsequent>,ArrowHandlePair<T1, T2>>(ref original);
         }
     }
 

@@ -2,7 +2,6 @@ namespace Nemonuri.FStarDotNet.Primitives.FStarTypeSystems
 
 open Nemonuri.PureTypeSystems
 open Nemonuri.PureTypeSystems.Primitives
-module Pts = Nemonuri.PureTypeSystems.Operations
 
 #if false
 type ISupportWitness<'T> =
@@ -33,20 +32,18 @@ type FStarType<'TExpr, 'TRefiner when 'TRefiner :> IRefinerPremise<'TExpr> and '
     end
 #endif
 
-type FStarKind<'TExpr, 'TRefiner when 'TRefiner :> IRefinerPremise<TypeExpr<'TExpr>> and 'TRefiner : unmanaged> = Refined<TypeExpr<'TExpr>, 'TRefiner>
+//type FStarKind<'TExpr, 'TRefiner when 'TRefiner :> IRefinerPremise<TypeExpr<'TExpr>> and 'TRefiner : unmanaged> = Refined<TypeExpr<'TExpr>, 'TRefiner>
 
-type FStarType<'T, 'TRefiner when 'TRefiner :> IRefinerPremise<'T> and 'TRefiner : unmanaged> = Refined<'T, 'TRefiner>
+type Type0 = Kinds.Data
 
-type Type0 = FStarType<obj, Tautology<obj>>
-
-type EqType<'a when 'a : equality> = FStarType<'a, Tautology<'a>>
+type EqType<'a when 'a : equality> = 'a
 
 
 module Operations =
 
     open TypeEquality
 
-    let tautology = Pts.tautology
+    //let tautology = Pts.tautology
 
 #if false
     let toFStarType (witness: 'e) (refiner: 'r) : FStarType<'e,'r> = { Witness = witness }
