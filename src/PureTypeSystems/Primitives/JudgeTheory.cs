@@ -1,3 +1,5 @@
+using System.Runtime.CompilerServices;
+
 namespace Nemonuri.PureTypeSystems.Primitives;
 
 public static class JudgeTheory
@@ -6,12 +8,12 @@ public static class JudgeTheory
 
     public static JudgeHandle<T> GetTautologyHandle<T>() => default;
 
-    public static JudgeHandle<T> GetNegationHandle<T>() => ToHandle<T, Negation<T>>();
+    public static JudgeHandle<T> GetNegationHandle<T>() => FreeToHandle<Negation, T>();
 
     public static bool IsNegationHandle<T>(JudgeHandle<T> judgeHandle) => 
         judgeHandle.ToIntPtr() == GetNegationHandle<T>().ToIntPtr();
 
-    public static JudgeHandle<T> GetThunkHandle<T>() => ToHandle<T, Thunk<T>>();
+    public static JudgeHandle<T> GetThunkHandle<T>() => FreeToHandle<Thunk, T>();
 
     public static bool IsThunkHandle<T>(JudgeHandle<T> judgeHandle) => 
         judgeHandle.ToIntPtr() == GetThunkHandle<T>().ToIntPtr();
@@ -26,14 +28,22 @@ public static class JudgeTheory
         return judgement == Judgement.True;
     }
 
-    extension<T, TJudge>(TJudge)
-        where TJudge : unmanaged, IJudgePremise<T>
+    public static bool TryFreeJudge<T1, T2, TJudge>(in TJudge boundJudge, in T2 expr, out Judgement judgement)
+        where TJudge : IJudgePremise<T1>
     {
-        public unsafe static JudgeHandle<T> ToHandle()
+        if (typeof(T1) != typeof(T2)) { judgement = Judgement.False; return false; }
+        judgement = boundJudge.Judge(in Unsafe.As<T2,T1>(ref Unsafe.AsRef(in expr)));
+        return true;
+    }
+
+    extension<TJudge>(TJudge)
+        where TJudge : unmanaged, IJudgePremise
+    {
+        public unsafe static JudgeHandle<T> FreeToHandle<T>()
         {
             static Judgement Impl(in T? item) => (new TJudge()).Judge(in item);
 
-            if (typeof(TJudge) == typeof(Tautology<T>))
+            if (typeof(TJudge) == typeof(Tautology))
             {
                 return GetTautologyHandle<T>();
             }
@@ -42,5 +52,11 @@ public static class JudgeTheory
                 return new(&Impl);
             }
         }
+    }
+
+    extension<T, TJudge>(TJudge)
+        where TJudge : unmanaged, IJudgePremise<T>
+    {
+        public unsafe static JudgeHandle<T> BoundToHandle() => FreeToHandle<BoundBasedFreeJudge<T, TJudge>, T>();
     }
 }

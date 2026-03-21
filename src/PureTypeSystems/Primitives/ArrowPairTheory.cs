@@ -35,10 +35,10 @@ public static class ArrowPairTheory
     }
 
     extension<TAntecedent, TPreJudge, TConsequent, TPostJudge, TContraPreJudge, TContraPostJudge, TImplyPair>(TImplyPair)
-        where TPreJudge : unmanaged, IJudgePremise<TAntecedent>
-        where TPostJudge : unmanaged, IJudgePremise<(TAntecedent, TConsequent)>
-        where TContraPreJudge : unmanaged, IJudgePremise<TConsequent>
-        where TContraPostJudge : unmanaged, IJudgePremise<(TConsequent, TAntecedent)>
+        where TPreJudge : unmanaged, IJudgePremise
+        where TPostJudge : unmanaged, IJudgePremise
+        where TContraPreJudge : unmanaged, IJudgePremise
+        where TContraPostJudge : unmanaged, IJudgePremise
         where TImplyPair : unmanaged, IArrowPairPremise<TAntecedent, TPreJudge, TConsequent, TPostJudge, TContraPreJudge, TContraPostJudge>
     {
         public static ArrowHandlePair<TAntecedent, TConsequent> ToHandlePair()
@@ -47,8 +47,8 @@ public static class ArrowPairTheory
             var contraHandle = ToContraHandle<TAntecedent, TConsequent, TImplyPair>()
                                 .WithJudges
                                 (
-                                    JudgeTheory.ToHandle<TConsequent, TContraPreJudge>(),
-                                    JudgeTheory.ToHandle<(TConsequent, TAntecedent), TContraPostJudge>()
+                                    JudgeTheory.FreeToHandle<TContraPreJudge, TConsequent>(),
+                                    JudgeTheory.FreeToHandle<TContraPostJudge, (TConsequent, TAntecedent)>()
                                 );
             return new(handle, contraHandle);
         }
@@ -56,6 +56,6 @@ public static class ArrowPairTheory
 
     public static ArrowHandlePair<TP, TQ> GetFailureHandlePair<TP, TQ>()
     {
-        return ToHandlePair<TP, Tautology<TP>, TQ, Negation<(TP, TQ)>, Tautology<TQ>, Negation<(TQ, TP)>, FailurePair<TP, TQ>>();
+        return ToHandlePair<TP, Tautology, TQ, Negation, Tautology, Negation, FailurePair<TP, TQ>>();
     }
 }

@@ -8,20 +8,20 @@ public interface IArrowPremise<TAntecedent, TConsequent>
 }
 
 public interface IArrowPremise<TAntecedent, TPreJudge, TConsequent, TPostJudge> : IArrowPremise<TAntecedent, TConsequent>
-    where TPreJudge : IJudgePremise<TAntecedent>
-    where TPostJudge : IJudgePremise<(TAntecedent, TConsequent)>
+    where TPreJudge : IJudgePremise
+    where TPostJudge : IJudgePremise
 {
 }
 
 
-public readonly struct Identity<T> : IArrowPremise<T, Tautology<T>, T, Tautology<(T,T)>>
+public readonly struct Identity<T> : IArrowPremise<T, Tautology, T, Tautology>
 {
     public static T Apply(in T pre) => pre;
 
     T IArrowPremise<T, T>.Apply(in T pre) => Apply(in pre);
 }
 
-public readonly struct Failure<TP, TQ> : IArrowPremise<TP, Tautology<TP>, TQ, Negation<(TP,TQ)>>
+public readonly struct Failure<TP, TQ> : IArrowPremise<TP, Tautology, TQ, Negation>
 {
     public static TQ Apply(in TP pre) => throw new InvalidOperationException(/* TODO */);
 

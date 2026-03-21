@@ -1,6 +1,33 @@
+using System.Runtime.CompilerServices;
 using static Nemonuri.PureTypeSystems.Primitives.Extensions.JudgeHandleExtensions;
 
 namespace Nemonuri.PureTypeSystems.Primitives;
+
+public interface IJudgePremise
+{
+    Judgement Judge<T>(in T expr);
+}
+
+public readonly struct Tautology : IJudgePremise
+{
+    public static Judgement Judge<T>(in T _) => Judgement.True;
+
+    Judgement IJudgePremise.Judge<T>(in T expr) => Judge(in expr);
+}
+
+public readonly struct Negation : IJudgePremise
+{
+    public static Judgement Judge<T>(in T _) => Judgement.False;
+
+    Judgement IJudgePremise.Judge<T>(in T pre) => Judge(in pre);
+}
+
+public readonly struct Thunk : IJudgePremise
+{
+    public static Judgement Judge<T>(in T _) => Judgement.Thunk;
+
+    Judgement IJudgePremise.Judge<T>(in T pre) => Judge(in pre);
+}
 
 public interface IJudgePremise<T>
 {
@@ -10,25 +37,22 @@ public interface IJudgePremise<T>
     Judgement Judge(in T? expr);
 }
 
-public readonly struct Tautology<T> : IJudgePremise<T>
+public readonly struct BoundBasedFreeJudge<T1, TJudge> : IJudgePremise
+    where TJudge : unmanaged, IJudgePremise<T1>
 {
-    public static Judgement Judge(in T? _) => Judgement.True;
+    public static Judgement Judge<T2>(in T2 expr)
+    {
+        if (JudgeTheory.TryFreeJudge<T1, T2, TJudge>((new TJudge()), in expr, out var jm))
+        {
+            return jm;
+        }
+        else
+        {
+            return Judgement.False;
+        }
+    }
 
-    Judgement IJudgePremise<T>.Judge(in T? pre) => Tautology<T>.Judge(in pre);
-}
-
-public readonly struct Negation<T> : IJudgePremise<T>
-{
-    public static Judgement Judge(in T? _) => Judgement.False;
-
-    Judgement IJudgePremise<T>.Judge(in T? pre) => Negation<T>.Judge(in pre);
-}
-
-public readonly struct Thunk<T> : IJudgePremise<T>
-{
-    public static Judgement Judge(in T? _) => Judgement.Thunk;
-
-    Judgement IJudgePremise<T>.Judge(in T? pre) => Thunk<T>.Judge(in pre);
+    Judgement IJudgePremise.Judge<T2>(in T2 expr) => Judge(in expr);
 }
 
 
@@ -50,7 +74,7 @@ public unsafe readonly struct JudgeHandle<T> : IHandle
     {
         if (IsTautology)
         {
-            return Tautology<T>.Judge(in pre);
+            return Tautology.Judge(in pre);
         }
         else
         {

@@ -56,15 +56,15 @@ public static class ArrowTheory
     }
 
     extension<TAntecedent, TPreJudge, TConsequent, TPostJudge, TArrow>(TArrow)
-        where TPreJudge : unmanaged, IJudgePremise<TAntecedent>
-        where TPostJudge : unmanaged, IJudgePremise<(TAntecedent, TConsequent)>
+        where TPreJudge : unmanaged, IJudgePremise
+        where TPostJudge : unmanaged, IJudgePremise
         where TArrow : unmanaged, IArrowPremise<TAntecedent, TPreJudge, TConsequent, TPostJudge>
     {
         public static ArrowHandle<TAntecedent, TConsequent> ToHandle() =>
             ToHandle<TAntecedent, TConsequent, TArrow>().WithJudges
             (
-                JudgeTheory.ToHandle<TAntecedent, TPreJudge>(),
-                JudgeTheory.ToHandle<(TAntecedent, TConsequent), TPostJudge>()
+                JudgeTheory.FreeToHandle<TPreJudge, TAntecedent>(),
+                JudgeTheory.FreeToHandle<TPostJudge, (TAntecedent, TConsequent)>()
             );
     }
 

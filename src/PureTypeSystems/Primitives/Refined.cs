@@ -10,5 +10,5 @@ public readonly struct Refined<T, TJudge>(T value) //where TJudge : IJudgePremis
 
 public static class RefineTheory
 {
-    public static Refined<T, Negation<T>> GetContradiction<T>() => default;
+    public static Refined<Negation, T> GetContradiction<T>() => default;
 }

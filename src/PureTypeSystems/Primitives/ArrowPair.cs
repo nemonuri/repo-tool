@@ -9,10 +9,10 @@ public interface IArrowPairPremise<TAntecedent, TConsequent> :
 public interface IArrowPairPremise<TAntecedent, TPreJudge, TConsequent, TPostJudge, TContraPreJudge, TContraPostJudge> :
     IArrowPairPremise<TAntecedent, TConsequent>,
     IArrowPremise<TAntecedent, TPreJudge, TConsequent, TPostJudge> 
-    where TPreJudge : IJudgePremise<TAntecedent>
-    where TPostJudge : IJudgePremise<(TAntecedent, TConsequent)>
-    where TContraPreJudge : IJudgePremise<TConsequent>
-    where TContraPostJudge : IJudgePremise<(TConsequent, TAntecedent)>
+    where TPreJudge : IJudgePremise
+    where TPostJudge : IJudgePremise
+    where TContraPreJudge : IJudgePremise
+    where TContraPostJudge : IJudgePremise
 {
 }
 
@@ -44,7 +44,7 @@ public readonly struct ContraArrow<TAnt, TCon, TImplyPair> : IArrowPremise<TCon,
 }
 
 
-public readonly struct IdentityPair<T> : IArrowPairPremise<T, Tautology<T>, T, Tautology<(T,T)>, Tautology<T>, Tautology<(T,T)>>
+public readonly struct IdentityPair<T> : IArrowPairPremise<T, Tautology, T, Tautology, Tautology, Tautology>
 {
     public static T Apply(in T pre) => Identity<T>.Apply(in pre);
 
@@ -56,7 +56,7 @@ public readonly struct IdentityPair<T> : IArrowPairPremise<T, Tautology<T>, T, T
 }
 
 public readonly struct FailurePair<TAnt, TCon> : 
-    IArrowPairPremise<TAnt, Tautology<TAnt>, TCon, Negation<(TAnt, TCon)>, Tautology<TCon>, Negation<(TCon, TAnt)>>
+    IArrowPairPremise<TAnt, Tautology, TCon, Negation, Tautology, Negation>
 {
     public static TCon Apply(in TAnt ant) => Failure<TAnt, TCon>.Apply(in ant);
 
