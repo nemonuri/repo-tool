@@ -118,15 +118,29 @@ module Prims =
 
     type hasEq = struct
 
+        static member Judge<'T> (expr: inref<'T>): Judgement = 
+            typeof<'T>.CustomAttributes 
+            |> Seq.tryFind (fun (cad: Reflection.CustomAttributeData) -> cad.AttributeType = typeof<NoEqualityAttribute>)
+            |> Option.isNone
+            |> FromBoolean
+
+        static member Cons(typ: 'Type) = KindTheory.Cons<hasEq, _, Type0<Judgement>>(&typ)
+
         interface IJudgePremise with
-            member _.Judge (expr: inref<'T>): Judgement = 
-                typeof<'T>.CustomAttributes 
-                |> Seq.tryFind (fun (cad: Reflection.CustomAttributeData) -> cad.AttributeType = typeof<NoEqualityAttribute>)
-                |> Option.isNone
-                |> FromBoolean
+            member _.Judge (expr: inref<'T>): Judgement = hasEq.Judge(&expr)
+
+        interface IKindPremise<hasEq> with
+            member _.TryToPair (handlePair: byref<ArrowHandlePair<'p,'q>>): bool = 
+                ArrowPairTheory.TryToTypeEqualHandlePair<'Type, Type0<Judgement>, hasEq<'Type>, _,_>(&handlePair)
+    end
+    and private hasEq<'Type> = struct
+
+        interface IArrowPairPremise<'Type, Type0<Judgement>> with
+            member _.Apply (pre: inref<'Type>): Type0<Judgement> = Type0<_>(hasEq.Judge(&pre))
+            member _.ContraApply (post: inref<Type0<Judgement>>): 'Type = raise (NotImplementedException())
     end
     
-    type eqtype<'a> = Guard<Data<'a>, hasEq> 
+    type eqtype<'a> = Guard<Type0<'a>, hasEq> 
 
 
     (** [bool] is a two element type with elements [true] and [false]. We
@@ -177,7 +191,7 @@ module Prims =
         See FStar.Squash for various ways of manipulating squashed
         types. *)
     [<tac_opaque>]
-    type squash<'p> = FStarType<unit, FStarType<unit, Tautology, 'p>, unit>
+    type squash<'p> = Refined<unit,'p>
 
     (** [auto_squash] is equivalent to [squash]. However, F* will
         automatically insert `auto_squash` when simplifying terms,
@@ -226,19 +240,10 @@ module Prims =
         type with a single constructor for reflexivity.  As with the other
         connectives, we often work instead with the squashed version of
         equality, below. *)
-    type equals<'a, 'x, '_0 when 'x :> IConstant<'a> and '_0 :> IConstant<'a>> = | Refl
-        with
-            member this.Check(_: 't) = 
-                match Teq.tryRefl<'t, equals<'a, 'x, '_0>> with
-                | None -> Pts.triTrue
-                | Some _ ->
-                match Teq.tryRefl<'x, '_0> with
-                | None -> Pts.triFalse
-                | Some _ -> Pts.triTrue
-
-            interface ITypeRefiner with
-                member this.GetCondition (): Condition<'T> = this.Check<'T>
-        end
+    type equals<'a, 'x, '_0 when 'x :> IConstant<'a> and '_0 :> IConstant<'a>> = class
+        internal new() = {}
+    end 
+    let Refl<'a,'x when 'x :> IConstant<'a>> = equals<'a,'x,'x>()
 
 
     (** [eq2] is the squashed version of [equals]. It's a proof
@@ -260,17 +265,6 @@ module Prims =
 
     (** constructive conjunction *)
     type pair<'p, 'q> = | Pair of _1:'p * _2:'q
-        with
-            member this.Check(x: 'x) =
-                match tryToDomain<pair<'p, 'q>,_> x with
-                | None -> Pts.triTrue
-                | Some v -> 
-                match v with
-                | Pair(_1,_2) -> Pts.triAnd (Pts.checkSelf _1) (Pts.checkSelf _2)
-
-            interface ITypeRefiner with
-                member this.GetCondition (): Condition<'T> = this.Check<'T>
-        end
 
 
     (** squashed conjunction, specialized to [Type0], written with an
@@ -278,36 +272,10 @@ module Prims =
     [<tac_opaque; smt_theory_symbol>]
     type l_and<[<logical>] 'p, [<logical>] 'q> = squash<pair<'p, 'q>>
 
-    (** constructive disjunction *)
-    let inline private createSum<^p, ^q, ^x, ^th 
-                                    when (^x or ^th) : (static member Create: ^x -> FStarSum<^p,^q>)>
-        (v: ^x) =
-        ((^x or ^th) : (static member Create: ^x -> FStarSum<^p,^q>) v)
-
-(*
-    let inline (|Left|Right|) (v: ^x) : Choice<^p, ^q> =
-        let sum = createSum<^p, ^q, ^x, FStarSums.FStarSumTheory> v
-        match sum with
-        | FStarSumLeft (v: ^p) -> Left v
-        | FStarSumRight (v: ^q) -> Right v
-*)
 
     type sum<'p, 'q> = 
     | Left of v:'p
     | Right of v:'q
-        with
-            member this.Check(x: 'x) = 
-                match tryToDomain<sum<'p, 'q>,_> x with
-                | None -> Pts.triTrue
-                | Some v' -> 
-                match v' with
-                | Left v -> Pts.checkSelf v
-                | Right v -> Pts.checkSelf v
-            
-            interface ITypeRefiner with
-                member this.GetCondition () = this.Check<'T>
-        end
-
 
 
     (** squashed disjunction, specialized to [Type0], written with an
@@ -394,38 +362,38 @@ module Prims =
         want to use this [has_type] predicate. F*'s type theory certainly
         does not internalize its own typing judgment *)
 
+    [<RequireQualifiedAccess; Struct>]
     [<deprecated "'has_type' is intended for internal use and debugging purposes only; \
                     do not rely on it for your proofs">]
-    type has_type<'a, '_0, 'Type when '_0 :> IConstant<'a>> = 
-        struct 
-            interface IConstant<'_0 -> bool> with
-                member this.Value: '_0 -> bool = fun _0 -> 
-                    typeof<'Type>.IsAssignableFrom(_0.GetType()) ||
-                    (match box _0 with | :? ISupportWitness<'Type> -> true | _ -> false)
-        end
+    type has_type<'a, '_0, 'Type when '_0 :> IConstant<'a>> = struct 
+
+        interface IArrowPremise<'a,Type0> with
+            member _.Apply (pre: inref<'a>): Type0 = 
+                let result = EqualityComparer<'a>.Default.Equals(pre, Unchecked.defaultof<'_0>.Value) && typeof<'Type>.IsAssignableFrom(pre.GetType()) in
+                Type0(result |> FromBoolean)
+    end
         
 
     (** Squashed universal quantification, or dependent products, written
         [forall (x:a). p x], specialized to Type0 *)
     [<tac_opaque; smt_theory_symbol>]
     [<logical>]
-    type l_Forall<'a, 'p when 'p :> IConstant<'a -> Type0>> = squash<``x: a -> GTot (p x)``<'a,'p,IConstant<'a>>>
-    and ``x: a -> GTot (p x)``<'a, 'p, 'x when 'x :> IConstant<'a>> = 'x -> Kind<'p * 'x>
+    type l_Forall<'a, 'p when 'p :> IArrowPremise<'a,Type0>> = struct
+
+        interface IJudgePremise with
+            member _.Judge (expr: inref<'T>): Judgement = 
+                if typeof<'T>.IsAssignableFrom(typeof<IConstant<'a>>) then Judgement.Thunk else Judgement.False
+                    
+
+    end
+    and l_Forall<'a, 'p, 'x when 'p :> IArrowPremise<'a,Type0> and 'x :> IConstant<'a>> = squash<Refined<'x,App<'p,'x>>>
+    //= squash<Refined<'a,App<'p,'a>>>
+    // squash<``x: a -> GTot (p x)``<'a,'p,IConstant<'a>>>
+    // and ``x: a -> GTot (p x)``<'a, 'p, 'x when 'x :> IConstant<'a>> = 'x -> Kind<'p * 'x>
 
     (** [p1 `subtype_of` p2] when every element of [p1] is also an element
         of [p2]. *)
-    type subtype_of<'p1, 'p2> = l_Forall<'p1, ``has_type x p2``<'p1,'p2,IConstant<'p1>>>
-    and ``has_type x p2``<'p1, 'p2, 'x when 'x :> IConstant<'p1>> =
-            struct
-                interface IConstant<'p1 -> Type0> with
-                    member this.Value: 'p1 -> Type0 = fun (p1: 'p1) -> 
-                        match box p1 with
-                        | :? 'x as x -> 
-                            match (has_type<'p1, 'x, 'p2>() :> IConstant<'x -> bool>).Value x with
-                            | true -> toType0 (obj())
-                            | false -> toType0 null
-                        | _ -> toType0 null
-            end
+    type subtype_of<'p1, 'p2> = l_Forall<'p1, has_type<'p1, IConstant<'p1>, 'p2>>
 
 
     (** The type of squashed types.

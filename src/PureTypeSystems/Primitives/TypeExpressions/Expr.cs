@@ -8,4 +8,4 @@ public readonly record struct Data<TData>(TData Value);
 
 public readonly record struct App<TKind, TAppOrData>(TAppOrData Value);
 
-public readonly record struct Guard<TExpr, TJudge>(TExpr Value) where TJudge : IJudgePremise;
+//public readonly record struct Guard<TExpr, TJudge>(TExpr Value) where TJudge : IJudgePremise;

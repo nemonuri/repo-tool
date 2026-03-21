@@ -1,6 +1,7 @@
 namespace Nemonuri.PureTypeSystems
 
 open Nemonuri.PureTypeSystems.Primitives
+open type Nemonuri.PureTypeSystems.Primitives.Extensions.JudgementExtensions
 open Microsoft.FSharp.Core.Operators.Unchecked
 
 module Refiners =

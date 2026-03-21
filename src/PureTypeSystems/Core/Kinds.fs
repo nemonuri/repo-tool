@@ -29,9 +29,7 @@ module Kinds =
         interface IKindPremise<Data> with
 
             member _.TryToPair (handlePair: byref<ArrowHandlePair<'p,'q>>): bool = 
-                if typeof<'q> <> typeof<Data<'p>> then false else
-                handlePair <- ArrowPairTheory.ToTypeEqualHandlePair<'p,Data<'p>,DataImpl<'p>,_,_>();
-                true
+                ArrowPairTheory.TryToTypeEqualHandlePair<'p,Data<'p>,DataImpl<'p>,_,_>(&handlePair);
     end
     and private DataImpl<'p> = struct
 
@@ -43,7 +41,11 @@ module Kinds =
 
     type App<'k, 'kd> = TypeExpressions.App<'k, 'kd>
 
-    type Guard<'t, 'j when 'j :> IJudgePremise> = TypeExpressions.Guard<'t, 'j>
+    type Guard<'t, 'j when 'j : unmanaged and 'j :> IJudgePremise and 'j : struct and 'j : (new: unit -> 'j) and 'j :> System.ValueType> = 
+        TypeExpressions.App<StrictGuardKind<'j>, 't>
+
+    type LooseGuard<'t, 'j when 'j : unmanaged and 'j :> IJudgePremise and 'j : struct and 'j : (new: unit -> 'j) and 'j :> System.ValueType> = 
+        TypeExpressions.App<LooseGuardKind<'j>, 't>
 
     type Premise = struct
 
@@ -79,9 +81,10 @@ module Kinds =
         let inline call (p: ^p) (x: ^x) = ((^p or ^x) : (static member ToDotNet : _ -> _) x)
         call defaultof<Premise> appOrData
 
+#if false
     let inline guardToDotNet (guarded: Guard<^t,^j>) =
         guarded.Value |> toDotNet |> Refiners.refine<^dn,^j>
-
+#endif
 
 
 module TypeShadowing =

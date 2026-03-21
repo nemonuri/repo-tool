@@ -36,6 +36,13 @@ public static class JudgeTheory
         return true;
     }
 
+    public static Judgement FreeJudge<T1, T2, TJudge>(in TJudge boundJudge, in T2 expr)
+        where TJudge : IJudgePremise<T1>
+    {
+        TryFreeJudge<T1, T2, TJudge>(in boundJudge, in expr, out var jm);
+        return jm;
+    }
+
     extension<TJudge>(TJudge)
         where TJudge : unmanaged, IJudgePremise
     {

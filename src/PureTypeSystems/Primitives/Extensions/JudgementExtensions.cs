@@ -7,5 +7,11 @@ public static class JudgementExtensions
         public bool IsTrue => jm == Judgement.True;
 
         public bool IsTrueOrThunk => jm.Truthy;
+
+        public void Deconstruct(out bool determinate, out bool truthy)
+        {
+            determinate = jm.Determinate;
+            truthy = jm.Truthy;
+        }
     }
 }
