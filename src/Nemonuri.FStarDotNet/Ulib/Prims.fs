@@ -55,6 +55,9 @@ module Prims =
     module Fk = Nemonuri.FStarDotNet.Primitives.Operations.FStarKinds
 #endif
     open Nemonuri.PureTypeSystems
+    open Nemonuri.PureTypeSystems.Kinds
+    open Nemonuri.PureTypeSystems.Primitives
+    open type Nemonuri.PureTypeSystems.Primitives.JudgementTheory
     open Nemonuri.FStarDotNet.Primitives.FStarTypeSystems
     open Nemonuri.FStarDotNet.Primitives.FStarTypeSystems.Operations
     module Obs = Nemonuri.OCamlDotNet.Primitives.OCamlByteSpanSources
@@ -113,9 +116,17 @@ module Prims =
     let inline private ty0t ty0 = toType0 ty0 |> Ftc.tail
 #endif
 
-    type hasEq = Tautology
+    type hasEq = struct
+
+        interface IJudgePremise with
+            member _.Judge (expr: inref<'T>): Judgement = 
+                typeof<'T>.CustomAttributes 
+                |> Seq.tryFind (fun (cad: Reflection.CustomAttributeData) -> cad.AttributeType = typeof<NoEqualityAttribute>)
+                |> Option.isNone
+                |> FromBoolean
+    end
     
-    type eqtype = FStarGhostType<unit, hasEq>
+    type eqtype<'a> = Guard<Data<'a>, hasEq> 
 
 
     (** [bool] is a two element type with elements [true] and [false]. We
@@ -134,7 +145,7 @@ module Prims =
         inhabitants represents logical falsehood. Note, [empty] is
         seldom used directly in F*. We instead use its "squashed" variant,
         [False], see below. *)
-    type empty = System.Void
+    type empty = Invalid
 
     (** [trivial] is the singleton inductive type---it is trivially
         inhabited. Like [empty], [trivial] is seldom used. We instead use

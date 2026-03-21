@@ -2,7 +2,7 @@ namespace Nemonuri.OCamlDotNet.Primitives
 
 open System.IO
 open Nemonuri.Posix
-open Nemonuri.PureTypeSystems.Refiners
+open Nemonuri.PureTypeSystems.Refiners.Bound
 open Nemonuri.PureTypeSystems.Primitives
 open type Nemonuri.PureTypeSystems.Primitives.JudgementTheory
 

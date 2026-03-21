@@ -35,6 +35,7 @@ type FStarType<'TExpr, 'TRefiner when 'TRefiner :> IRefinerPremise<'TExpr> and '
 //type FStarKind<'TExpr, 'TRefiner when 'TRefiner :> IRefinerPremise<TypeExpr<'TExpr>> and 'TRefiner : unmanaged> = Refined<TypeExpr<'TExpr>, 'TRefiner>
 
 type Type0 = Kinds.Data
+type Type0<'a> = Kinds.Data<'a>
 
 type EqType<'a when 'a : equality> = 'a
 

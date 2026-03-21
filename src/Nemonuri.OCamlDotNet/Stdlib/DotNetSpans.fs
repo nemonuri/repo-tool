@@ -26,7 +26,7 @@ module DotNetNativeInts =
     open Nemonuri.PureTypeSystems
     open Nemonuri.PureTypeSystems.Primitives
     open System.Runtime.CompilerServices
-    module Rf = Nemonuri.PureTypeSystems.Refiners
+    module Rf = Nemonuri.PureTypeSystems.Refiners.Bound
 
     type private EqualSize<'l, 'r when 'l : unmanaged and 'r : unmanaged> =
         struct
@@ -61,7 +61,7 @@ module DotNetStreams = begin
     open Unchecked
     open Nemonuri.PureTypeSystems
     open Nemonuri.PureTypeSystems.Primitives
-    module Rf = Nemonuri.PureTypeSystems.Refiners
+    module Rf = Nemonuri.PureTypeSystems.Refiners.Bound
 
     type CanRead<'TStream when 'TStream :> Stream> = struct
 
