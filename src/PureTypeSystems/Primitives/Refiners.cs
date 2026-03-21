@@ -7,6 +7,7 @@ public interface IConstant<T>
     T Value {get;}
 }
 
+#if false
 public interface IRefinerPremise<TPre, TPost>
 {
     Judgement Judge(in TPre? pre, out TPost? post);
@@ -28,3 +29,4 @@ public readonly unsafe struct RefinerHandle<TPre, TPost>(delegate*<in TPre?, out
 
     public Judgement Judge(in TPre? pre, out TPost? post) => _fp(in pre, out post);
 }
+#endif

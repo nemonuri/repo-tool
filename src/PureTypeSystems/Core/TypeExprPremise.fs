@@ -1,14 +1,14 @@
 namespace Nemonuri.PureTypeSystems
 
 open Nemonuri.PureTypeSystems.Primitives
-open Nemonuri.PureTypeSystems.Operations
+open Nemonuri.PureTypeSystems.Kinds
 
 type TypeExprPremise =
     struct
 //--- TypeExprToDotNet ---
 
         static member inline TypeExprToDotNet(_1: Bracket<_>) = _1.Value
-        static member inline TypeExprToDotNet(_1,_2) = toDotNet _1 _2
+        static member inline TypeExprToDotNet(_1,_2) = cons _1 _2
         static member inline TypeExprToDotNet(_1,_2,_3) = K.TypeExprToDotNet(_1, K.TypeExprToDotNet(_2,_3))
         static member inline TypeExprToDotNet(_1,_2,_3,_4) = K.TypeExprToDotNet(_1, K.TypeExprToDotNet(_2,_3,_4))
         static member inline TypeExprToDotNet(_1,_2,_3,_4,_5) = K.TypeExprToDotNet(_1, K.TypeExprToDotNet(_2,_3,_4,_5))

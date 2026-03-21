@@ -16,7 +16,6 @@ type Kind<'T> =
         val Witness: 'T
         new(witness: 'T) = { Witness = witness }
     end    
-#endif
 
 /// https://en.wikipedia.org/wiki/Three-valued_logic
 type Trilean = bool voption
@@ -41,7 +40,7 @@ type Tautology<'T> =
             member x.Judge (pre: inref<'T>, post: byref<'T>): Judgement = Tautology<'T>.Judge(&pre, &post)
     end
 
-#if false
+
 [<NoEquality; NoComparison>]
 type Tautology =
     struct
@@ -50,7 +49,7 @@ type Tautology =
         interface ITypeRefiner with
             member this.GetCondition (): Condition<'T> = this.Check<'T>
     end
-#endif
+
 [<NoEquality; NoComparison>]
 type AlwaysUnknown =
     struct
@@ -59,15 +58,65 @@ type AlwaysUnknown =
         interface ITypeRefiner with
             member this.GetCondition (): Condition<'T> = this.Check<'T>
     end
+#endif
+
+module Kinds =
+
+    open Unchecked
+
+    let inline cons kind p =
+        let inline call (k': ^k) (p': ^p) = ((^k or ^p) : (static member Cons : _ -> _) p') in
+        call kind p
+    
+    let inline decons kind q =
+        let inline call (k': ^k) (q': ^q) = ((^k or ^q) : (static member Decons : _ -> _) q') in
+        call kind q
+
+    type Data = IdentityKind
+    type Data<'a> = TypeExpressions.Data<'a>
+
+    let dotNetToData (dn: 'dn) = Data<'dn>(dn)
+
+    let dotNetOfData (d: Data<'dn>) = d.Value
+
+    type App<'k, 'kd> = TypeExpressions.App<'k, 'kd>
+
+    type Premise = struct
+
+        static member ToApp(_: 'TKind, data: Data<'TData>) = App<'TKind, Data<'TData>>(data)
+
+        static member ToApp(_: 'TKind, app: App<'THead, 'TTail>) = App<'TKind, App<'THead, 'TTail>>(app)
+
+        static member ToDotNet(data: Data<'TData>) = dotNetOfData data
+
+        static member inline ToDotNet(app: App<'THead, Data<_>>) = Premise.ToDotNet(app.Value) |> cons defaultof<'THead>
+
+        static member inline ToDotNet(app: App<'THead, App<_, Data<_>>>) = Premise.ToDotNet(app.Value) |> cons defaultof<'THead>
+
+        static member inline ToDotNet(app: App<'THead, App<_, App<_, Data<_>>>>) = Premise.ToDotNet(app.Value) |> cons defaultof<'THead>
+
+        static member inline ToDotNet(app: App<'THead, App<_, App<_, App<_, Data<_>>>>>) = Premise.ToDotNet(app.Value) |> cons defaultof<'THead>
+
+        static member inline ToDotNet(app: App<'THead, App<_, App<_, App<_, App<_, Data<_>>>>>>) = Premise.ToDotNet(app.Value) |> cons defaultof<'THead>
+
+        static member inline ToDotNet(app: App<'THead, App<_, App<_, App<_, App<_, App<_, Data<_>>>>>>>) = Premise.ToDotNet(app.Value) |> cons defaultof<'THead>
+
+        static member inline ToDotNet(app: App<'THead, App<_, App<_, App<_, App<_, App<_, App<_, Data<_>>>>>>>>) = Premise.ToDotNet(app.Value) |> cons defaultof<'THead>
+
+        static member inline ToDotNet(app: App<'THead, App<_, App<_, App<_, App<_, App<_, App<_, App<_, Data<_>>>>>>>>>) = Premise.ToDotNet(app.Value) |> cons defaultof<'THead>
+
+    end
+
+    let inline toApp kind dataOrApp =
+        let inline call (p: ^p) (k: ^k) (x: ^x) = ((^p or ^k) : (static member ToApp : _*_ -> _) k,x)
+        call defaultof<Premise> kind dataOrApp
+    
+    let inline toDotNet appOrData =
+        let inline call (p: ^p) (x: ^x) = ((^p or ^x) : (static member ToDotNet : _ -> _) x)
+        call defaultof<Premise> appOrData
 
 
-module Operations =
-
-
-    let inline toDotNet kindPremise typeExpr = 
-        let inline call (p: ^p) (e: ^e) = ((^p or ^e) : (static member ToDotNet : _ -> _) e) in
-        call kindPremise typeExpr
-
+#if false
     // let inline ofDotNet (kind: ^k) (dn: ^dn) = ((^k or ^dn) : (static member FromDotNet: ^dn -> ^k * ^t) dn)
 
     let (|TypeExpr|) (x: TypeExpr<'t>) = x.Witness
@@ -109,7 +158,7 @@ module Operations =
         | :? ITypeRefiner as v -> Some v
         | _ -> None
 
-#if false
+
     let toSelfCondition (x: 'a) =
         match tryToRefiner x with
         | Some v -> v.GetCondition<'a>()
@@ -118,6 +167,9 @@ module Operations =
 
     let checkSelf (x: 'a) = toSelfCondition x x
 #endif
+
+
+
 
 module TypeShadowing =
 

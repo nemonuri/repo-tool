@@ -31,13 +31,23 @@ public static class KindTheory
                 return ArrowPairTheory.GetFailureHandlePair<TSource, TTarget>();
             }
         }
-    }
 
+        public static TTarget Cons<TSource, TTarget>(in TSource source)
+        {
+            return KindTheory.ToPair<TKind, TSource, TTarget>().Handle.Apply(in source);
+        }
+
+        public static TSource Decons<TSource, TTarget>(in TTarget target)
+        {
+            return KindTheory.ToPair<TKind, TSource, TTarget>().ContraHandle.Apply(in target);
+        }
+    }
 }
 
 public readonly struct IdentityKind : IKindPremise<IdentityKind>
 {
-    public static ArrowHandlePair<T,T> ToPair<T>() => KindTheory.ToPair<IdentityKind,T,T>();
+    public static T Cons<T>(T p) => KindTheory.Cons<IdentityKind,T,T>(in p);
+    public static T Decons<T>(T q) => KindTheory.Decons<IdentityKind,T,T>(in q);
 
     public bool TryToPair<TSource, TTarget>(out ArrowHandlePair<TSource, TTarget> kindHandlePair)
     {

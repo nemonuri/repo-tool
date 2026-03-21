@@ -16,15 +16,15 @@ module Refiners =
 
     [<NoComparison; NoEquality>]
     [<Struct>]
-    type RefineResult<'a, 'r when 'r :> IRefinerPremise<'a> and 'r : unmanaged> =
+    type RefineResult<'a, 'r when 'r :> IJudgePremise<'a> and 'r : unmanaged> =
     | RefineError of 'a * Judgement
     | RefineOk of Refined<'a, 'r>
 
 
-    let refine<'a, 'r when 'r :> IRefinerPremise<'a> and 'r : unmanaged> (x: 'a) =
-        let jud, rst = defaultof<'r>.Judge(&x) in
+    let refine<'a, 'r when 'r :> IJudgePremise<'a> and 'r : unmanaged> (x: 'a) =
+        let jud = defaultof<'r>.Judge(&x) in
         match jud with
-        | True _ -> Refined<'a, 'r>(rst) |> RefineOk
+        | True _ -> Refined<'a, 'r>(x) |> RefineOk
         | _ -> RefineError(x, jud)
         
     let toResult (r: RefineResult<'a,'r>) : Result<Refined<'a, 'r>, ('a * Judgement)> =
@@ -37,7 +37,7 @@ module Refiners =
         | RefineOk v -> ValueSome v
         | RefineError (a,j) -> ValueNone
     
-    let tryRefineV<'a, 'r when 'r :> IRefinerPremise<'a> and 'r : unmanaged> (x: 'a) : voption<Refined<'a, 'r>> = x |> refine |> toValueOption
+    let tryRefineV<'a, 'r when 'r :> IJudgePremise<'a> and 'r : unmanaged> (x: 'a) : voption<Refined<'a, 'r>> = x |> refine |> toValueOption
 
-    let trustMe<'a, 'r when 'r :> IRefinerPremise<'a>> (a: 'a) = Refined<'a, 'r>(a)
+    let trustMe<'a, 'r> (a: 'a) = Refined<'a, 'r>(a)
 

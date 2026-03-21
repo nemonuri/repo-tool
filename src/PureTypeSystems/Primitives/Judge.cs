@@ -4,7 +4,10 @@ namespace Nemonuri.PureTypeSystems.Primitives;
 
 public interface IJudgePremise<T>
 {
-    Judgement Judge(in T? pre);
+    /// <summary>
+    /// Judge 'expr' is constructable and has type 'T', in given premise.
+    /// </summary>
+    Judgement Judge(in T? expr);
 }
 
 public readonly struct Tautology<T> : IJudgePremise<T>

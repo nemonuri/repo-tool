@@ -5,10 +5,10 @@
     <RootNamespace>Nemonuri.PureTypeSystems</RootNamespace>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="Refiners.fs" /><Compile Include="Predicates.fs" />
-    <Compile Include="Primitives.fs" />
-    <Compile Include="TypeExprPremise.fs" />
-    <Compile Include="TypeExprs.fs" />
+    <Compile Include="Refiners.fs" />
+    <Compile Include="Kinds.fs" />
+    
+    
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Primitives\Nemonuri.PureTypeSystems.Primitives.csproj" />

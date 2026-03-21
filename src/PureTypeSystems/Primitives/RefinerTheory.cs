@@ -2,6 +2,7 @@ using System.Runtime.CompilerServices;
 
 namespace Nemonuri.PureTypeSystems.Primitives;
 
+#if false
 public static class RefinerTheory
 {
     extension<T, TRefiner>(TRefiner)
@@ -64,3 +65,4 @@ public static class RefinerTheory
         }
     }
 }
+#endif

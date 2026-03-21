@@ -1,7 +1,7 @@
 namespace Nemonuri.PureTypeSystems.Primitives;
 
 [StructLayout(LayoutKind.Sequential)]
-public readonly struct Refined<T, TJudge>(T value) where TJudge : IJudgePremise<T>
+public readonly struct Refined<T, TJudge>(T value) //where TJudge : IJudgePremise<T>
 {
     private readonly T _value = value;
 
