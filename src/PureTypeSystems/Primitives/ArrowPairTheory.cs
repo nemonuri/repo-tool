@@ -22,17 +22,32 @@ public static class ArrowPairTheory
             );
         }
 
-        public static ArrowHandlePair<T1, T2> ToTypeEqualHandlePair<T1, T2>()
+        public static bool TryToTypeEqualHandlePair<T1, T2>(out ArrowHandlePair<T1, T2> arrowHandlePair)
         {
             if (!(typeof(T1) == typeof(TAntecedent) && typeof(T2) == typeof(TConsequent)))
+            {
+                arrowHandlePair = default;
+                return false;
+            }
+
+            var original = ToHandlePair<TAntecedent, TConsequent, TImplyPair>();
+            arrowHandlePair = Unsafe.As<ArrowHandlePair<TAntecedent, TConsequent>,ArrowHandlePair<T1, T2>>(ref original);
+            return true;
+        }
+
+#if false
+        public static ArrowHandlePair<T1, T2> ToTypeEqualHandlePair<T1, T2>()
+        {
+            if (!TryToTypeEqualHandlePair<TAntecedent, TConsequent, TImplyPair, T1, T2>(out var arrowHandlePair))
             {
                 throw new InvalidCastException(/* TODO */);
             }
 
-            var original = ToHandlePair<TAntecedent, TConsequent, TImplyPair>();
-            return Unsafe.As<ArrowHandlePair<TAntecedent, TConsequent>,ArrowHandlePair<T1, T2>>(ref original);
+            return arrowHandlePair;
         }
+#endif
     }
+
 
     extension<TAntecedent, TPreJudge, TConsequent, TPostJudge, TContraPreJudge, TContraPostJudge, TImplyPair>(TImplyPair)
         where TPreJudge : unmanaged, IJudgePremise

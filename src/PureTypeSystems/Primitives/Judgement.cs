@@ -3,8 +3,18 @@ using System.Runtime.InteropServices;
 namespace Nemonuri.PureTypeSystems.Primitives;
 
 [StructLayout(LayoutKind.Sequential)]
-public readonly record struct Judgement(bool Determinate, bool Truthy)
+public readonly record struct Judgement
 {
+    internal Judgement(bool determinate, bool truthy)
+    {
+        Determinate = determinate;
+        Truthy = truthy;
+    }
+
+    internal bool Determinate {get;}
+
+    internal bool Truthy {get;}
+
     public static Judgement Unknown => new(false,false);
 
     public static Judgement Thunk => new(false,true);

@@ -1,4 +1,5 @@
 using System.Runtime.CompilerServices;
+using Nemonuri.PureTypeSystems.Primitives.Extensions;
 
 namespace Nemonuri.PureTypeSystems.Primitives;
 
@@ -6,7 +7,6 @@ namespace Nemonuri.PureTypeSystems.Primitives;
     - a kind is the type of a type constructor
     - reference: https://en.wikipedia.org/wiki/Kind_(type_theory)
 */
-
 
 
 public interface IKindPremise<TKind>
@@ -63,4 +63,58 @@ public readonly struct IdentityKind : IKindPremise<IdentityKind>
             return true;
         }
     }
+}
+
+public readonly struct StrictGuardKind<TJudge> : IKindPremise<StrictGuardKind<TJudge>>
+    where TJudge : unmanaged, IJudgePremise
+{
+    public static Refined<T, TJudge> Cons<T>(T p) => KindTheory.Cons<StrictGuardKind<TJudge>,T,Refined<T, TJudge>>(in p);
+
+    public static T Decons<T>(Refined<T, TJudge> q) => KindTheory.Decons<StrictGuardKind<TJudge>,T,Refined<T, TJudge>>(in q);
+
+    private readonly struct KindImpl<T> : IArrowPairPremise<T, Refined<T, TJudge>>
+    {
+        public T ContraApply(in Refined<T, TJudge> post) => post.Value;
+
+        public Refined<T, TJudge> Apply(in T pre)
+        {
+            if ((new TJudge()).Judge(in pre).IsTrue) 
+            { 
+                return new(pre); 
+            }
+            else
+            {
+                throw new ArgumentException(/* TODO */);
+            }
+        }
+    }
+
+    public bool TryToPair<TP, TQ>(out ArrowHandlePair<TP, TQ> handlePair) => ArrowPairTheory.TryToTypeEqualHandlePair<TP, Refined<TP, TJudge>, KindImpl<TP>, TP, TQ>(out handlePair);
+}
+
+public readonly struct LooseGuardKind<TJudge> : IKindPremise<LooseGuardKind<TJudge>>
+    where TJudge : unmanaged, IJudgePremise
+{
+    public static Refined<T, TJudge> Cons<T>(T p) => KindTheory.Cons<LooseGuardKind<TJudge>,T,Refined<T, TJudge>>(in p);
+
+    public static T Decons<T>(Refined<T, TJudge> q) => KindTheory.Decons<LooseGuardKind<TJudge>,T,Refined<T, TJudge>>(in q);
+
+    private readonly struct KindImpl<T> : IArrowPairPremise<T, Refined<T, TJudge>>
+    {
+        public T ContraApply(in Refined<T, TJudge> post) => post.Value;
+
+        public Refined<T, TJudge> Apply(in T pre)
+        {
+            if ((new TJudge()).Judge(in pre).IsTrueOrThunk) 
+            { 
+                return new(pre); 
+            }
+            else
+            {
+                throw new ArgumentException(/* TODO */);
+            }
+        }
+    }
+
+    public bool TryToPair<TP, TQ>(out ArrowHandlePair<TP, TQ> handlePair) => ArrowPairTheory.TryToTypeEqualHandlePair<TP, Refined<TP, TJudge>, KindImpl<TP>, TP, TQ>(out handlePair);
 }
