@@ -2,10 +2,16 @@ namespace Nemonuri.PureTypeSystems.Primitives.TypeExpressions;
 
 public static class RefinedTheory
 {
-    public static Refined<T> Upcast<T, TJudge>(in Refined<T, TJudge> refined)
-        where TJudge : unmanaged, IJudgePremise
+    public static Refined<T, TJudge> TrustMe<T, TJudge>(T value)
+        where TJudge : IJudgePremise
     {
-        return new(refined.Value, JudgeTheory.FreeToHandle<TJudge, T>());
+        return new(value);
+    }
+
+    public static Refined<T> Upcast<T, TJudge>(in Refined<T, TJudge> refined)
+        where TJudge : IJudgePremise
+    {
+        return new(refined.Value, JudgeTheory.ToHandle<TJudge, T>());
     }
 
     public static bool TryDowncast<T, TJudge>(in Refined<T> refined, out Refined<T, TJudge> casted)
@@ -19,7 +25,7 @@ public static class RefinedTheory
 
 */
 
-        var handleOfTarget = JudgeTheory.FreeToHandle<TJudge, T>();
+        var handleOfTarget = JudgeTheory.ToHandle<TJudge, T>();
         if (!refined.JudgeHandle.Equals(handleOfTarget))
         {
             casted = default;
@@ -36,7 +42,7 @@ public static class RefinedTheory
     }
 
     public static Judgement Judge<T, TJudge>(in Refined<T, TJudge> refined)
-        where TJudge : unmanaged, IJudgePremise
+        where TJudge : IJudgePremise
     {
         return Judge(Upcast(in refined));
     }

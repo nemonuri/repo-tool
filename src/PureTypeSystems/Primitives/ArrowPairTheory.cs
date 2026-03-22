@@ -62,8 +62,8 @@ public static class ArrowPairTheory
             var contraHandle = ToContraHandle<TAntecedent, TConsequent, TImplyPair>()
                                 .WithJudges
                                 (
-                                    JudgeTheory.FreeToHandle<TContraPreJudge, TConsequent>(),
-                                    JudgeTheory.FreeToHandle<TContraPostJudge, (TConsequent, TAntecedent)>()
+                                    JudgeTheory.ToHandle<TContraPreJudge, TConsequent>(),
+                                    JudgeTheory.ToHandle<TContraPostJudge, (TConsequent, TAntecedent)>()
                                 );
             return new(handle, contraHandle);
         }

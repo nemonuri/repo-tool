@@ -47,13 +47,13 @@ public static class ArrowTheory
     }
 
     private static TConsequent ImplInternal<TAntecedent, TConsequent, T>(in TAntecedent ant)
-        where T : unmanaged, IArrowPremise<TAntecedent, TConsequent>
+        where T : IArrowPremise<TAntecedent, TConsequent>
     {
-        return (new T()).Apply(in ant);
+        return Activator.CreateInstance<T>().Apply(in ant);
     }
 
     extension<TAntecedent, TConsequent, TArrow>(TArrow)
-        where TArrow : unmanaged, IArrowPremise<TAntecedent, TConsequent>
+        where TArrow : IArrowPremise<TAntecedent, TConsequent>
     {
         public unsafe static ArrowHandle<TAntecedent, TConsequent> ToHandle()
         {
@@ -75,15 +75,15 @@ public static class ArrowTheory
     }
 
     extension<TAntecedent, TPreJudge, TConsequent, TPostJudge, TArrow>(TArrow)
-        where TPreJudge : unmanaged, IJudgePremise
-        where TPostJudge : unmanaged, IJudgePremise
-        where TArrow : unmanaged, IArrowPremise<TAntecedent, TPreJudge, TConsequent, TPostJudge>
+        where TPreJudge : IJudgePremise
+        where TPostJudge : IJudgePremise
+        where TArrow : IArrowPremise<TAntecedent, TPreJudge, TConsequent, TPostJudge>
     {
         public static ArrowHandle<TAntecedent, TConsequent> ToHandle() =>
             ToHandle<TAntecedent, TConsequent, TArrow>().WithJudges
             (
-                JudgeTheory.FreeToHandle<TPreJudge, TAntecedent>(),
-                JudgeTheory.FreeToHandle<TPostJudge, (TAntecedent, TConsequent)>()
+                JudgeTheory.ToHandle<TPreJudge, TAntecedent>(),
+                JudgeTheory.ToHandle<TPostJudge, (TAntecedent, TConsequent)>()
             );
     }
 

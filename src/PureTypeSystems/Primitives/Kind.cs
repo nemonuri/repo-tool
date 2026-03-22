@@ -62,7 +62,7 @@ public readonly struct IdentityKind : IKindPremise<IdentityKind>
 }
 
 
-public readonly struct ArrowBasedKind<TP, TQ, TArrow> : IKindPremise<ArrowBasedKind<TP, TQ, TArrow>>, IConstant<ArrowHandle<TP, TQ>>
+public readonly struct ArrowBasedKind<TP, TQ, TArrow> : IKindPremise<ArrowBasedKind<TP, TQ, TArrow>>//, IConstant<ArrowHandle<TP, TQ>>
     where TArrow : unmanaged, IArrowPremise<TP, TQ>
 {
     public static TQ Cons(TP tp) => KindTheory.Cons<ArrowBasedKind<TP, TQ, TArrow>, TP, TQ>(in tp);
@@ -72,7 +72,7 @@ public readonly struct ArrowBasedKind<TP, TQ, TArrow> : IKindPremise<ArrowBasedK
         return ArrowTheory.TryToTypeEqualHandle<TP, TQ, TArrow, TP2, TQ2>(out handle);
     }
 
-    ArrowHandle<TP, TQ> IConstant<ArrowHandle<TP, TQ>>.Value => ArrowTheory.ToHandle<TP, TQ, TArrow>();
+    //ArrowHandle<TP, TQ> IConstant<ArrowHandle<TP, TQ>>.Value => ArrowTheory.ToHandle<TP, TQ, TArrow>();
 }
 
 public readonly struct JudgeBasedKind<T, TJudge> : IKindPremise<JudgeBasedKind<T, TJudge>>

@@ -17,7 +17,7 @@ public readonly struct Tautology : IJudgePremise, IConstant<Judgement>
 
     Judgement IJudgePremise.Judge<T>(in T expr) => Judge(in expr);
 
-    Judgement IConstant<Judgement>.Value => Judgement;
+    Judgement IArrowPremise<ValueUnit, Judgement>.Apply(in ValueUnit _) => Judgement;
 }
 
 public readonly struct Negation : IJudgePremise, IConstant<Judgement>
@@ -28,7 +28,7 @@ public readonly struct Negation : IJudgePremise, IConstant<Judgement>
 
     Judgement IJudgePremise.Judge<T>(in T pre) => Judge(in pre);
 
-    Judgement IConstant<Judgement>.Value => Judgement;
+    Judgement IArrowPremise<ValueUnit, Judgement>.Apply(in ValueUnit _) => Judgement;
 }
 
 public readonly struct Thunk : IJudgePremise, IConstant<Judgement>
@@ -39,7 +39,7 @@ public readonly struct Thunk : IJudgePremise, IConstant<Judgement>
 
     Judgement IJudgePremise.Judge<T>(in T pre) => Judge(in pre);
 
-    Judgement IConstant<Judgement>.Value => Judgement;
+    Judgement IArrowPremise<ValueUnit, Judgement>.Apply(in ValueUnit _) => Judgement;
 }
 
 public readonly struct JudgeBasedArrow<T, TJudge> : IArrowPremise<T, Refined<T, TJudge>>
@@ -50,7 +50,7 @@ public readonly struct JudgeBasedArrow<T, TJudge> : IArrowPremise<T, Refined<T, 
     Refined<T, TJudge> IArrowPremise<T, Refined<T, TJudge>>.Apply(in T pre) => Apply(in pre);
 }
 
-public interface IJudgePremise<T>
+public interface IJudgePremise<T> : IJudgePremise
 {
     /// <summary>
     /// Judge 'expr' is constructable and has type 'T', in given premise.
@@ -152,6 +152,8 @@ public readonly struct ForAll<TContext, T> : IJudgePremise<ArrowHandle<TContext,
     }
 
     Judgement IJudgePremise<ArrowHandle<TContext, T>>.Judge(in ArrowHandle<TContext, T> pre) => Judge(in pre);
+
+    Judgement IJudgePremise.Judge<T2>(in T2 expr) => JudgeTheory.FreeJudge<ArrowHandle<TContext, T>, T2, ForAll<TContext, T>>(this, in expr);
 }
 
 public readonly struct Exist<T, TContext> : IJudgePremise<ArrowHandle<T, TContext>>
@@ -192,4 +194,6 @@ public readonly struct Exist<T, TContext> : IJudgePremise<ArrowHandle<T, TContex
     }
 
     Judgement IJudgePremise<ArrowHandle<T, TContext>>.Judge(in ArrowHandle<T, TContext> pre) => Judge(in pre);
+
+    Judgement IJudgePremise.Judge<T2>(in T2 expr) => JudgeTheory.FreeJudge<ArrowHandle<T, TContext>, T2, Exist<T, TContext>>(this, in expr);
 }

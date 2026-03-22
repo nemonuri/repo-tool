@@ -30,7 +30,7 @@ public static class JudgementTheory
     public static Judgement FromBoolean(bool source) => source ? Judgement.True : Judgement.False;
 }
 
-
+#if false
 public readonly struct JudgementIsTrue : IJudgePremise<Judgement>
 {
     public static Judgement Judge(in Judgement pre) => JudgementTheory.FromBoolean(pre == Judgement.True);
@@ -58,3 +58,4 @@ public readonly struct JudgementIsFalse<T> : IJudgePremise<(T, Judgement)>
 
     Judgement IJudgePremise<(T, Judgement)>.Judge(in (T, Judgement) pre) => Judge(in pre);
 }
+#endif

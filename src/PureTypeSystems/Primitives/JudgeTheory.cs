@@ -8,12 +8,12 @@ public static class JudgeTheory
 
     public static JudgeHandle<T> GetTautologyHandle<T>() => default;
 
-    public static JudgeHandle<T> GetNegationHandle<T>() => FreeToHandle<Negation, T>();
+    public static JudgeHandle<T> GetNegationHandle<T>() => ToHandle<Negation, T>();
 
     public static bool IsNegationHandle<T>(JudgeHandle<T> judgeHandle) => 
         judgeHandle.ToIntPtr() == GetNegationHandle<T>().ToIntPtr();
 
-    public static JudgeHandle<T> GetThunkHandle<T>() => FreeToHandle<Thunk, T>();
+    public static JudgeHandle<T> GetThunkHandle<T>() => ToHandle<Thunk, T>();
 
     public static bool IsThunkHandle<T>(JudgeHandle<T> judgeHandle) => 
         judgeHandle.ToIntPtr() == GetThunkHandle<T>().ToIntPtr();
@@ -44,11 +44,11 @@ public static class JudgeTheory
     }
 
     extension<TJudge>(TJudge)
-        where TJudge : unmanaged, IJudgePremise
+        where TJudge : IJudgePremise
     {
-        public unsafe static JudgeHandle<T> FreeToHandle<T>()
+        public unsafe static JudgeHandle<T> ToHandle<T>()
         {
-            static Judgement Impl(in T? item) => (new TJudge()).Judge(in item);
+            static Judgement Impl(in T? item) => Activator.CreateInstance<TJudge>().Judge(in item);
 
             if (typeof(TJudge) == typeof(Tautology))
             {
@@ -61,9 +61,11 @@ public static class JudgeTheory
         }
     }
 
+#if false
     extension<T, TJudge>(TJudge)
         where TJudge : unmanaged, IJudgePremise<T>
     {
         public unsafe static JudgeHandle<T> BoundToHandle() => FreeToHandle<BoundBasedFreeJudge<T, TJudge>, T>();
     }
+#endif
 }

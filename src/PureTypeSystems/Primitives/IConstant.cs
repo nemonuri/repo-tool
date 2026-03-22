@@ -1,37 +1,47 @@
-﻿using Hth = Nemonuri.PureTypeSystems.Primitives.HandleTheory;
+﻿using System.Diagnostics;
+using Hth = Nemonuri.PureTypeSystems.Primitives.HandleTheory;
+using Vth = Nemonuri.PureTypeSystems.Primitives.ValueUnitTheory;
 
 namespace Nemonuri.PureTypeSystems.Primitives;
 
-public interface IConstant<T>
+public interface IConstant<T> : IArrowPremise<ValueUnit, T>
 {
-    T Value {get;}
+    // T Value {get;}
 }
 
 
-public unsafe readonly struct ConstantHandle<T> : IHandle, IEquatable<ConstantHandle<T>>
+public readonly struct ConstantHandle<T> : IHandle, IEquatable<ConstantHandle<T>>
 {
-    private readonly delegate*<T> _fp;
+    private readonly ArrowHandle<ValueUnit, T> _arrowHandle;
 
-    internal ConstantHandle(delegate*<T> fp)
+    internal ConstantHandle(ArrowHandle<ValueUnit, T> arrowHandle)
     {
-        _fp = fp;
+        Debug.Assert( arrowHandle.PreJudge.IsTautology );
+        Debug.Assert( arrowHandle.PostJudge.IsTautology );
+        _arrowHandle = arrowHandle;
     }
 
-    public nint ToIntPtr() => (nint)_fp;
+    public nint ToIntPtr() => _arrowHandle.ToIntPtr();
 
     public bool Equals(ConstantHandle<T> other) => Hth.Equals(this, other);
 
     public override bool Equals(object? obj) => obj is ConstantHandle<T> o && Equals(o);
 
     public override int GetHashCode() => Hth.GetHashCode(this);
+
+    public ArrowHandle<ValueUnit, T> ArrowHandle => _arrowHandle;
+
+    public T Value => ArrowHandle.Apply(Vth.Singleton);
 }
 
 
 public static class ConstantTheory
 {
     extension<T, TConstant>(TConstant)
-        where TConstant : IConstant<T>
+        where TConstant : IArrowPremise<ValueUnit, T>
     {
-        public static T GetValue() => System.Activator.CreateInstance<TConstant>().Value;
+        public static ConstantHandle<T> ToHandle() => new(ArrowTheory.ToHandle<ValueUnit, T, TConstant>());
+
+        public static T GetValue() => (ToHandle<T, TConstant>()).Value;
     }
 }
