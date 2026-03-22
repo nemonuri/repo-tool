@@ -1,5 +1,6 @@
-namespace Nemonuri.PureTypeSystems.Primitives;
+namespace Nemonuri.PureTypeSystems.Primitives.TypeExpressions;
 
+#if false
 [StructLayout(LayoutKind.Sequential)]
 public readonly struct Refined<T, TJudge>(T value) //where TJudge : IJudgePremise<T>
 {
@@ -12,3 +13,5 @@ public static class RefineTheory
 {
     public static Refined<Negation, T> GetContradiction<T>() => default;
 }
+#endif
+

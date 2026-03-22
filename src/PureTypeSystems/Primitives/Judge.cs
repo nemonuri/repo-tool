@@ -1,4 +1,6 @@
 using static Nemonuri.PureTypeSystems.Primitives.Extensions.JudgeHandleExtensions;
+using Nemonuri.PureTypeSystems.Primitives.TypeExpressions;
+using Hth = Nemonuri.PureTypeSystems.Primitives.HandleTheory;
 
 namespace Nemonuri.PureTypeSystems.Primitives;
 
@@ -76,7 +78,7 @@ public readonly struct BoundBasedFreeJudge<T1, TJudge> : IJudgePremise
 
 
 [StructLayout(LayoutKind.Sequential)]
-public unsafe readonly struct JudgeHandle<T> : IHandle
+public unsafe readonly struct JudgeHandle<T> : IHandle, IEquatable<JudgeHandle<T>>
 {
     private readonly delegate*<in T?, Judgement> _fp;
 
@@ -100,6 +102,12 @@ public unsafe readonly struct JudgeHandle<T> : IHandle
             return _fp(in pre);
         }
     }
+
+    public bool Equals(JudgeHandle<T> other) => Hth.Equals(this, other);
+
+    public override bool Equals(object? obj) => obj is JudgeHandle<T> o && Equals(o);
+
+    public override int GetHashCode() => Hth.GetHashCode(this);
 }
 
 /**

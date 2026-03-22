@@ -1,5 +1,6 @@
 using System.Runtime.CompilerServices;
 using Nemonuri.PureTypeSystems.Primitives.Extensions;
+using Nemonuri.PureTypeSystems.Primitives.TypeExpressions;
 
 namespace Nemonuri.PureTypeSystems.Primitives;
 
