@@ -1,10 +1,12 @@
 ﻿namespace Nemonuri.PureTypeSystems
 
 open Nemonuri.PureTypeSystems.Primitives
+open Nemonuri.PureTypeSystems.Primitives.TypeExpressions
 
 module Kinds =
 
     open Unchecked
+    type private Eth = Nemonuri.PureTypeSystems.Primitives.TypeExpressions.ExpressionTheory
 
     let inline cons kind p =
         let inline call (k': ^k) (p': ^p) = ((^k or ^p) : (static member Cons : _ -> _) p') in
@@ -14,13 +16,14 @@ module Kinds =
         let inline call (k': ^k) (q': ^q) = ((^k or ^q) : (static member Decons : _ -> _) q') in
         call kind q
 
-    //type Data = IdentityKind
-    type Data<'a> = TypeExpressions.Data<'a>
 
-    let dotNetToData (dn: 'dn) = Data<'dn>(dn)
+    type Data<'a> = Refined<TypeExpressions.Data<'a>>
 
-    let dotNetOfData (d: Data<'dn>) = d.Value
+    let dotNetToData (dn: 'dn) : Data<'dn> = Eth.ToData dn |> Eth.ToRefinedData
 
+    // let dotNetOfData (d: Data<'dn>) = d.Value
+
+#if false
     type Data = struct
 
         static member Cons (x: 'p) = KindTheory.Cons<Data,'p,Data<'p>>(&x)
@@ -37,15 +40,18 @@ module Kinds =
             member _.Apply (pre: inref<'p>) = dotNetToData pre
             member _.ContraApply (post: inref<Data<'p>>) = dotNetOfData post
     end
+#endif
 
 
     type App<'k, 'kd> = TypeExpressions.App<'k, 'kd>
 
+#if false
     type Guard<'t, 'j when 'j : unmanaged and 'j :> IJudgePremise and 'j : struct and 'j : (new: unit -> 'j) and 'j :> System.ValueType> = 
         TypeExpressions.App<StrictGuardKind<'j>, 't>
 
     type LooseGuard<'t, 'j when 'j : unmanaged and 'j :> IJudgePremise and 'j : struct and 'j : (new: unit -> 'j) and 'j :> System.ValueType> = 
         TypeExpressions.App<LooseGuardKind<'j>, 't>
+#endif
 
     type Premise = struct
 

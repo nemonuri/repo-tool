@@ -20,11 +20,11 @@ public interface IKindPremise<TKind> where TKind : IKindPremise<TKind>
 public static class KindTheory
 {
     extension<TKind>(TKind)
-        where TKind : unmanaged, IKindPremise<TKind>
+        where TKind : IKindPremise<TKind>
     {
         public static ArrowHandle<TP, TQ> ToCons<TP, TQ>()
         {
-            if ((new TKind()).TryToCons<TP, TQ>(out var hp))
+            if (Activator.CreateInstance<TKind>().TryToCons<TP, TQ>(out var hp))
             {
                 return hp;
             }

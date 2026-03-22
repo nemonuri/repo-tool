@@ -30,12 +30,12 @@ public static class UnthunkerTheory
         return arrow.Apply(ValueUnitTheory.Singleton);
     }
 
-    public static ArrowHandle<TP, JudgeHandle<TQ>> Unthunk<TP, TQ>(IIntroducerPremise<JudgeHandle<TQ>> intro, JudgeHandle<TQ> hint)
+    public static ArrowHandle<TP, JudgeHandle<TQ>> Unthunk<TP, TQ>(IIntroducer<JudgeHandle<TQ>> intro, JudgeHandle<TQ> hint)
     {
         return intro.Introduce<TP>(hint);
     }
 
-    public static ArrowHandle<TP, ArrowHandle<THead, TTail>> Unthunk<TP, THead, TTail>(IIntroducerPremise<ArrowHandle<THead, TTail>> intro, in ArrowHandle<THead, TTail> hint)
+    public static ArrowHandle<TP, ArrowHandle<THead, TTail>> Unthunk<TP, THead, TTail>(IIntroducer<ArrowHandle<THead, TTail>> intro, in ArrowHandle<THead, TTail> hint)
     {
         return intro.Introduce<TP>(in hint);
     }
@@ -56,7 +56,7 @@ public static class UnthunkerTheory
 
     public static bool TryUnthunk<TP, TQ>(object? unthunker, JudgeHandle<TQ> hint, out ArrowHandle<TP, JudgeHandle<TQ>> handle)
     {
-        if (unthunker is IIntroducerPremise<JudgeHandle<TQ>> intro)
+        if (unthunker is IIntroducer<JudgeHandle<TQ>> intro)
         {
             handle = Unthunk<TP, TQ>(intro, hint);
             return true;
@@ -70,7 +70,7 @@ public static class UnthunkerTheory
 
     public static bool TryUnthunk<TP, THead, TTail>(object? unthunker, in ArrowHandle<THead, TTail> hint, out ArrowHandle<TP, ArrowHandle<THead, TTail>> handle)
     {
-        if (unthunker is IIntroducerPremise<ArrowHandle<THead, TTail>> intro)
+        if (unthunker is IIntroducer<ArrowHandle<THead, TTail>> intro)
         {
             handle = Unthunk<TP, THead, TTail>(intro, hint);
             return true;

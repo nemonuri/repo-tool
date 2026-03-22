@@ -1,3 +1,5 @@
+using  Nemonuri.PureTypeSystems.Primitives.TypeConstructors;
+
 namespace Nemonuri.PureTypeSystems.Primitives.TypeExpressions;
 
 //public readonly record struct Expr<TExpr>(TExpr? Value);
@@ -74,3 +76,15 @@ public readonly record struct RefinedApp<TKind, TExpr>
     }
 }
 #endif
+
+public readonly struct Testable<T> 
+{
+    public Testable(T value, IIntroducer<bool> introducer)
+    {
+        Value = value;
+        Introducer = introducer;
+    }
+
+    public T Value {get;}
+    public IIntroducer<bool> Introducer {get;}
+}

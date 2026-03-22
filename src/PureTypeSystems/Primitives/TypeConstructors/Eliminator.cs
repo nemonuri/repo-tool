@@ -1,11 +1,11 @@
 namespace Nemonuri.PureTypeSystems.Primitives.TypeConstructors;
 
-public interface IEliminatorPremise<TAnt>
+public interface IEliminator<TAnt>
 {
     ArrowHandle<TAnt, TCon> ToArrowHandle<TCon>(in TAnt hint);
 }
 
-
+#if false
 public unsafe readonly struct EliminatorHandle<TAnt, TCon> : IHandle
 {
     private readonly delegate*<in TAnt, ArrowHandle<TAnt, TCon>> _fp;
@@ -51,3 +51,4 @@ public static class EliminatorTheory
         return ArrowTheory.TryApplyTrue(in impHnd, in subject, out result, out _);
     }
 }
+#endif

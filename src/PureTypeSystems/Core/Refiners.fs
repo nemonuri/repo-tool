@@ -24,8 +24,10 @@ module Refiners =
 
     let trustMe<'a, 'r when 'r :> IJudgePremise> (x: 'a) = RefinedTheory.TrustMe<'a, 'r>(x)
 
+    let judge<'a, 'r when 'r :> IJudgePremise> (x: 'a) = JudgeTheory.ToHandle<'r,'a>().Judge(&x)
+
     let refine<'a, 'r when 'r :> IJudgePremise> (x: 'a) =
-        let jud = defaultof<'r>.Judge(&x) in
+        let jud = judge<'a,'r> x in
         match jud with
         | True _ -> trustMe<'a, 'r>(x) |> RefineOk
         | _ -> RefineError(x, jud)
@@ -43,15 +45,3 @@ module Refiners =
     let tryRefineV<'a, 'r when 'r :> IJudgePremise> (x: 'a) : voption<Refined<'a, 'r>> = x |> refine |> toValueOption
 
     
-
-    module Bound = begin
-
-        let refine<'a, 'r when 'r :> IJudgePremise<'a> and 'r : unmanaged> (x: 'a) =
-            let jud = defaultof<'r>.Judge(&x) in
-            match jud with
-            | True _ -> Refined<'a, 'r>(x) |> RefineOk
-            | _ -> RefineError(x, jud)
-
-        let tryRefineV<'a, 'r when 'r :> IJudgePremise<'a> and 'r : unmanaged> (x: 'a) : voption<Refined<'a, 'r>> = x |> refine |> toValueOption
-
-    end
