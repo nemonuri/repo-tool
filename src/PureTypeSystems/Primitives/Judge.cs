@@ -1,4 +1,3 @@
-using System.Runtime.CompilerServices;
 using static Nemonuri.PureTypeSystems.Primitives.Extensions.JudgeHandleExtensions;
 
 namespace Nemonuri.PureTypeSystems.Primitives;
@@ -8,25 +7,45 @@ public interface IJudgePremise
     Judgement Judge<T>(in T expr);
 }
 
-public readonly struct Tautology : IJudgePremise
+public readonly struct Tautology : IJudgePremise, IConstant<Judgement>
 {
-    public static Judgement Judge<T>(in T _) => Judgement.True;
+    private static Judgement Judgement => Judgement.True;
+
+    public static Judgement Judge<T>(in T _) => Judgement;
 
     Judgement IJudgePremise.Judge<T>(in T expr) => Judge(in expr);
+
+    Judgement IConstant<Judgement>.Value => Judgement;
 }
 
-public readonly struct Negation : IJudgePremise
+public readonly struct Negation : IJudgePremise, IConstant<Judgement>
 {
-    public static Judgement Judge<T>(in T _) => Judgement.False;
+    private static Judgement Judgement => Judgement.False;
+
+    public static Judgement Judge<T>(in T _) => Judgement;
 
     Judgement IJudgePremise.Judge<T>(in T pre) => Judge(in pre);
+
+    Judgement IConstant<Judgement>.Value => Judgement;
 }
 
-public readonly struct Thunk : IJudgePremise
+public readonly struct Thunk : IJudgePremise, IConstant<Judgement>
 {
-    public static Judgement Judge<T>(in T _) => Judgement.Thunk;
+    private static Judgement Judgement => Judgement.Thunk;
+
+    public static Judgement Judge<T>(in T _) => Judgement;
 
     Judgement IJudgePremise.Judge<T>(in T pre) => Judge(in pre);
+
+    Judgement IConstant<Judgement>.Value => Judgement;
+}
+
+public readonly struct JudgeBasedArrow<T, TJudge> : IArrowPremise<T, Refined<T, TJudge>>
+    where TJudge : IJudgePremise
+{
+    public static Refined<T, TJudge> Apply(in T pre) => new(pre);
+
+    Refined<T, TJudge> IArrowPremise<T, Refined<T, TJudge>>.Apply(in T pre) => Apply(in pre);
 }
 
 public interface IJudgePremise<T>

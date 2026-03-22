@@ -1,3 +1,6 @@
+using System.Runtime.CompilerServices;
+
+
 namespace Nemonuri.PureTypeSystems.Primitives;
 
 
@@ -11,6 +14,9 @@ public static class ArrowTheory
     public const nint IdentityPointer = 0;
 
     public static ArrowHandle<TP, TQ> GetIdentityHandle<TP, TQ>() => default;
+
+    public static ArrowHandle<TP, TQ> GetFailureHandle<TP, TQ>() => ToHandle<TP, Tautology, TQ, Negation, Failure<TP, TQ>>();
+        
 
     public static bool TryApplyTrue<TP, TQ>
     (
@@ -53,6 +59,19 @@ public static class ArrowTheory
         {
             return new(&ImplInternal<TAntecedent, TConsequent, TArrow>);
         }
+
+        public static bool TryToTypeEqualHandle<TP2, TQ2>(out ArrowHandle<TP2, TQ2> handle)
+        {
+            if (!(typeof(TP2) == typeof(TAntecedent) && typeof(TQ2) == typeof(TConsequent)))
+            {
+                handle = default;
+                return false;
+            }
+
+            var original = ToHandle<TAntecedent, TConsequent, TArrow>();
+            handle = Unsafe.As<ArrowHandle<TAntecedent, TConsequent>, ArrowHandle<TP2, TQ2>>(ref original);
+            return true;
+        }
     }
 
     extension<TAntecedent, TPreJudge, TConsequent, TPostJudge, TArrow>(TArrow)
@@ -67,6 +86,7 @@ public static class ArrowTheory
                 JudgeTheory.FreeToHandle<TPostJudge, (TAntecedent, TConsequent)>()
             );
     }
+
 
 #if false
     public unsafe static ArrowHandle<TAntecedent, TConsequent> ToHandleForce<TAntecedent, TConsequent, T>()
