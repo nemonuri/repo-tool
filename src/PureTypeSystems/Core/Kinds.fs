@@ -25,20 +25,23 @@ module Kinds =
 
     type DataJudge<'dn>(data: Data<'dn>) = class
 
+        member internal _.Data = data;
+
         interface IIntroducer<Judgement> with
             member _.Introduce<'p> (_: inref<Judgement>): ArrowHandle<'p,Judgement> = 
-                    let ok, result = Ath.TryToTypeEqualHandle<Data<'dn>, Judgement, DataJudgeImpl<'dn>, 'p, Judgement>() in
+                    let ok, (result: ArrowHandle<'p,Judgement>) = Ath.TryToTypeEqualHandle<_,_, DataJudgeImpl<'dn>, _,_>() in
                     if ok then result else Ath.GetFailureHandle<_,_>()
     end
     and private DataJudgeImpl<'dn> = struct
 
-        interface IArrowPremise<Data<'dn>, Judgement> with
-            member _.Apply (pre: inref<Data<'dn>>): Judgement = 
-                let v = pre.Value in
-                pre.JudgeHandle.Judge(&v)
+        interface IMethodPremise<DataJudge<'dn>, 'dn, Judgement> with
+            member _.Apply (pre: inref<struct (DataJudge<'dn> * 'dn)>): Judgement = 
+                    let struct (ctx, v) = pre in
+                    let data0 = Eth.ToData v in
+                    ctx.Data.JudgeHandle.Judge(&data0)
     end
 
-    let judgeableOfData (d: Data<'dn>) : Judgeable<'dn> = Judgeable<_>(d.Value.Value, DataJudge<'dn>.Instance)
+    let judgeableOfData (d: Data<'dn>) : Judgeable<'dn, DataJudge<'dn>> = Judgeable<_,_>(d.Value.Value, DataJudge<_>(d))
 
     type App<'k, 'expr> = Refined<TypeExpressions.App<'k, 'expr>>
 
