@@ -7,8 +7,8 @@ open Nemonuri.PureTypeSystems.Primitives.TypeConstructors
 module RefinedKinds =
 
     open Unchecked
-    type private Eth = Nemonuri.PureTypeSystems.Primitives.TypeExpressions.ExpressionTheory
-    type private Ath = Nemonuri.PureTypeSystems.Primitives.ArrowTheory
+    type Eth = Nemonuri.PureTypeSystems.Primitives.TypeExpressions.ExpressionTheory
+    type Ath = Nemonuri.PureTypeSystems.Primitives.ArrowTheory
 
 #if false
     let inline cons kind p =
@@ -89,12 +89,15 @@ module RefinedKinds =
         unsafeJudgeableOfApp app coned
 #endif
 
+
     type Premise = struct
+
 
         static member ToApp(_: 'TKind, data: RefinedData<'TData>) : RefinedApp<'TKind, RefinedData<'TData>> = Eth.ToApp data |> Eth.ToRefinedApp
 
         static member ToApp(_: 'TKind, app: RefinedApp<'THead, 'TTail>) : RefinedApp<'TKind, RefinedApp<'THead, 'TTail>> = Eth.ToApp app |> Eth.ToRefinedApp
 
+#if false
         static member ToDotNet(data: RefinedData<'TData>) = judgeableOfData data
 
         static member inline ToDotNet(app: RefinedApp<'THead, RefinedData<'TData>>) = 
@@ -152,7 +155,7 @@ module RefinedKinds =
             let headJd = AppJudge<'kh,_,_,_>(app.JudgeHandle, decons, tail.Introducer) in
             Judgeable<_,_>(headVal, headJd)
 
-#if false
+
         static member inline ToDotNet(app: App<'THead, App<_, App<_, App<_, App<_, App<_, Data<_>>>>>>>) = Premise.ToDotNet(app.Value) |> cons defaultof<'THead>
 
         static member inline ToDotNet(app: App<'THead, App<_, App<_, App<_, App<_, App<_, App<_, Data<_>>>>>>>>) = Premise.ToDotNet(app.Value) |> cons defaultof<'THead>
@@ -169,6 +172,8 @@ module RefinedKinds =
     let inline toDotNet appOrData =
         let inline call (p: ^p) (x: ^x) = ((^p or ^x) : (static member ToDotNet : _ -> _) x)
         call defaultof<Premise> appOrData
+
+
 
 #if false
     let inline guardToDotNet (guarded: Guard<^t,^j>) =

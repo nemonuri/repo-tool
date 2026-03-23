@@ -9,6 +9,7 @@ module Kinds =
     open Unchecked
     type private Eth = Nemonuri.PureTypeSystems.Primitives.TypeExpressions.ExpressionTheory
     type private Ath = Nemonuri.PureTypeSystems.Primitives.ArrowTheory
+    type B<'a> = Bracket<'a>
 
     let inline cons kind p =
         let inline call (k': ^k) (p': ^p) = ((^k or ^p) : (static member Cons : _ -> _) p') in
@@ -25,15 +26,24 @@ module Kinds =
 
     let dotNetToData (dn: 'dn) : Data<'dn> = Eth.ToData dn
 
-    let dotNetOfData (data: Data<'dn>) = Eth.ToData data
+    let dotNetOfData (data: Data<'dn>) = data.Value
 
     type App<'k, 'e> = TypeExpressions.App<'k, 'e>
 
-    type Premise = struct
+    type ToAppPremise = struct
 
         static member ToApp(_: 'TKind, data: Data<'TData>) : App<'TKind, Data<'TData>> = Eth.UnsafeToApp data
 
         static member ToApp(_: 'TKind, app: App<'THead, 'TTail>) : App<'TKind, App<'THead, 'TTail>> = Eth.UnsafeToApp app
+
+    end
+
+    let inline toApp kind dataOrApp =
+        let inline call (p: ^p) (k: ^k) (x: ^x) = ((^p or ^k) : (static member ToApp : _*_ -> _) k,x)
+        call defaultof<ToAppPremise> kind dataOrApp
+
+
+    type Premise = struct
 
         static member ToDotNet(data: Data<'TData>) = dotNetOfData data
 
@@ -53,12 +63,35 @@ module Kinds =
 
         static member inline ToDotNet(app: App<'THead, App<_, App<_, App<_, App<_, App<_, App<_, App<_, Data<_>>>>>>>>>) = Premise.ToDotNet(app.Expression) |> cons defaultof<'THead>
 
+
+        static member OfDotNet(k: Var, d: 'TData) = dotNetToData d
+
+        static member inline OfDotNet(k: App<'THead, Var>, d) = Premise.OfDotNet(k.Expression, decons defaultof<'THead> d) |> toApp defaultof<'THead>
+
+        static member inline OfDotNet(k: App<'THead, App<_, Var>>, d) = Premise.OfDotNet(k.Expression, decons defaultof<'THead> d) |> toApp defaultof<'THead>
+
+        static member inline OfDotNet(k: App<'THead, App<_, App<_, Var>>>, d) = Premise.OfDotNet(k.Expression, decons defaultof<'THead> d) |> toApp defaultof<'THead>
+
+        static member inline OfDotNet(k: App<'THead, App<_, App<_, App<_, Var>>>>, d) = Premise.OfDotNet(k.Expression, decons defaultof<'THead> d) |> toApp defaultof<'THead>
+
+        static member inline OfDotNet(k: App<'THead, App<_, App<_, App<_, App<_, Var>>>>>, d) = Premise.OfDotNet(k.Expression, decons defaultof<'THead> d) |> toApp defaultof<'THead>
+
+        static member inline OfDotNet(k: App<'THead, App<_, App<_, App<_, App<_, App<_, Var>>>>>>, d) = 
+            Premise.OfDotNet(k.Expression, decons defaultof<'THead> d) |> toApp defaultof<'THead>
+
+        static member inline OfDotNet(k: App<'THead, App<_, App<_, App<_, App<_, App<_, App<_, Var>>>>>>>, d) = 
+            Premise.OfDotNet(k.Expression, decons defaultof<'THead> d) |> toApp defaultof<'THead>
+
+        static member inline OfDotNet(k: App<'THead, App<_, App<_, App<_, App<_, App<_, App<_, App<_, Var>>>>>>>>, d) = 
+            Premise.OfDotNet(k.Expression, decons defaultof<'THead> d) |> toApp defaultof<'THead>
+
     end
 
-    let inline toApp kind dataOrApp =
-        let inline call (p: ^p) (k: ^k) (x: ^x) = ((^p or ^k) : (static member ToApp : _*_ -> _) k,x)
-        call defaultof<Premise> kind dataOrApp
-    
+
     let inline toDotNet appOrData =
         let inline call (p: ^p) (x: ^x) = ((^p or ^x) : (static member ToDotNet : _ -> _) x)
         call defaultof<Premise> appOrData
+
+    let inline ofDotNet kinds appOrData =
+        let inline call (p: ^p) (k: ^k) (x: ^x) = ((^p or ^x) : (static member OfDotNet : _*_ -> _) k, x)
+        call defaultof<Premise> kinds appOrData

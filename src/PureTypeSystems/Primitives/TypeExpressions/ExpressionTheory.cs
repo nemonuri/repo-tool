@@ -2,6 +2,10 @@ namespace Nemonuri.PureTypeSystems.Primitives.TypeExpressions;
 
 public static class ExpressionTheory
 {
+    public static Var Var => new();
+
+    public static App<TKind, Var> ToApp<TKind>(Var var) => new(var);
+
     public static Data<T> ToData<T>(T value) => new(value);
 
     public static Refined<Data<T>> ToRefinedData<T>(Data<T> data, JudgeHandle<Data<T>> handle = default) => new(data, handle);
