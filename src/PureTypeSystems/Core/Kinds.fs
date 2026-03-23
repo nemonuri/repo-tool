@@ -2,6 +2,7 @@
 
 open Nemonuri.PureTypeSystems.Primitives
 open Nemonuri.PureTypeSystems.Primitives.TypeExpressions
+open Nemonuri.PureTypeSystems.Primitives.TypeConstructors
 
 module Kinds =
 
@@ -21,7 +22,24 @@ module Kinds =
 
     let dotNetToData (dn: 'dn) : Data<'dn> = Eth.ToData dn |> Eth.ToRefinedData
 
-    // let dotNetOfData (d: Data<'dn>) = d.Value
+    type DataTester<'dn>() = class
+
+        static member Instance = DataTester<'dn>()
+
+        interface IIntroducer<bool> with
+            member _.Introduce<'p> (hint: inref<bool>): ArrowHandle<'p,bool> = 
+                    let ok, result = ArrowTheory.TryToTypeEqualHandle<Data<'dn>, bool, DataTesterImpl<'dn>, 'p, bool>() in
+                    if ok then result else ArrowTheory.GetFailureHandle<'p,bool>()
+    end
+    and private DataTesterImpl<'dn> = struct
+
+        interface IArrowPremise<Data<'dn>, bool> with
+            member _.Apply (pre: inref<Data<'dn>>): bool = 
+                let v = pre.Value in
+                pre.JudgeHandle.Judge(&v) = Judgement.True
+    end
+
+    let dotNetOfData (d: Data<'dn>) : Testable<'dn> = Testable<_>(d.Value.Value, DataTester<'dn>.Instance)
 
 #if false
     type Data = struct
@@ -42,8 +60,7 @@ module Kinds =
     end
 #endif
 
-
-    type App<'k, 'kd> = TypeExpressions.App<'k, 'kd>
+    type App<'k, 'kd> = Refined<TypeExpressions.App<'k, 'kd>>
 
 #if false
     type Guard<'t, 'j when 'j : unmanaged and 'j :> IJudgePremise and 'j : struct and 'j : (new: unit -> 'j) and 'j :> System.ValueType> = 
@@ -55,7 +72,7 @@ module Kinds =
 
     type Premise = struct
 
-        static member ToApp(_: 'TKind, data: Data<'TData>) = App<'TKind, Data<'TData>>(data)
+        static member ToApp(_: 'TKind, data: Data<'TData>) : App<'TKind, Data<'TData>> = Eth.ToApp(data) |> Eth.ToRefinedApp
 
         static member ToApp(_: 'TKind, app: App<'THead, 'TTail>) = App<'TKind, App<'THead, 'TTail>>(app)
 
