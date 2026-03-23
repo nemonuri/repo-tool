@@ -1,5 +1,6 @@
 using System.Runtime.CompilerServices;
 
+#if false
 namespace Nemonuri.PureTypeSystems.Primitives;
 
 public static class ArrowPairTheory
@@ -74,3 +75,4 @@ public static class ArrowPairTheory
         return ToHandlePair<TP, Tautology, TQ, Negation, Tautology, Negation, FailurePair<TP, TQ>>();
     }
 }
+#endif

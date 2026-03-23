@@ -6,6 +6,9 @@ namespace Nemonuri.PureTypeSystems.Primitives;
 
 public interface IJudgePremise
 {
+    /// <summary>
+    /// Judge 'expr' is constructable and has type 'T', in given premise.
+    /// </summary>
     Judgement Judge<T>(in T expr);
 }
 
@@ -31,9 +34,9 @@ public readonly struct Negation : IJudgePremise, IConstant<Judgement>
     Judgement IArrowPremise<ValueUnit, Judgement>.Apply(in ValueUnit _) => Judgement;
 }
 
-public readonly struct Thunk : IJudgePremise, IConstant<Judgement>
+public readonly struct Testable : IJudgePremise, IConstant<Judgement>
 {
-    private static Judgement Judgement => Judgement.Thunk;
+    private static Judgement Judgement => Judgement.Testable;
 
     public static Judgement Judge<T>(in T _) => Judgement;
 
@@ -50,12 +53,8 @@ public readonly struct JudgeBasedArrow<T, TJudge> : IArrowPremise<T, Refined<T, 
     Refined<T, TJudge> IArrowPremise<T, Refined<T, TJudge>>.Apply(in T pre) => Apply(in pre);
 }
 
-public interface IJudgePremise<T> : IJudgePremise
+public interface IJudgePremise<T> : IJudgePremise, IArrowPremise<T, Judgement>
 {
-    /// <summary>
-    /// Judge 'expr' is constructable and has type 'T', in given premise.
-    /// </summary>
-    Judgement Judge(in T? expr);
 }
 
 public readonly struct BoundBasedFreeJudge<T1, TJudge> : IJudgePremise
@@ -78,28 +77,29 @@ public readonly struct BoundBasedFreeJudge<T1, TJudge> : IJudgePremise
 
 
 [StructLayout(LayoutKind.Sequential)]
-public unsafe readonly struct JudgeHandle<T> : IHandle, IEquatable<JudgeHandle<T>>
+public readonly struct JudgeHandle<T> : IHandle, IEquatable<JudgeHandle<T>>
 {
-    private readonly delegate*<in T?, Judgement> _fp;
+    //private readonly delegate*<in T?, Judgement> _fp;
+    private readonly ArrowHandle<T, Judgement> _arrowHandle;
 
-    internal JudgeHandle(delegate*<in T?, Judgement> fp)
+    internal JudgeHandle(ArrowHandle<T, Judgement> arrowHandle)
     {
-        _fp = fp;
+        _arrowHandle = arrowHandle;
     }
 
-    public nint ToIntPtr() => (nint)_fp;
+    public nint ToIntPtr() => _arrowHandle.ToIntPtr();
 
-    public bool IsTautology => ToIntPtr() == JudgeTheory.TautologyPointer;
+    public ArrowHandle<T, Judgement> ArrowHandle => _arrowHandle;
 
-    public Judgement Judge(in T? pre)
+    public Judgement Judge(in T pre)
     {
-        if (IsTautology)
+        if (ArrowHandle.IsFailure)
         {
-            return Tautology.Judge(in pre);
+            return Judgement.False;
         }
         else
         {
-            return _fp(in pre);
+            return ArrowHandle.Apply(in pre);
         }
     }
 
@@ -109,6 +109,8 @@ public unsafe readonly struct JudgeHandle<T> : IHandle, IEquatable<JudgeHandle<T
 
     public override int GetHashCode() => Hth.GetHashCode(this);
 }
+
+#if false
 
 /**
     reference: https://plato.stanford.edu/entries/logic-intuitionistic/#FormSystMathMath
@@ -197,3 +199,5 @@ public readonly struct Exist<T, TContext> : IJudgePremise<ArrowHandle<T, TContex
 
     Judgement IJudgePremise.Judge<T2>(in T2 expr) => JudgeTheory.FreeJudge<ArrowHandle<T, TContext>, T2, Exist<T, TContext>>(this, in expr);
 }
+
+#endif

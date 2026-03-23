@@ -1,5 +1,6 @@
 namespace Nemonuri.PureTypeSystems.Primitives;
 
+#if false
 public interface IArrowPairPremise<TAntecedent, TConsequent> : 
     IArrowPremise<TAntecedent, TConsequent>
 {
@@ -66,3 +67,4 @@ public readonly struct FailurePair<TAnt, TCon> :
 
     TCon IArrowPremise<TAnt, TCon>.Apply(in TAnt pre) => Apply(in pre);
 }
+#endif

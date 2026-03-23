@@ -1,5 +1,6 @@
 namespace Nemonuri.PureTypeSystems.Primitives.Extensions;
 
+#if false
 public static class ArrowHandleExtensions
 {
     extension<TP, TQ>(in ArrowHandle<TP, TQ> handle)
@@ -10,3 +11,4 @@ public static class ArrowHandleExtensions
         }
     }
 }
+#endif

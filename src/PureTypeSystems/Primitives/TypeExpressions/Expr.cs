@@ -79,12 +79,22 @@ public readonly record struct RefinedApp<TKind, TExpr>
 
 public readonly struct Testable<T> 
 {
-    public Testable(T value, IIntroducer<bool> introducer)
+    public Testable(T value, IIntroducer<TestResult> introducer)
     {
         Value = value;
         Introducer = introducer;
     }
 
     public T Value {get;}
-    public IIntroducer<bool> Introducer {get;}
+    public IIntroducer<TestResult> Introducer {get;}
+}
+
+public readonly struct Testable<T, TIntroducerPremise> where TIntroducerPremise : IIntroducer<TestResult> 
+{
+    public Testable(T value)
+    {
+        Value = value;
+    }
+
+    public T Value {get;}
 }

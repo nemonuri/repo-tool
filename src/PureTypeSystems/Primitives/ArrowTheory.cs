@@ -3,21 +3,22 @@ using System.Runtime.CompilerServices;
 
 namespace Nemonuri.PureTypeSystems.Primitives;
 
-
+#if false
 public readonly record struct ApplyJudgement(Judgement Pre, Judgement? Post)
 {
 }
+#endif
 
 
 public static class ArrowTheory
 {
-    public const nint IdentityPointer = 0;
+    public const nint FailurePointer = 0;
 
-    public static ArrowHandle<TP, TQ> GetIdentityHandle<TP, TQ>() => default;
+    //public static ArrowHandle<TP, TQ> GetIdentityHandle<TP, TQ>() => default;
 
-    public static ArrowHandle<TP, TQ> GetFailureHandle<TP, TQ>() => ToHandle<TP, Tautology, TQ, Negation, Failure<TP, TQ>>();
+    public static ArrowHandle<TP, TQ> GetFailureHandle<TP, TQ>() => default; //ToHandle<TP, Tautology, TQ, Negation, Failure<TP, TQ>>();
         
-
+#if false
     public static bool TryApplyTrue<TP, TQ>
     (
         in ArrowHandle<TP, TQ> implyHandle, 
@@ -45,6 +46,7 @@ public static class ArrowTheory
     {
         return handle.PreJudge.IsTautology && handle.PostJudge.IsTautology;
     }
+#endif    
 
     private static TConsequent ImplInternal<TAntecedent, TConsequent, T>(in TAntecedent ant)
         where T : IArrowPremise<TAntecedent, TConsequent>
@@ -57,6 +59,10 @@ public static class ArrowTheory
     {
         public unsafe static ArrowHandle<TAntecedent, TConsequent> ToHandle()
         {
+            if (typeof(TArrow) == typeof(Failure<TAntecedent, TConsequent>))
+            {
+                return GetFailureHandle<TAntecedent, TConsequent>();
+            }
             return new(&ImplInternal<TAntecedent, TConsequent, TArrow>);
         }
 
@@ -74,6 +80,7 @@ public static class ArrowTheory
         }
     }
 
+#if false
     extension<TAntecedent, TPreJudge, TConsequent, TPostJudge, TArrow>(TArrow)
         where TPreJudge : IJudgePremise
         where TPostJudge : IJudgePremise
@@ -88,7 +95,7 @@ public static class ArrowTheory
     }
 
 
-#if false
+
     public unsafe static ArrowHandle<TAntecedent, TConsequent> ToHandleForce<TAntecedent, TConsequent, T>()
         where T : unmanaged
     {

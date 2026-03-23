@@ -17,11 +17,19 @@ public readonly record struct Judgement
 
     public static Judgement Unknown => new(false,false);
 
-    public static Judgement Thunk => new(false,true);
+    public static Judgement Testable => new(false,true);
 
     public static Judgement False => new(true,false);
 
     public static Judgement True => new(true,true);
+
+    public bool IsUnknown => this == Unknown;
+
+    public bool IsTestable => this == Testable;
+
+    public bool IsFalse => this == False;
+
+    public bool IsTrue => this == True;
 }
 
 

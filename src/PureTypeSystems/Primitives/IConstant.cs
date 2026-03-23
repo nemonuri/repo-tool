@@ -16,8 +16,6 @@ public readonly struct ConstantHandle<T> : IHandle, IEquatable<ConstantHandle<T>
 
     internal ConstantHandle(ArrowHandle<ValueUnit, T> arrowHandle)
     {
-        Debug.Assert( arrowHandle.PreJudge.IsTautology );
-        Debug.Assert( arrowHandle.PostJudge.IsTautology );
         _arrowHandle = arrowHandle;
     }
 

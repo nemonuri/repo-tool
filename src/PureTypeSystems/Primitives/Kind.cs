@@ -50,6 +50,7 @@ public static class KindTheory
     
 }
 
+#if false
 public readonly struct IdentityKind : IKindPremise<IdentityKind>
 {
     public static T Cons<T>(T p) => KindTheory.Cons<IdentityKind,T,T>(in p);
@@ -60,6 +61,7 @@ public readonly struct IdentityKind : IKindPremise<IdentityKind>
         return true;
     }
 }
+#endif
 
 
 public readonly struct ArrowBasedKind<TP, TQ, TArrow> : IKindPremise<ArrowBasedKind<TP, TQ, TArrow>>//, IConstant<ArrowHandle<TP, TQ>>
