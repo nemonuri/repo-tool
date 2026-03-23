@@ -13,6 +13,8 @@ namespace Nemonuri.PureTypeSystems.Primitives;
 public interface IKindPremise<TKind> where TKind : IKindPremise<TKind>
 {
     bool TryToCons<TP, TQ>(out ArrowHandle<TP, TQ> handle);
+
+    bool TryToDecons<TQ, TP>(out ArrowHandle<TQ, TP> handle);
 }
 
 
@@ -22,9 +24,11 @@ public static class KindTheory
     extension<TKind>(TKind)
         where TKind : IKindPremise<TKind>
     {
+        private static TKind GetInstance() => Activator.CreateInstance<TKind>();
+
         public static ArrowHandle<TP, TQ> ToCons<TP, TQ>()
         {
-            if (Activator.CreateInstance<TKind>().TryToCons<TP, TQ>(out var hp))
+            if (GetInstance<TKind>().TryToCons<TP, TQ>(out var hp))
             {
                 return hp;
             }
@@ -37,6 +41,28 @@ public static class KindTheory
         public static TQ Cons<TP, TQ>(in TP p)
         {
             return ToCons<TKind, TP, TQ>().Apply(in p);
+        }
+
+        public static ArrowHandle<TQ, TP> ToDecons<TQ, TP>()
+        {
+            if (GetInstance<TKind>().TryToDecons<TQ, TP>(out var hp))
+            {
+                return hp;
+            }
+            else
+            {
+                return ArrowTheory.GetFailureHandle<TQ, TP>();
+            }
+        }
+
+        public static TP Decons<TQ, TP>(in TQ q)
+        {
+            return ToDecons<TKind, TQ, TP>().Apply(in q);
+        }
+
+        public static App<TKind, TP> DeconsToApp<TQ, TP>(in TQ q)
+        {
+            return new(Decons<TKind, TQ, TP>(in q));
         }
 
 #if false
@@ -63,7 +89,7 @@ public readonly struct IdentityKind : IKindPremise<IdentityKind>
 }
 #endif
 
-
+#if false
 public readonly struct ArrowBasedKind<TP, TQ, TArrow> : IKindPremise<ArrowBasedKind<TP, TQ, TArrow>>//, IConstant<ArrowHandle<TP, TQ>>
     where TArrow : unmanaged, IArrowPremise<TP, TQ>
 {
@@ -89,7 +115,7 @@ public readonly struct JudgeBasedKind<T, TJudge> : IKindPremise<JudgeBasedKind<T
 }
 
 
-#if false
+
 public readonly struct StrictGuardKind<TJudge> : IKindPremise<StrictGuardKind<TJudge>>
     where TJudge : unmanaged, IJudgePremise
 {

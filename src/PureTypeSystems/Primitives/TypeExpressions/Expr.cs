@@ -99,7 +99,7 @@ public readonly struct Testable<T, TIntroducerPremise> where TIntroducerPremise 
     public T Value {get;}
 }
 
-public readonly struct Judgeable<T, TIntro> where TIntro : IIntroducer<Judgement>
+public readonly struct Judgeable<T, TIntro> where TIntro : IIntroducer<JudgeResult>
 {
     public Judgeable(T value, TIntro introducer)
     {

@@ -23,9 +23,9 @@ module Kinds =
 
     let dotNetToData (dn: 'dn) : Data<'dn> = Eth.ToData dn |> Eth.ToRefinedData
 
-    type DataJudge<'dn>(data: Data<'dn>) = class
+    type DataJudge<'dn>(judgeHandle: JudgeHandle<TypeExpressions.Data<'dn>>) = class
 
-        member internal _.Data = data;
+        member internal _.JudgeHandle = judgeHandle;
 
         interface IIntroducer<Judgement> with
             member _.Introduce<'p> (_: inref<Judgement>): ArrowHandle<'p,Judgement> = 
@@ -38,33 +38,48 @@ module Kinds =
             member _.Apply (pre: inref<struct (DataJudge<'dn> * 'dn)>): Judgement = 
                     let struct (ctx, v) = pre in
                     let data0 = Eth.ToData v in
-                    ctx.Data.JudgeHandle.Judge(&data0)
+                    ctx.JudgeHandle.Judge(&data0)
     end
 
-    let judgeableOfData (d: Data<'dn>) : Judgeable<'dn, DataJudge<'dn>> = Judgeable<_,_>(d.Value.Value, DataJudge<_>(d))
+    let judgeableOfData (d: Data<'dn>) : Judgeable<'dn, DataJudge<'dn>> = Judgeable<_,_>(d.Value.Value, DataJudge<_>(d.JudgeHandle))
 
     type App<'k, 'expr> = Refined<TypeExpressions.App<'k, 'expr>>
 
-    type AppJudge<'k, 'e, 'c when 'k :> IKindPremise<'k>>() = class
 
-        static member Instance = AppJudge<'k, 'e, 'c>()
+    type AppJudge<'k, 'e, 'c, 'j 
+                    when 'k :> IKindPremise<'k>
+                    and 'j :> IIntroducer<Judgement>>
+                    (judgeHandle: JudgeHandle<TypeExpressions.App<'k,'e>>, innerIntroducer: 'j) = class
+
+        member internal _.JudgeHandle = judgeHandle
 
         interface IIntroducer<Judgement> with
-            member _.Introduce<'p> (_: inref<Judgement>): ArrowHandle<'p,Judgement> = 
-                    let ok, result = Ath.TryToTypeEqualHandle<App<'k,'e>, Judgement, AppJudgeImpl<'k, 'e, 'c>, 'p, Judgement>() in
-                    if ok then result else Ath.GetFailureHandle<_,_>()
+            member _.Introduce<'p> (hint: inref<Judgement>): ArrowHandle<'p,Judgement> = 
+                    let ok, (result: ArrowHandle<'p,Judgement>) = Ath.TryToTypeEqualHandle<_,_, AppJudgeImpl<'k, 'e, 'c, 'j>, _,_>() in
+                    if ok then result else 
+                    innerIntroducer.Introduce<'p>(&hint)
 
     end
-    and private AppJudgeImpl<'k, 'e, 'c when 'k :> IKindPremise<'k>> = struct
+    and private AppJudgeImpl<'k, 'e, 'c, 'j 
+                                when 'k :> IKindPremise<'k>
+                                and 'j :> IIntroducer<Judgement>> = struct
 
-        interface IArrowPremise<App<'k,'e>, Judgement> with
+        interface IMethodPremise<AppJudge<'k, 'e, 'c, 'j>, 'c, Judgement> with
             member _.Apply (pre: inref<_>): Judgement = 
-                let v = pre.Value in
-                pre.JudgeHandle.Judge(&v)
+                let struct (ctx, v) = pre in
+                let app0 = KindTheory.DeconsToApp<'k,_,'e>(&v) in
+                ctx.JudgeHandle.Judge(&app0)
     end
 
-    let judgeableOfApp (a: App)
-
+#if false
+    let unsafeJudgeableOfApp (app: App<'k, 'e>) (constructed: 'c) : Judgeable<'c, AppJudge<'k, 'e, 'c>> = 
+        Judgeable<_,_>(constructed,  AppJudge<_,_,'c>(app.JudgeHandle))
+    
+    let inline judgeableOfApp (app: App<^k, ^e>) =
+        let app0 = app.Value in
+        let coned = cons defaultof<^k> app0.Expression in
+        unsafeJudgeableOfApp app coned
+#endif
 
     type Premise = struct
 
@@ -74,7 +89,12 @@ module Kinds =
 
         static member ToDotNet(data: Data<'TData>) = judgeableOfData data
 
-        static member inline ToDotNet(app: App<'THead, Data<_>>) = Premise.ToDotNet(app.Value) |> cons defaultof<'THead>
+        static member inline ToDotNet(app: App<'THead, Data<_>>) = //Premise.ToDotNet(app.Value.Expression)
+            let tail = Premise.ToDotNet(app.Value.Expression) in
+            let headVal = cons defaultof<'THead> tail.Value in
+            let headJd = AppJudge<'THead, _,_,_>(app.JudgeHandle, tail.Introducer) in
+            Judgeable<_,_>(headVal, headJd)
+
 
 #if false
         static member inline ToDotNet(app: App<'THead, App<_, Data<_>>>) = Premise.ToDotNet(app.Value) |> cons defaultof<'THead>

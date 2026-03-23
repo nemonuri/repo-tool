@@ -1,4 +1,5 @@
 using System.Runtime.InteropServices;
+using Nemonuri.PureTypeSystems.Primitives.TypeConstructors;
 
 namespace Nemonuri.PureTypeSystems.Primitives;
 
@@ -32,10 +33,44 @@ public readonly record struct Judgement
     public bool IsTrue => this == True;
 }
 
+public readonly struct JudgeResult
+{
+    private JudgeResult(Judgement judgement, IIntroducer<TestResult>? testerIntroducer)
+    {
+        Judgement = judgement;
+        TesterIntroducer = testerIntroducer;
+    }
+
+    public Judgement Judgement {get;}
+
+    public IIntroducer<TestResult>? TesterIntroducer {get;}
+
+    public static JudgeResult CreateUnknown() => default;
+
+    public static JudgeResult CreateTrue() => new(Judgement.True, null);
+
+    public static JudgeResult CreateFalse() => new(Judgement.False, null);
+
+    public static JudgeResult CreateTestable(IIntroducer<TestResult> introducer) => new(Judgement.Testable, introducer);
+
+    public bool IsUnknown => Judgement.IsUnknown;
+
+    [MemberNotNullWhen(true, nameof(TesterIntroducer))]
+    public bool IsTestable => Judgement.IsTestable;
+
+    public bool IsFalse => Judgement.IsFalse;
+
+    public bool IsTrue => Judgement.IsTrue;
+}
 
 public static class JudgementTheory
 {
     public static Judgement FromBoolean(bool source) => source ? Judgement.True : Judgement.False;
+}
+
+public static class JudgeResultTheory
+{
+    public static JudgeResult FromBoolean(bool source) => source ? JudgeResult.CreateTrue() : JudgeResult.CreateFalse();
 }
 
 #if false

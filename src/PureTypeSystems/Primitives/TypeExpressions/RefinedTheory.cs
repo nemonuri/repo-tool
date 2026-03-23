@@ -36,12 +36,12 @@ public static class RefinedTheory
         return true;
     }
 
-    public static Judgement Judge<T>(in Refined<T> refined)
+    public static JudgeResult Judge<T>(in Refined<T> refined)
     {
         return refined.JudgeHandle.Judge(refined.Value);
     }
 
-    public static Judgement Judge<T, TJudge>(in Refined<T, TJudge> refined)
+    public static JudgeResult Judge<T, TJudge>(in Refined<T, TJudge> refined)
         where TJudge : IJudgePremise
     {
         return Judge(Upcast(in refined));

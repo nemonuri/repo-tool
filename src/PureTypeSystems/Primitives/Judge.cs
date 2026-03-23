@@ -9,31 +9,28 @@ public interface IJudgePremise
     /// <summary>
     /// Judge 'expr' is constructable and has type 'T', in given premise.
     /// </summary>
-    Judgement Judge<T>(in T expr);
+    JudgeResult Judge<T>(in T expr);
 }
 
-public readonly struct Tautology : IJudgePremise, IConstant<Judgement>
+public readonly struct Tautology : IJudgePremise
 {
-    private static Judgement Judgement => Judgement.True;
+    private static JudgeResult JudgeResult => JudgeResult.CreateTrue();
 
-    public static Judgement Judge<T>(in T _) => Judgement;
+    public static JudgeResult Judge<T>(in T _) => JudgeResult;
 
-    Judgement IJudgePremise.Judge<T>(in T expr) => Judge(in expr);
-
-    Judgement IArrowPremise<ValueUnit, Judgement>.Apply(in ValueUnit _) => Judgement;
+    JudgeResult IJudgePremise.Judge<T>(in T expr) => Judge(in expr);
 }
 
-public readonly struct Negation : IJudgePremise, IConstant<Judgement>
+public readonly struct Negation : IJudgePremise
 {
-    private static Judgement Judgement => Judgement.False;
+    private static JudgeResult JudgeResult => JudgeResult.CreateFalse();
 
-    public static Judgement Judge<T>(in T _) => Judgement;
+    public static JudgeResult Judge<T>(in T _) => JudgeResult;
 
-    Judgement IJudgePremise.Judge<T>(in T pre) => Judge(in pre);
-
-    Judgement IArrowPremise<ValueUnit, Judgement>.Apply(in ValueUnit _) => Judgement;
+    JudgeResult IJudgePremise.Judge<T>(in T expr) => Judge(in expr);
 }
 
+#if false
 public readonly struct Testable : IJudgePremise, IConstant<Judgement>
 {
     private static Judgement Judgement => Judgement.Testable;
@@ -44,6 +41,7 @@ public readonly struct Testable : IJudgePremise, IConstant<Judgement>
 
     Judgement IArrowPremise<ValueUnit, Judgement>.Apply(in ValueUnit _) => Judgement;
 }
+#endif
 
 public readonly struct JudgeBasedArrow<T, TJudge> : IArrowPremise<T, Refined<T, TJudge>>
     where TJudge : IJudgePremise
@@ -53,10 +51,11 @@ public readonly struct JudgeBasedArrow<T, TJudge> : IArrowPremise<T, Refined<T, 
     Refined<T, TJudge> IArrowPremise<T, Refined<T, TJudge>>.Apply(in T pre) => Apply(in pre);
 }
 
-public interface IJudgePremise<T> : IJudgePremise, IArrowPremise<T, Judgement>
+public interface IJudgePremise<T> : IJudgePremise, IArrowPremise<T, JudgeResult>
 {
 }
 
+#if false
 public readonly struct BoundBasedFreeJudge<T1, TJudge> : IJudgePremise
     where TJudge : unmanaged, IJudgePremise<T1>
 {
@@ -74,30 +73,30 @@ public readonly struct BoundBasedFreeJudge<T1, TJudge> : IJudgePremise
 
     Judgement IJudgePremise.Judge<T2>(in T2 expr) => Judge(in expr);
 }
+#endif
 
 
 [StructLayout(LayoutKind.Sequential)]
 public readonly struct JudgeHandle<T> : IHandle, IEquatable<JudgeHandle<T>>
 {
-    //private readonly delegate*<in T?, Judgement> _fp;
-    private readonly ArrowHandle<T, Judgement> _arrowHandle;
+    private readonly ArrowHandle<T, JudgeResult> _arrowHandle;
 
-    internal JudgeHandle(ArrowHandle<T, Judgement> arrowHandle)
+    internal JudgeHandle(ArrowHandle<T, JudgeResult> arrowHandle)
     {
         _arrowHandle = arrowHandle;
     }
 
     public nint ToIntPtr() => _arrowHandle.ToIntPtr();
 
-    public ArrowHandle<T, Judgement> ArrowHandle => _arrowHandle;
+    public ArrowHandle<T, JudgeResult> ArrowHandle => _arrowHandle;
 
     public bool IsUnknown => ArrowHandle.IsFailure;
 
-    public Judgement Judge(in T pre)
+    public JudgeResult Judge(in T pre)
     {
         if (IsUnknown)
         {
-            return Judgement.Unknown;
+            return JudgeResult.CreateUnknown();
         }
         else
         {

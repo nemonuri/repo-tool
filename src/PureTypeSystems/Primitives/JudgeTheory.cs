@@ -14,30 +14,32 @@ public static class JudgeTheory
     public static bool IsNegationHandle<T>(JudgeHandle<T> judgeHandle) => 
         judgeHandle.ToIntPtr() == GetNegationHandle<T>().ToIntPtr();
 
+#if false
     public static JudgeHandle<T> GetTestableHandle<T>() => ToHandle<Testable, T>();
 
     public static bool IsThunkHandle<T>(JudgeHandle<T> judgeHandle) => 
         judgeHandle.ToIntPtr() == GetTestableHandle<T>().ToIntPtr();
+#endif
 
-    public static bool TryJudgeTrue<T>(JudgeHandle<T> judgeHandle, [NotNullWhen(true)] in T pre, out Judgement judgement) =>
-        (judgement = judgeHandle.Judge(in pre)) == Judgement.True;
+    public static bool TryJudgeTrue<T>(JudgeHandle<T> judgeHandle, [NotNullWhen(true)] in T pre, out JudgeResult judgeResult) =>
+        (judgeResult = judgeHandle.Judge(in pre)).IsTrue;
 
-    public static bool TryJudgeTrue<T1, T2>(JudgeHandle<(T1,T2)> judgeHandle, in T1 pre, [NotNullWhen(true)] in T2 post, out Judgement judgement)
+    public static bool TryJudgeTrue<T1, T2>(JudgeHandle<(T1,T2)> judgeHandle, in T1 pre, [NotNullWhen(true)] in T2 post, out JudgeResult judgement)
     {
         var pair = (pre, post);
         judgement = judgeHandle.Judge(in pair);
-        return judgement == Judgement.True;
+        return judgement.IsTrue;
     }
 
-    public static bool TryFreeJudge<T1, T2, TJudge>(in TJudge boundJudge, in T2 expr, out Judgement judgement)
+    public static bool TryFreeJudge<T1, T2, TJudge>(in TJudge boundJudge, in T2 expr, out JudgeResult judgeResult)
         where TJudge : IJudgePremise<T1>
     {
-        if (typeof(T1) != typeof(T2)) { judgement = Judgement.False; return false; }
-        judgement = boundJudge.Apply(in Unsafe.As<T2,T1>(ref Unsafe.AsRef(in expr)));
+        if (typeof(T1) != typeof(T2)) { judgeResult = JudgeResult.CreateFalse(); return false; }
+        judgeResult = boundJudge.Apply(in Unsafe.As<T2,T1>(ref Unsafe.AsRef(in expr)));
         return true;
     }
 
-    public static Judgement FreeJudge<T1, T2, TJudge>(in TJudge boundJudge, in T2 expr)
+    public static JudgeResult FreeJudge<T1, T2, TJudge>(in TJudge boundJudge, in T2 expr)
         where TJudge : IJudgePremise<T1>
     {
         TryFreeJudge<T1, T2, TJudge>(in boundJudge, in expr, out var jm);
@@ -48,14 +50,14 @@ public static class JudgeTheory
     {
         public unsafe static JudgeHandle<T> ToHandle<T>()
         {
-            static Judgement Impl(in T item) => Activator.CreateInstance<TJudge>().Judge(in item);
+            static JudgeResult Impl(in T item) => Activator.CreateInstance<TJudge>().Judge(in item);
 
-            ArrowHandle<T, Judgement> arrowHandle = new(&Impl);
+            ArrowHandle<T, JudgeResult> arrowHandle = new(&Impl);
             return new(arrowHandle);
         }
     }
 
-    public static JudgeHandle<T> IntroduceJudge<T>(IIntroducer<Judgement> introducer)
+    public static JudgeHandle<T> IntroduceJudge<T>(IIntroducer<JudgeResult> introducer)
     {
         var handle = introducer.Introduce<T>(default);
         return new(handle);
