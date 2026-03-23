@@ -9,10 +9,10 @@ module Refiners =
 
     let inline (|Judgement|) (j: Judgement) = let det, tru = j.Deconstruct() in det, tru
 
-    let inline (|Unknown|Thunk|False|True|) (Judgement(det, tru)) =
+    let inline (|Unknown|Testable|False|True|) (Judgement(det, tru)) =
         match det, tru with
         | false, false -> Unknown Judgement.Unknown
-        | false, true -> Thunk Judgement.Thunk
+        | false, true -> Testable Judgement.Testable
         | true, false -> False Judgement.False
         | true, true -> True Judgement.True
 

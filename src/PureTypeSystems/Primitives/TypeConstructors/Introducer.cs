@@ -5,6 +5,18 @@ public interface IIntroducer<TCon>
     ArrowHandle<TAnt, TCon> Introduce<TAnt>(in TCon hint);
 }
 
+public static class IntroducerTheory
+{
+    extension<TQ, TIntro>(TIntro)
+        where TIntro : IIntroducer<TQ>
+    {
+        public static MethodHandle<TIntro, TP, TQ> IntroduceMethod<TP>(in TIntro self, in TQ hint) 
+        {
+            return new(self.Introduce<(TIntro, TP)>(in hint));
+        }
+    }
+}
+
 #if false
 public static class IntroducerTheory
 {

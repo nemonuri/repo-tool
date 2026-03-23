@@ -91,11 +91,13 @@ public readonly struct JudgeHandle<T> : IHandle, IEquatable<JudgeHandle<T>>
 
     public ArrowHandle<T, Judgement> ArrowHandle => _arrowHandle;
 
+    public bool IsUnknown => ArrowHandle.IsFailure;
+
     public Judgement Judge(in T pre)
     {
-        if (ArrowHandle.IsFailure)
+        if (IsUnknown)
         {
-            return Judgement.False;
+            return Judgement.Unknown;
         }
         else
         {

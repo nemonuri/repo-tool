@@ -1,20 +1,23 @@
 using System.Runtime.CompilerServices;
+using Nemonuri.PureTypeSystems.Primitives.TypeConstructors;
 
 namespace Nemonuri.PureTypeSystems.Primitives;
 
 public static class JudgeTheory
 {
-    public const nint NegationPointer = 0;
+    public const nint UnknownPointer = 0;
+
+    public static JudgeHandle<T> GetUnknownHandle<T>() => default;
 
     public static JudgeHandle<T> GetNegationHandle<T>() => ToHandle<Negation, T>();
 
     public static bool IsNegationHandle<T>(JudgeHandle<T> judgeHandle) => 
         judgeHandle.ToIntPtr() == GetNegationHandle<T>().ToIntPtr();
 
-    public static JudgeHandle<T> GetThunkHandle<T>() => ToHandle<Testable, T>();
+    public static JudgeHandle<T> GetTestableHandle<T>() => ToHandle<Testable, T>();
 
     public static bool IsThunkHandle<T>(JudgeHandle<T> judgeHandle) => 
-        judgeHandle.ToIntPtr() == GetThunkHandle<T>().ToIntPtr();
+        judgeHandle.ToIntPtr() == GetTestableHandle<T>().ToIntPtr();
 
     public static bool TryJudgeTrue<T>(JudgeHandle<T> judgeHandle, [NotNullWhen(true)] in T pre, out Judgement judgement) =>
         (judgement = judgeHandle.Judge(in pre)) == Judgement.True;
@@ -41,24 +44,23 @@ public static class JudgeTheory
         return jm;
     }
 
-    extension<TJudge>(TJudge)
-        where TJudge : IJudgePremise
+    extension<TJudge>(TJudge) where TJudge : IJudgePremise
     {
         public unsafe static JudgeHandle<T> ToHandle<T>()
         {
             static Judgement Impl(in T item) => Activator.CreateInstance<TJudge>().Judge(in item);
 
-            if (typeof(TJudge) == typeof(Negation))
-            {
-                return GetNegationHandle<T>();
-            }
-            else
-            {
-                ArrowHandle<T, Judgement> arrowHandle = new(&Impl);
-                return new(arrowHandle);
-            }
+            ArrowHandle<T, Judgement> arrowHandle = new(&Impl);
+            return new(arrowHandle);
         }
     }
+
+    public static JudgeHandle<T> IntroduceJudge<T>(IIntroducer<Judgement> introducer)
+    {
+        var handle = introducer.Introduce<T>(default);
+        return new(handle);
+    }
+
 
 #if false
     extension<T, TJudge>(TJudge)
