@@ -9,17 +9,18 @@ module Refiners =
 
     let inline (|Judgement|) (j: Judgement) = let det, tru = j.Deconstruct() in det, tru
 
-    let inline (|Unknown|Testable|False|True|) (Judgement(det, tru)) =
+    let inline (|Unknown|Testable|False|True|) (r: JudgeResult) =
+        let (Judgement(det, tru)) = r.Judgement in
         match det, tru with
         | false, false -> Unknown Judgement.Unknown
-        | false, true -> Testable Judgement.Testable
+        | false, true -> Testable (Judgement.Testable, r.TesterIntroducer)
         | true, false -> False Judgement.False
         | true, true -> True Judgement.True
 
     [<NoComparison; NoEquality>]
     [<Struct>]
     type RefineResult<'a, 'r> =
-    | RefineError of 'a * Judgement
+    | RefineError of 'a * JudgeResult
     | RefineOk of Refined<'a, 'r>
 
     let trustMe<'a, 'r when 'r :> IJudgePremise> (x: 'a) = RefinedTheory.TrustMe<'a, 'r>(x)
@@ -32,7 +33,7 @@ module Refiners =
         | True _ -> trustMe<'a, 'r>(x) |> RefineOk
         | _ -> RefineError(x, jud)
         
-    let toResult (r: RefineResult<'a,'r>) : Result<Refined<'a, 'r>, ('a * Judgement)> =
+    let toResult (r: RefineResult<'a,'r>) : Result<Refined<'a, 'r>, ('a * JudgeResult)> =
         match r with
         | RefineOk v -> Ok v
         | RefineError (a,j) -> Error (a,j)

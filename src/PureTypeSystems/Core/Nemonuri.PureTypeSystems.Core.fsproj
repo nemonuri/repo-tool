@@ -7,8 +7,7 @@
   <ItemGroup>
     <Compile Include="Refiners.fs" />
     <Compile Include="Kinds.fs" />
-    
-    
+    <Compile Include="RefinedKinds.fs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Primitives\Nemonuri.PureTypeSystems.Primitives.csproj" />

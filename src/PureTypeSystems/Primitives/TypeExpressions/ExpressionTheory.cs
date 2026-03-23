@@ -12,6 +12,8 @@ public static class ExpressionTheory
 
     public static App<THeadKind, Refined<App<TTailKind, TExpr>>> ToApp<THeadKind, TTailKind, TExpr>(Refined<App<TTailKind, TExpr>> app) => new(app);
 
+    public static App<TKind, TExpr> UnsafeToApp<TKind, TExpr>(TExpr expr) => new(expr);
+
 #if false
     public static App<TKind, App<TKind, TExpr>> ToApp<TKind, TExpr>(RefinedApp<TKind, TExpr> appExpr)
     {
