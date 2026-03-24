@@ -37,17 +37,34 @@ type OptionKind = struct
 
 end
 
+let isTypeAndEqual<'a,'b> (expected: 'a) (actual: 'b) = Assert.Equal<'a>(expected,Assert.IsType<'a>(actual))
+
 [<Fact>]
 let ``Kinds.cons OptionKind int``() =
     let actual = K.cons (OptionKind()) 123
-    Assert.IsType<int option>(actual)
+    isTypeAndEqual<int option,_> (Some 123) actual
 
 [<Fact>]
 let ``Kinds.cons OptionKind string``() =
     let actual = K.cons (OptionKind()) "123"
-    Assert.IsType<string option>(actual)
+    isTypeAndEqual<string option,_> (Some "123") actual
 
 [<Fact>]
 let ``Kinds.cons OptionKind (option int)``() =
     let actual = K.cons (OptionKind()) (Some 123)
-    Assert.IsType<int option option>(actual)
+    isTypeAndEqual<int option option,_> (Some (Some 123)) actual
+
+[<Fact>]
+let ``Kinds.decons OptionKind (option int)``() =
+    let actual = K.decons (OptionKind()) (Some 123)
+    isTypeAndEqual<int,_> 123 actual
+    
+[<Fact>]
+let ``Kinds.decons OptionKind (option string)``() =
+    let actual = K.decons (OptionKind()) (Some "123")
+    isTypeAndEqual<string,_> "123" actual
+
+[<Fact>]
+let ``Kinds.decons OptionKind (option option int)``() =
+    let actual = K.decons (OptionKind()) (Some (Some 123))
+    isTypeAndEqual<int option,_> (Some 123) actual
