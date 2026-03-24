@@ -8,6 +8,7 @@ public static class RefinedTheory
         return new(value);
     }
 
+#if false
     public static Refined<T> Upcast<T, TJudge>(in Refined<T, TJudge> refined)
         where TJudge : IJudgePremise
     {
@@ -19,7 +20,7 @@ public static class RefinedTheory
     {
 /**
 
-    ## Assume
+    Assume
 
     ∀(tj1 tj2 t: Type).( ((FreeToHandle tj1 t) = (FreeToHandle tj2 t)) → (tj1 = tj2) )
 
@@ -46,4 +47,5 @@ public static class RefinedTheory
     {
         return Judge(Upcast(in refined));
     }
+#endif
 }

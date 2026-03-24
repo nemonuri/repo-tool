@@ -47,6 +47,18 @@ public readonly record struct Refined<T, TJudge>
     }
 }
 
+public readonly record struct Guarded<TExpr, TGuard>
+{
+    public TExpr Expression {get;}
+
+    internal Guarded(TExpr expression)
+    {
+        Expression = expression;
+    }   
+}
+
+
+#if false
 public readonly record struct Refined<T>
 {
     public T Value {get;}
@@ -59,7 +71,6 @@ public readonly record struct Refined<T>
     }
 }
 
-#if false
 public readonly record struct RefinedData<T>
 {
     public Data<T> Data {get;}
@@ -84,7 +95,6 @@ public readonly record struct RefinedApp<TKind, TExpr>
         JudgeHandle = judgeHandle;
     }
 }
-#endif
 
 public readonly struct Testable<T> 
 {
@@ -120,3 +130,4 @@ public readonly struct Judgeable<T, TIntro> where TIntro : IIntroducer<JudgeResu
     public TIntro Introducer {get;}
 }
 
+#endif

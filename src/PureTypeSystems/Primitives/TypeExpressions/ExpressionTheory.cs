@@ -8,6 +8,7 @@ public static class ExpressionTheory
 
     public static Data<T> ToData<T>(T value) => new(value);
 
+#if false
     public static Refined<Data<T>> ToRefinedData<T>(Data<T> data, JudgeHandle<Data<T>> handle = default) => new(data, handle);
 
     public static App<TKind, Refined<Data<T>>> ToApp<TKind, T>(Refined<Data<T>> dataExpr) => new(dataExpr);
@@ -18,7 +19,7 @@ public static class ExpressionTheory
 
     public static App<TKind, TExpr> UnsafeToApp<TKind, TExpr>(TExpr expr) => new(expr);
 
-#if false
+
     public static App<TKind, App<TKind, TExpr>> ToApp<TKind, TExpr>(RefinedApp<TKind, TExpr> appExpr)
     {
         return new(appExpr);
