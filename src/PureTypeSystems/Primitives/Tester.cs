@@ -72,7 +72,7 @@ public static class TesterTheory
     {
         public unsafe static TesterHandle<T> ToHandle<T>()
         {
-            static TestResult Impl(in T item) => Activator.CreateInstance<TTester>().Test(in item);
+            static TestResult Impl(in T item) => RealizerTheory.Realize<TTester>().Test(in item);
 
             ArrowHandle<T, TestResult> arrowHandle = new(&Impl);
             return new(arrowHandle);

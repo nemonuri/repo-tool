@@ -1,4 +1,5 @@
 using System.Runtime.CompilerServices;
+using Nemonuri.PureTypeSystems.Primitives.TypeConstructors;
 
 
 namespace Nemonuri.PureTypeSystems.Primitives;
@@ -51,7 +52,7 @@ public static class ArrowTheory
     private static TConsequent ImplInternal<TAntecedent, TConsequent, T>(in TAntecedent ant)
         where T : IArrowPremise<TAntecedent, TConsequent>
     {
-        return Activator.CreateInstance<T>().Apply(in ant);
+        return RealizerTheory.Realize<T>().Apply(in ant);
     }
 
     extension<TAntecedent, TConsequent, TArrow>(TArrow)

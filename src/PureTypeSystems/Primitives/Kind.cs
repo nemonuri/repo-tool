@@ -1,5 +1,6 @@
 using System.Runtime.CompilerServices;
 using Nemonuri.PureTypeSystems.Primitives.Extensions;
+using Nemonuri.PureTypeSystems.Primitives.TypeConstructors;
 using Nemonuri.PureTypeSystems.Primitives.TypeExpressions;
 
 namespace Nemonuri.PureTypeSystems.Primitives;
@@ -24,7 +25,7 @@ public static class KindTheory
     extension<TKind>(TKind)
         where TKind : IKindPremise<TKind>
     {
-        private static TKind GetInstance() => Activator.CreateInstance<TKind>();
+        private static TKind GetInstance() => RealizerTheory.Realize<TKind>();
 
         public static ArrowHandle<TP, TQ> ToCons<TP, TQ>()
         {

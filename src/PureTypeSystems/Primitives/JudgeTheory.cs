@@ -50,7 +50,7 @@ public static class JudgeTheory
     {
         public unsafe static JudgeHandle<T> ToHandle<T>()
         {
-            static JudgeResult Impl(in T item) => Activator.CreateInstance<TJudge>().Judge(in item);
+            static JudgeResult Impl(in T item) => RealizerTheory.Realize<TJudge>().Judge(in item);
 
             ArrowHandle<T, JudgeResult> arrowHandle = new(&Impl);
             return new(arrowHandle);

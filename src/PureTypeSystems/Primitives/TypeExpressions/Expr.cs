@@ -28,6 +28,13 @@ public readonly record struct App<TKind, TExpr>
 
 public readonly struct Var {}
 
+public class Empty
+{
+    internal static Empty Instance {get;} = new();
+
+    private Empty() {}
+}
+
 // public readonly record struct Guard<TExpr, TJudge>(TExpr Expression) where TJudge : IJudgePremise;
 
 public readonly record struct Refined<T, TJudge>
