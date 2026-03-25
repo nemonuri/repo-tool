@@ -60,20 +60,35 @@ public static class JudgeTheory
             ArrowHandle<T, JudgeResult> arrowHandle = new(&Impl);
             return new(arrowHandle);
         }
+
+        public static JudgeResult Judge<T>(in T p)
+        {
+            return JudgeTheory.ToHandle<TJudge, T>().Judge(in p);
+        }
     }
 
+#if false
     public static JudgeHandle<T> IntroduceJudge<T>(IIntroducer<JudgeResult> introducer)
     {
         var handle = introducer.Introduce<T>(default);
         return new(handle);
     }
 
-
-#if false
     extension<T, TJudge>(TJudge)
         where TJudge : unmanaged, IJudgePremise<T>
     {
         public unsafe static JudgeHandle<T> BoundToHandle() => FreeToHandle<BoundBasedFreeJudge<T, TJudge>, T>();
     }
 #endif
+
+    public static JudgeIntersection<TJudge1, TJudge2> Intersect<TJudge1, TJudge2>()
+        where TJudge1 : IJudgePremise
+        where TJudge2 : IJudgePremise
+        => new();
+
+    public static JudgeUnion<TJudge1, TJudge2> Union<TJudge1, TJudge2>()
+        where TJudge1 : IJudgePremise
+        where TJudge2 : IJudgePremise
+        => new();
+
 }

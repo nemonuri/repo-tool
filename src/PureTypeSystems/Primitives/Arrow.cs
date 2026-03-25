@@ -7,6 +7,7 @@ public interface IArrow<TP, TQ>
     TQ Apply(in TP pre);
 }
 
+
 public interface IArrowPremise<TP, TQ> : IArrow<TP, TQ>
 {
 }
@@ -64,3 +65,17 @@ public unsafe readonly struct ArrowHandle<TP, TQ> : IHandle, IArrow<TP, TQ>
     }
 }
 
+public readonly record struct DefaultArrow<TP, TQ>(Func<TP, TQ>? Func) : IArrow<TP, TQ>
+{
+    public TQ Apply(in TP pre)
+    {
+        if (Func is null)
+        {
+            return Failure<TP, TQ>.Apply(in pre);
+        }
+        else
+        {
+            return Func.Invoke(pre);
+        }
+    }
+}

@@ -223,3 +223,29 @@ public readonly struct Exist<T, TContext> : IJudgePremise<ArrowHandle<T, TContex
 }
 
 #endif
+
+
+public readonly struct JudgeIntersection<TJudge1, TJudge2> : IJudgePremise
+    where TJudge1 : IJudgePremise
+    where TJudge2 : IJudgePremise
+{
+    public static JudgeResult Judge<T>(in T p)
+    {
+        return JudgeResultTheory.Intersect(JudgeTheory.Judge<TJudge1, T>(in p), JudgeTheory.Judge<TJudge2, T>(in p));
+    }
+
+    JudgeResult IJudgePremise.Judge<T>(in T expr) => Judge(in expr);
+}
+
+
+public readonly struct JudgeUnion<TJudge1, TJudge2> : IJudgePremise
+    where TJudge1 : IJudgePremise
+    where TJudge2 : IJudgePremise
+{
+    public static JudgeResult Judge<T>(in T p)
+    {
+        return JudgeResultTheory.Union(JudgeTheory.Judge<TJudge1, T>(in p), JudgeTheory.Judge<TJudge2, T>(in p));
+    }
+
+    JudgeResult IJudgePremise.Judge<T>(in T expr) => Judge(in expr);
+}

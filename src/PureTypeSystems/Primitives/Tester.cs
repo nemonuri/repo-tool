@@ -79,6 +79,7 @@ public static class TesterTheory
         }
     }
 
+#if false
     public static bool TryIntroduceTester<T>(IIntroducer<TestResult> introducer, out TesterHandle<T> testerHandle)
     {
         var handle = introducer.Introduce<T>(default);
@@ -93,5 +94,41 @@ public static class TesterTheory
             return true;
         }
     }
-        
+#endif
+
+}
+
+public static class TestResultTheory
+{
+    public static TestResult Intersect(TestResult first, TestResult second)
+    {
+        return (first, second) switch
+        {
+            ({ IsCounterExample: false }, { IsCounterExample: false }) => TestResult.Example,
+            _ => TestResult.CounterExample
+        };
+    }
+
+    public static TestResult Union(TestResult first, TestResult second)
+    {
+        return (first, second) switch
+        {
+            ({ IsCounterExample: true }, { IsCounterExample: true }) => TestResult.CounterExample,
+            _ => TestResult.Example
+        };
+    }
+
+    private readonly struct IntersectImpl : IArrowPremise<(TestResult, TestResult), TestResult>
+    {
+        public TestResult Apply(in (TestResult, TestResult) pre) => Intersect(pre.Item1, pre.Item2);
+    }
+
+    public static ArrowHandle<(TestResult, TestResult), TestResult> IntersectHandle => ArrowTheory.ToHandle<(TestResult, TestResult), TestResult, IntersectImpl>();
+
+    private readonly struct UnionImpl : IArrowPremise<(TestResult, TestResult), TestResult>
+    {
+        public TestResult Apply(in (TestResult, TestResult) pre) => Union(pre.Item1, pre.Item2);
+    }
+
+    public static ArrowHandle<(TestResult, TestResult), TestResult> UnionHandle => ArrowTheory.ToHandle<(TestResult, TestResult), TestResult, IntersectImpl>();
 }

@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Runtime.InteropServices;
 using Nemonuri.PureTypeSystems.Primitives.TypeConstructors;
 
@@ -41,6 +42,12 @@ public readonly struct JudgeResult
         UncheckedTesterIntroducer = testerIntroducer;
     }
 
+    internal static JudgeResult GuardNotTestableAndCreate(Judgement judgement)
+    {
+        Debug.Assert( !judgement.IsTestable );
+        return new(judgement, null);
+    }
+
     public Judgement Judgement {get;}
 
     public IEnumerableIntroducer<TestResult>? UncheckedTesterIntroducer {get;}
@@ -75,11 +82,85 @@ public readonly struct JudgeResult
 public static class JudgementTheory
 {
     public static Judgement FromBoolean(bool source) => source ? Judgement.True : Judgement.False;
+
+    public static Judgement Intersect(Judgement first, Judgement second)
+    {
+        return (first, second) switch
+        {
+            ({ IsFalse: true }, _) or (_, { IsFalse: true }) => Judgement.False,
+            ({ IsUnknown: true }, _) or (_, { IsUnknown: true }) => Judgement.Unknown,
+            ({ IsTestable: false }, { IsTestable: false }) => Judgement.True,
+            _ => Judgement.Testable
+        };
+    }
+
+    public static Judgement Union(Judgement first, Judgement second)
+    {
+        return (first, second) switch
+        {
+            ({ IsTrue: true }, _) or (_, { IsTrue: true }) => Judgement.True,
+            ({ IsUnknown: true }, _) or (_, { IsUnknown: true }) => Judgement.Unknown,
+            ({ IsTestable: false }, { IsTestable: false }) => Judgement.False,
+            _ => Judgement.Testable
+        };
+    }
 }
 
 public static class JudgeResultTheory
 {
     public static JudgeResult FromBoolean(bool source) => source ? JudgeResult.CreateTrue() : JudgeResult.CreateFalse();
+
+    public static JudgeResult Intersect(JudgeResult first, JudgeResult second)
+    {
+        static JudgeResult NotTestablePath(Judgement first, Judgement second) => JudgeResult.GuardNotTestableAndCreate(JudgementTheory.Intersect(first, second));
+        static JudgeResult TestablePath(IEnumerableIntroducer<TestResult> first, IEnumerableIntroducer<TestResult> second)
+        {
+            return JudgeResult.CreateTestable(EnumerableIntroducerTheory.Intersect<TestResult>(first, second, TestResultTheory.IntersectHandle));
+        }
+         
+        var jm = JudgementTheory.Intersect(first.Judgement, second.Judgement);
+
+        if (jm.IsTestable)
+        {
+            return (first.TryGetTesterIntroducer(out var fi), second.TryGetTesterIntroducer(out var si)) switch
+            {
+                (true, true) => TestablePath(fi!, si!),
+                (true, false) => TestablePath(fi!, fi!),
+                (false, true) => TestablePath(si!, si!),
+                _ => NotTestablePath(first.Judgement, second.Judgement)
+            };
+        }
+        else
+        {
+            return NotTestablePath(first.Judgement, second.Judgement);
+        }
+    }
+
+    public static JudgeResult Union(JudgeResult first, JudgeResult second)
+    {
+        static JudgeResult NotTestablePath(Judgement first, Judgement second) => JudgeResult.GuardNotTestableAndCreate(JudgementTheory.Union(first, second));
+        static JudgeResult TestablePath(IEnumerableIntroducer<TestResult> first, IEnumerableIntroducer<TestResult> second)
+        {
+            return JudgeResult.CreateTestable(EnumerableIntroducerTheory.Union<TestResult>(first, second, TestResultTheory.UnionHandle));
+        }
+
+        var jm = JudgementTheory.Union(first.Judgement, second.Judgement);
+
+        if (jm.IsTestable)
+        {
+            return (first.TryGetTesterIntroducer(out var fi), second.TryGetTesterIntroducer(out var si)) switch
+            {
+                (true, true) => TestablePath(fi!, si!),
+                (true, false) => TestablePath(fi!, fi!),
+                (false, true) => TestablePath(si!, si!),
+                _ => NotTestablePath(first.Judgement, second.Judgement)
+            };
+        }
+        else
+        {
+            return NotTestablePath(first.Judgement, second.Judgement);
+        }
+    }
 }
 
 #if false
