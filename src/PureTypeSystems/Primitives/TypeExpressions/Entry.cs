@@ -21,11 +21,11 @@ public readonly record struct DotNetEntry<T, TJudge>
 }
 
 
-public readonly struct ComposerEntry<T, TJudge, TExpr, TGuard>
+public readonly struct ConstructorEntry<T, TJudge, TExpr, TGuard>
     where TJudge : IJudgePremise
     where TGuard : IGuardPremise<ValueUnit, TJudge, TExpr>
 {
-    internal ComposerEntry(KindEntry<TExpr, TGuard> kind, DotNetEntry<T, TJudge> dotnet)
+    internal ConstructorEntry(KindEntry<TExpr, TGuard> kind, DotNetEntry<T, TJudge> dotnet)
     {
         AssumedKindEntry = kind;
         DotNetEntry = dotnet;
@@ -102,6 +102,7 @@ public static class EntryTheory
         return ok;
     }
 
+#if false
     public static bool TryVarEntryToGuarded<TState, TJudge>
     (
         IRefiner<TState> refiner, 
@@ -117,6 +118,7 @@ public static class EntryTheory
         guarded = ok ? new(expr) : default;
         return ok;
     }
+#endif
 
     public static bool TryDataEntryToGuarded<TState, T, TJudge>
     (

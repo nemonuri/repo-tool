@@ -2,10 +2,10 @@ using Nemonuri.PureTypeSystems.Primitives.TypeConstructors;
 
 namespace Nemonuri.PureTypeSystems.Primitives;
 
-
+#if false
 public static class UnthunkerTheory
 {
-#if false
+
     extension<T, TArrow>(TArrow)
         where TArrow : unmanaged, IArrowPremise<ValueUnit, JudgeHandle<T>>
     {
@@ -23,7 +23,7 @@ public static class UnthunkerTheory
     {
         public static ArrowHandle<TAnt, ArrowHandle<THead, TTail>> Unthunk<TAnt>(in ArrowHandle<THead, TTail> hint) => (new TIntro()).Introduce<TAnt>(in hint);
     }
-#endif
+
 
     public static JudgeHandle<T> Unthunk<T>(IArrowPremise<ValueUnit, JudgeHandle<T>> arrow)
     {
@@ -82,3 +82,4 @@ public static class UnthunkerTheory
         }
     }
 }
+#endif
