@@ -35,7 +35,43 @@ public readonly struct VarGuard<TJudge> : IGuardPremise<ValueUnit, TJudge, Var>
     Var IGuardPremise<ValueUnit, TJudge, Var>.MapFrom(in ValueUnit value) => MapFrom(value);
 }
 
-public interface IAppGuardPremise<T, TJudge, THeadKind, TTailExpr> : IGuardPremise<T, TJudge, App<THeadKind, TTailExpr>>
+public interface IAppGuardPremise<T, TJudge, THead, TTail> : IGuardPremise<T, TJudge, App<THead, TTail>>
     where TJudge : IJudgePremise
 {
 }
+
+public static class GuardTheory
+{
+    extension<T, TJudge, TExpr, TGuard>(TGuard)
+        where TJudge : IJudgePremise
+        where TGuard : IGuardPremise<T, TJudge, TExpr>
+    {
+        private static TGuard ToInstance() => RealizerTheory.Realize<TGuard>();
+
+        //public static T MapTo(in TExpr expr) => GuardTheory.ToInstance<T, TJudge, TExpr, TGuard>().MapTo(in expr);
+
+        //public static TExpr MapFrom(in T expr) => GuardTheory.ToInstance<T, TJudge, TExpr, TGuard>().MapFrom(in expr);
+
+        public static bool IsGuardable<TState>
+        (
+            IRefiner<TState> refiner,
+            in TState prevState,
+            in TExpr expr,
+            out TState nextState
+        )
+        {
+            TGuard inst = GuardTheory.ToInstance<T, TJudge, TExpr, TGuard>();
+            T v = inst.MapTo(in expr);
+            return refiner.IsRefineable<T, TJudge>(in prevState, in v, out nextState);
+        }
+    }
+
+    extension<TJudge, TExpr, TGuard>(TGuard)
+        where TJudge : IJudgePremise
+        where TGuard : IGuardPremise<ValueUnit, TJudge, TExpr>
+    {
+        
+    }
+}
+
+

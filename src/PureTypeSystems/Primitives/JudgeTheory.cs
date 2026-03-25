@@ -65,6 +65,12 @@ public static class JudgeTheory
         {
             return JudgeTheory.ToHandle<TJudge, T>().Judge(in p);
         }
+
+        public static bool IsTrueOrTestable<T>(in T p)
+        {
+            var jr = JudgeTheory.Judge<TJudge, T>(in p);
+            return jr.IsTrue || jr.IsTestable;
+        }
     }
 
 #if false
@@ -90,5 +96,6 @@ public static class JudgeTheory
         where TJudge1 : IJudgePremise
         where TJudge2 : IJudgePremise
         => new();
+
 
 }
