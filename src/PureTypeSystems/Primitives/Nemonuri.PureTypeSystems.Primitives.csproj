@@ -20,6 +20,7 @@
         <PolySharpIncludeGeneratedTypes>
           $(PolySharpIncludeGeneratedTypes)
           System.Runtime.CompilerServices.IsExternalInit;
+          System.Diagnostics.CodeAnalysis.MaybeNullAttribute;
           System.Diagnostics.CodeAnalysis.NotNullWhenAttribute;
           System.Diagnostics.CodeAnalysis.MemberNotNullWhenAttribute;
           System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes;

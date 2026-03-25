@@ -1,10 +1,11 @@
 namespace Nemonuri.PureTypeSystems.Primitives.TypeConstructors;
 
-public interface IIntroducer<TCon>
+public interface IIntroducer<TQ>
 {
-    ArrowHandle<TAnt, TCon> Introduce<TAnt>(in TCon hint);
+    bool TryIntroduce<TP>(in TQ hint, [NotNullWhen(true)] out IArrow<TP, TQ>? arrow);
 }
 
+#if false
 public static class IntroducerTheory
 {
     extension<TQ, TIntro>(TIntro)
@@ -17,7 +18,6 @@ public static class IntroducerTheory
     }
 }
 
-#if false
 public static class IntroducerTheory
 {
     extension<TCon, TSpec>(TSpec)

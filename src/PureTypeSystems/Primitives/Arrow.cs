@@ -2,9 +2,13 @@ using Nemonuri.PureTypeSystems.Primitives.Extensions;
 
 namespace Nemonuri.PureTypeSystems.Primitives;
 
-public interface IArrowPremise<TAntecedent, TConsequent>
+public interface IArrow<TP, TQ>
 {
-    TConsequent Apply(in TAntecedent pre);
+    TQ Apply(in TP pre);
+}
+
+public interface IArrowPremise<TP, TQ> : IArrow<TP, TQ>
+{
 }
 
 #if false
@@ -21,20 +25,20 @@ public readonly struct Failure<TP, TQ> : IArrowPremise<TP, TQ>
 {
     public static TQ Apply(in TP pre) => throw new InvalidOperationException(/* TODO */);
 
-    TQ IArrowPremise<TP, TQ>.Apply(in TP pre) => Failure<TP, TQ>.Apply(in pre);
+    TQ IArrow<TP, TQ>.Apply(in TP pre) => Failure<TP, TQ>.Apply(in pre);
 }
 
 public readonly struct Identity<T> : IArrowPremise<T, T>
 {
     public static T Apply(in T pre) => pre;
 
-    T IArrowPremise<T, T>.Apply(in T pre) => Apply(in pre);
+    T IArrow<T, T>.Apply(in T pre) => Apply(in pre);
 }
 
 
 
 [StructLayout(LayoutKind.Sequential)]
-public unsafe readonly struct ArrowHandle<TP, TQ> : IHandle
+public unsafe readonly struct ArrowHandle<TP, TQ> : IHandle, IArrow<TP, TQ>
 {
     private readonly delegate*<in TP, TQ> _fp;
 

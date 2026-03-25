@@ -30,6 +30,15 @@ public readonly struct Negation : IJudgePremise
     JudgeResult IJudgePremise.Judge<T>(in T expr) => Judge(in expr);
 }
 
+public readonly struct Unknown : IJudgePremise
+{
+    private static JudgeResult JudgeResult => JudgeResult.CreateUnknown();
+
+    public static JudgeResult Judge<T>(in T _) => JudgeResult;
+
+    JudgeResult IJudgePremise.Judge<T>(in T expr) => Judge(in expr);
+}
+
 #if false
 public readonly struct Testable : IJudgePremise, IConstant<Judgement>
 {
@@ -48,7 +57,7 @@ public readonly struct JudgeBasedArrow<T, TJudge> : IArrowPremise<T, Refined<T, 
 {
     public static Refined<T, TJudge> Apply(in T pre) => new(pre);
 
-    Refined<T, TJudge> IArrowPremise<T, Refined<T, TJudge>>.Apply(in T pre) => Apply(in pre);
+    Refined<T, TJudge> IArrow<T, Refined<T, TJudge>>.Apply(in T pre) => Apply(in pre);
 }
 
 public interface IJudgePremise<T> : IJudgePremise, IArrowPremise<T, JudgeResult>
@@ -110,8 +119,20 @@ public readonly struct JudgeHandle<T> : IHandle, IEquatable<JudgeHandle<T>>
 
     public override int GetHashCode() => Hth.GetHashCode(this);
 }
-
 #if false
+public readonly struct JudgeJoin<TJudge1, TJudge2> : IJudgePremise
+    where TJudge1 : IJudgePremise
+    where TJudge2 : IJudgePremise
+{
+    public JudgeResult Judge<T>(in T expr)
+    {
+        JudgeResult result1 = JudgeTheory.ToHandle<TJudge1, T>().Judge(in expr);
+        JudgeResult result2 = JudgeTheory.ToHandle<TJudge2, T>().Judge(in expr);
+    }
+}
+
+
+
 
 /**
     reference: https://plato.stanford.edu/entries/logic-intuitionistic/#FormSystMathMath

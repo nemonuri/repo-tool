@@ -1,12 +1,24 @@
 namespace Nemonuri.PureTypeSystems.Primitives.TypeExpressions;
 
-public static class RefinedTheory
+public static class DotNetExpressionTheory
 {
+#if false
     public static Refined<T, TJudge> TrustMe<T, TJudge>(T value)
         where TJudge : IJudgePremise
     {
         return new(value);
     }
+#endif
+
+    public static Refined<T, Unknown> ToRefined<T>(T value) => new(value);
+
+    public static Refined<T, TJudge> BindJudge<T, TJudge>(Refined<T, Unknown> refined)
+        where TJudge : IJudgePremise
+    {
+        return new(refined.Value);
+    }
+
+    
 
 #if false
     public static Refined<T> Upcast<T, TJudge>(in Refined<T, TJudge> refined)

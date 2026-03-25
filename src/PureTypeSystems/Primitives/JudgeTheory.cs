@@ -52,6 +52,11 @@ public static class JudgeTheory
         {
             static JudgeResult Impl(in T item) => RealizerTheory.Realize<TJudge>().Judge(in item);
 
+            if (typeof(TJudge) == typeof(Unknown))
+            {
+                return GetUnknownHandle<T>();
+            }
+
             ArrowHandle<T, JudgeResult> arrowHandle = new(&Impl);
             return new(arrowHandle);
         }

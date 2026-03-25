@@ -35,15 +35,15 @@ public readonly record struct Judgement
 
 public readonly struct JudgeResult
 {
-    private JudgeResult(Judgement judgement, IIntroducer<TestResult>? testerIntroducer)
+    private JudgeResult(Judgement judgement, IEnumerableIntroducer<TestResult>? testerIntroducer)
     {
         Judgement = judgement;
-        TesterIntroducer = testerIntroducer;
+        UncheckedTesterIntroducer = testerIntroducer;
     }
 
     public Judgement Judgement {get;}
 
-    public IIntroducer<TestResult>? TesterIntroducer {get;}
+    public IEnumerableIntroducer<TestResult>? UncheckedTesterIntroducer {get;}
 
     public static JudgeResult CreateUnknown() => default;
 
@@ -51,16 +51,25 @@ public readonly struct JudgeResult
 
     public static JudgeResult CreateFalse() => new(Judgement.False, null);
 
-    public static JudgeResult CreateTestable(IIntroducer<TestResult> introducer) => new(Judgement.Testable, introducer);
+    public static JudgeResult CreateTestable(IEnumerableIntroducer<TestResult> introducer) => new(Judgement.Testable, introducer);
 
-    public bool IsUnknown => Judgement.IsUnknown;
+    [MemberNotNullWhen(false, nameof(UncheckedTesterIntroducer))]
+    private bool IsTesterNullOrInvalid => UncheckedTesterIntroducer is null || !UncheckedTesterIntroducer.Introducables.Any();
 
-    [MemberNotNullWhen(true, nameof(TesterIntroducer))]
-    public bool IsTestable => Judgement.IsTestable;
+    public bool IsUnknown => Judgement.IsUnknown || (Judgement.IsTestable && IsTesterNullOrInvalid);
+
+    [MemberNotNullWhen(true, nameof(UncheckedTesterIntroducer))]
+    public bool IsTestable => Judgement.IsTestable && !IsTesterNullOrInvalid;
 
     public bool IsFalse => Judgement.IsFalse;
 
     public bool IsTrue => Judgement.IsTrue;
+
+    public bool TryGetTesterIntroducer([NotNullWhen(true)] out IEnumerableIntroducer<TestResult>? testerIntroducer)
+    {
+        testerIntroducer = IsTestable ? UncheckedTesterIntroducer : null;
+        return testerIntroducer is not null;
+    }
 }
 
 public static class JudgementTheory
