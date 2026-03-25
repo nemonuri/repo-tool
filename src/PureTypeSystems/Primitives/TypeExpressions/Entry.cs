@@ -21,28 +21,45 @@ public readonly record struct DotNetEntry<T, TJudge>
 }
 
 
-public readonly struct ConstructorEntry<T, TJudge, TExpr, TGuard>
+public readonly struct DataConstructorEntry<T, TJudge, TAssumedJuge, TAssumedExpr, TAssumedGuard>
     where TJudge : IJudgePremise
-    where TGuard : IGuardPremise<ValueUnit, TJudge, TExpr>
+    where TAssumedJuge : IJudgePremise
+    where TAssumedGuard : IGuardPremise<ValueUnit, TAssumedJuge, TAssumedExpr>
 {
-    internal ConstructorEntry(KindEntry<TExpr, TGuard> kind, DotNetEntry<T, TJudge> dotnet)
+    public DataConstructorEntry(KindEntry<TAssumedExpr, TAssumedGuard> kind, DotNetEntry<T, TJudge> dotnet)
     {
         AssumedKindEntry = kind;
         DotNetEntry = dotnet;
     }
 
-    public KindEntry<TExpr, TGuard> AssumedKindEntry {get;}
+    public KindEntry<TAssumedExpr, TAssumedGuard> AssumedKindEntry {get;}
 
     public DotNetEntry<T, TJudge> DotNetEntry {get;}
     
 
     public bool IsKindEntryUnbound => 
-        (typeof(TExpr) == typeof(Var)) && (typeof(TGuard) == typeof(VarGuard<Unknown>));
+        (typeof(TAssumedExpr) == typeof(Var)) && (typeof(TAssumedGuard) == typeof(VarGuard<Unknown>));
 
     public bool IsDotNetEntryUnbound => 
         (typeof(T) == typeof(ValueUnit)) && (typeof(TJudge) == typeof(Unknown));
 }
 
+public readonly struct KindConstructorEntry<T, TJudge, TExpr, TGuard, TAssumedJuge, TAssumedExpr, TAssumedGuard>
+    where TJudge : IJudgePremise
+    where TGuard : IGuardPremise<T, TJudge, TExpr>
+    where TAssumedJuge : IJudgePremise
+    where TAssumedGuard : IGuardPremise<ValueUnit, TAssumedJuge, TAssumedExpr>
+{
+    public KindConstructorEntry(KindEntry<TAssumedExpr, TAssumedGuard> assumedKindEntry, KindEntry<TExpr, TGuard> kindEntry)
+    {
+        AssumedKindEntry = assumedKindEntry;
+        KindEntry = kindEntry;
+    }
+
+    public KindEntry<TAssumedExpr, TAssumedGuard> AssumedKindEntry {get;}
+
+    public KindEntry<TExpr, TGuard> KindEntry {get;}
+}
 
 public static class EntryTheory
 {
