@@ -54,7 +54,7 @@ public static class RealizerTheory
         }
         else
         {
-            throw new MissingMethodException("Cannot create an instance of an abstract class, or the type that is specified for T does not have a parameterless constructor.");
+            return ThrowMissingMethodException<T>();
         }
     }
 
@@ -86,5 +86,11 @@ public static class RealizerTheory
             realized = default;
             return false;
         }
+    }
+
+    [DoesNotReturn]
+    public static T ThrowMissingMethodException<T>()
+    {
+        throw new MissingMethodException("Cannot create an instance of an abstract class, or the type that is specified for T does not have a parameterless constructor.");
     }
 }

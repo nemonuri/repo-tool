@@ -69,10 +69,6 @@ public static class EntryTheory
         where TJudge : IJudgePremise
         => new(value);
 
-    public static KindEntry<Var, VarGuard<TJudge>> ToVarEntry<TJudge>()
-        where TJudge : IJudgePremise
-        => new();
-
     public static KindEntry<Data<T>, DataGuard<T, TJudge>> ToDataEntry<T, TJudge>(DotNetEntry<T, TJudge> dotNetEntry)
         where TJudge : IJudgePremise
     {
@@ -87,6 +83,10 @@ public static class EntryTheory
         App<THead, TTail> app = new(tail);
         return new(app);
     }
+
+    public static KindEntry<Var, VarGuard<TJudge>> AssumeVarEntry<TJudge>()
+        where TJudge : IJudgePremise
+        => new();
 
     public static KindEntry<Data<ValueUnit>, DataGuard<ValueUnit, TJudge>> AssumeDataEntry<TJudge>()
         where TJudge : IJudgePremise
