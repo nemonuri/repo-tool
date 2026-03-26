@@ -1,4 +1,4 @@
-namespace Nemonuri.PureTypeSystems.Primitives.TypeExpressions;
+namespace Nemonuri.PureTypeSystems.Primitives;
 
 public interface IRefiner<TState>
 {

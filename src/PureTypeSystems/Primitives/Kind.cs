@@ -1,7 +1,6 @@
 using System.Runtime.CompilerServices;
 using Nemonuri.PureTypeSystems.Primitives.Extensions;
 using Nemonuri.PureTypeSystems.Primitives.TypeConstructors;
-using Nemonuri.PureTypeSystems.Primitives.TypeExpressions;
 
 namespace Nemonuri.PureTypeSystems.Primitives;
 
@@ -17,7 +16,6 @@ public interface IKindPremise<TKind> where TKind : IKindPremise<TKind>
 
     bool TryToDecons<TQ, TP>(out ArrowHandle<TQ, TP> handle);
 }
-
 
 
 public static class KindTheory
@@ -59,11 +57,6 @@ public static class KindTheory
         public static TP Decons<TQ, TP>(in TQ q)
         {
             return ToDecons<TKind, TQ, TP>().Apply(in q);
-        }
-
-        public static App<TKind, TP> DeconsToApp<TQ, TP>(in TQ q)
-        {
-            return new(Decons<TKind, TQ, TP>(in q));
         }
 
 #if false

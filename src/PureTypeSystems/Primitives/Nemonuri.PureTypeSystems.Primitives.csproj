@@ -31,5 +31,9 @@
     </When>
 
   </Choose>
+  
+  <ItemGroup>
+    <Compile Remove="Deprecated/**/*.*" />
+  </ItemGroup>
 
 </Project>

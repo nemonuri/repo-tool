@@ -1,5 +1,4 @@
 using static Nemonuri.PureTypeSystems.Primitives.Extensions.JudgeHandleExtensions;
-using Nemonuri.PureTypeSystems.Primitives.TypeExpressions;
 using Hth = Nemonuri.PureTypeSystems.Primitives.HandleTheory;
 
 namespace Nemonuri.PureTypeSystems.Primitives;
