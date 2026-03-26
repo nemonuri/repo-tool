@@ -18,6 +18,13 @@ public static class TypeLevelTheory
         return new(tail);
     }
 
+    public static Guarded<TExpr, TJudge> ToGuarded<TExpr, TJudge>(TExpr expr)
+        where TExpr : ITypeLevelExpression
+        where TJudge : IJudgePremise
+    {
+        return new(expr);
+    }
+
     public static bool CanEvaluate<TExpr, T>(TExpr expr, [NotNullWhen(true)] Func<TExpr, T>? evaluator)
         where TExpr : ITypeLevelExpression
     {
@@ -58,6 +65,10 @@ public static class TypeLevelTheory
             return false;
         }
     }
+
+
+
+    
 
 #if false
     public static Refined<Data<T>> ToRefinedData<T>(Data<T> data, JudgeHandle<Data<T>> handle = default) => new(data, handle);
