@@ -1,13 +1,14 @@
 namespace Nemonuri.PureTypeSystems
 
 open Nemonuri.PureTypeSystems.Primitives
-open Nemonuri.PureTypeSystems.Primitives.TypeExpressions
+open Nemonuri.PureTypeSystems.Primitives.Expressions
+open Nemonuri.PureTypeSystems.Primitives.Expressions.TypeLevel
 open Nemonuri.PureTypeSystems.Primitives.TypeConstructors
 
 module Kinds =
 
     open Unchecked
-    type private Eth = Nemonuri.PureTypeSystems.Primitives.TypeExpressions.ExpressionTheory
+    type private Eth = Nemonuri.PureTypeSystems.Primitives.Expressions.TypeLevel.TypeLevelTheory
     type private Ath = Nemonuri.PureTypeSystems.Primitives.ArrowTheory
     type B<'a> = Bracket<'a>
 
@@ -19,6 +20,7 @@ module Kinds =
         let inline call (k': ^k) (q': ^q) = ((^k or ^q) : (static member Decons : _ -> _) q') in
         call kind q
 
+#if false
     let inline deconsToApp (kind: ^k) q = decons kind q |> Eth.UnsafeToApp<^k,_> 
         
 
@@ -95,3 +97,4 @@ module Kinds =
     let inline ofDotNet kinds appOrData =
         let inline call (p: ^p) (k: ^k) (x: ^x) = ((^p or ^x) : (static member OfDotNet : _*_ -> _) k, x)
         call defaultof<Premise> kinds appOrData
+#endif

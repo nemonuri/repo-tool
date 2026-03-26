@@ -1,7 +1,7 @@
 namespace Nemonuri.PureTypeSystems
 
 open Nemonuri.PureTypeSystems.Primitives
-open Nemonuri.PureTypeSystems.Primitives.TypeExpressions
+open Nemonuri.PureTypeSystems.Primitives.Expressions
 open type Nemonuri.PureTypeSystems.Primitives.Extensions.JudgementExtensions
 open Microsoft.FSharp.Core.Operators.Unchecked
 
@@ -9,6 +9,7 @@ module Refiners =
 
     let inline (|Judgement|) (j: Judgement) = let det, tru = j.Deconstruct() in det, tru
 
+#if false
     let inline (|Unknown|Testable|False|True|) (r: JudgeResult) =
         let (Judgement(det, tru)) = r.Judgement in
         match det, tru with
@@ -45,4 +46,4 @@ module Refiners =
     
     let tryRefineV<'a, 'r when 'r :> IJudgePremise> (x: 'a) : voption<Refined<'a, 'r>> = x |> refine |> toValueOption
 
-    
+#endif

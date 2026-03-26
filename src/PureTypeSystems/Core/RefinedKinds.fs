@@ -1,14 +1,15 @@
 ﻿namespace Nemonuri.PureTypeSystems
 
 open Nemonuri.PureTypeSystems.Primitives
-open Nemonuri.PureTypeSystems.Primitives.TypeExpressions
+open Nemonuri.PureTypeSystems.Primitives.Expressions
+open Nemonuri.PureTypeSystems.Primitives.Expressions.TypeLevel
 open Nemonuri.PureTypeSystems.Primitives.TypeConstructors
 
 module RefinedKinds =
 
     open Unchecked
-    type Eth = Nemonuri.PureTypeSystems.Primitives.TypeExpressions.ExpressionTheory
-    type Ath = Nemonuri.PureTypeSystems.Primitives.ArrowTheory
+    type private Eth = Nemonuri.PureTypeSystems.Primitives.Expressions.TypeLevel.TypeLevelTheory
+    type private Ath = Nemonuri.PureTypeSystems.Primitives.ArrowTheory
 
 #if false
     let inline cons kind p =
